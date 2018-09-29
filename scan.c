@@ -1,7 +1,42 @@
+#include <stdio.h>
+#include <ctype.h>
+
+#include "pars.h"
+#include "error.h"
 #include "scan.h"
 
+#define SIZETABLE 6
+
 char CH, bufferCH = ' ';
-int token;
+int count = 0;
+TokenType tokenType;
+int number;
+char name[NAMESIZE];
+
+struct embeddedNames 
+{
+	char name[5];
+	TokenType type;
+} TableNames[SIZETABLE];
+
+void enterTableNames(char *name, TokenType type) 
+{
+	strcpy(TableNames[count].name, name);
+	TableNames[count++].type = type;
+}
+
+void searchTableNames(char *name) 
+{
+	for (int i = 0; i < SIZETABLE; i++) 
+	{
+		if (TableNames[i].name == name) 
+		{
+			tokenType = TableNames[i].type;
+			return;
+		}
+	}
+	tokenType = nameTok;
+}
 
 void getNextCH(void)
 {
@@ -12,31 +47,35 @@ void getNextCH(void)
 void eatComment(void)
 {
 	while (CH != EOF || (CH != '*' && bufferCH != '/'))
-	{
 		getNextCH();
-	}
 }
 
 void readIdent(void)
 {
-	getNextCH();
+	int i = 0;
 	while (isalnum(CH))
 	{
+		if (i > NAMESIZE)
+			error("big a name");
+		name[i++] = CH;
 		getNextCH();
 	}
+	searchTableNames(name);
 }
 
 void readNum(void)
 {
-	getNextCH();
+	number = 0;
 	while (isdigit(CH))
 	{
+		number *= 10 + CH - '0';
 		getNextCH();
 	}
 }
 
 void scanning(void)
 {
+	enter();
 	getNextCH();
 	while (isspace(CH))
 		getNextCH();
@@ -53,52 +92,69 @@ void scanning(void)
 		switch (CH)
 		{
 		case '-':
-			token = minusTok;
+			tokenType = minusTok;
 			break;
 		case '+':
-			token = plusTok;
+			tokenType = plusTok;
 			break;
 		case '/':
 			if (bufferCH == '*')
 				eatComment();
 			else
-				token = divTok;
+				tokenType = divTok;
 			break;
 		case '*':
-			token = multTok;
+			tokenType = multTok;
 			break;
 		case '(':
-			token = LbraketTok;
+			tokenType = LbraketTok;
 			break;
 		case ')':
-			token = RbraketTok;
+			tokenType = RbraketTok;
 			break;
 		case ';':
-			token = semiTok;
+			tokenType = semiTok;
 			break;
 		case ',':
-			token = commaTok;
+			tokenType = commaTok;
 			break;
 		case '>':
 			if (bufferCH == '=')
-				token = moreEQTok;
+				tokenType = moreEQTok;
 			else
-				token = moreTok;
+				tokenType = moreTok;
 			break;
 		case '<':
 			if (bufferCH == '=')
-				token = lessEQTok;
+				tokenType = lessEQTok;
 			else
-				token = lessTok;
+				tokenType = lessTok;
 			break;
 		case '=':
 			if (bufferCH == '=')
-				token = compTok;
+				tokenType = compTok;
 			else
-				token = equalTok;
+				tokenType = equalTok;
+			break;
+		case '{':
+			tokenType = RbracesTok;
+			break;
+		case '}':
+			tokenType = LbracesTok;
+			break;
 		default:
 			error("syntax error");
 			break;
 		}
 	}
+}
+
+void enter(void) 
+{
+	enterTableNames("var", varTok);
+	enterTableNames("mod", modTok);
+	enterTableNames("while", whileTok);
+	enterTableNames("if", ifTok);
+	enterTableNames("else", elseTok);
+	enterTableNames("for", forTok);
 }

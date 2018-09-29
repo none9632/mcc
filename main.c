@@ -6,14 +6,9 @@
 #include "scan.h"
 #include "pars.h"
 #include "launch.h"
+#include "error.h"
 
-extern FILE* file;
-
-void error(char* message) 
-{
-	printf("error: %s", message);
-	exit(EXIT_FAILURE);
-}
+FILE* file;
 
 void openFile(char* fileName) 
 {
