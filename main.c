@@ -22,7 +22,8 @@ int main(int argc, char *argv[])
 		error("correct input \n\tmyCompiler.exe <input_file>");
 	openFile(argv[1]);
 	puts("compilation...");
-	scanning();
+	enter();
+	nextTok();
 	parsing();		
 	launching();	
 	fclose(file);

@@ -1,95 +1,62 @@
 #include <stdio.h>
 #include <ctype.h>
 
+#include "table.h"
 #include "pars.h"
 #include "error.h"
 #include "scan.h"
 
-#define SIZETABLE 6
-
+extern FILE* file;
 char CH, bufferCH = ' ';
-int count = 0;
 TokenType tokenType;
-int number;
+int value;
 char name[NAMESIZE];
 
-struct embeddedNames 
-{
-	char name[5];
-	TokenType type;
-} TableNames[SIZETABLE];
-
-void enterTableNames(char *name, TokenType type) 
-{
-	strcpy(TableNames[count].name, name);
-	TableNames[count++].type = type;
-}
-
-void searchTableNames(char *name) 
-{
-	for (int i = 0; i < SIZETABLE; i++) 
-	{
-		if (TableNames[i].name == name) 
-		{
-			tokenType = TableNames[i].type;
-			return;
-		}
-	}
-	tokenType = nameTok;
-}
-
-void getNextCH(void)
-{
+void getNextCH(void) {
 	CH = bufferCH;
 	bufferCH = fgetc(file);
 }
 
-void eatComment(void)
-{
+void eatComment(void) {
 	while (CH != EOF || (CH != '*' && bufferCH != '/'))
 		getNextCH();
 }
 
-void readIdent(void)
-{
+void readIdent(void) {
 	int i = 0;
-	while (isalnum(CH))
-	{
-		if (i > NAMESIZE)
+	while (isalnum(CH)) {
+		if (i > NAMESIZE - 1)
 			error("big a name");
 		name[i++] = CH;
 		getNextCH();
 	}
-	searchTableNames(name);
+	name[NAMESIZE] = '\0';
+	tokenType = searchTN(name);
+	if (tokenType == 0)
+		tokenType = nameTok;
+
 }
 
-void readNum(void)
-{
-	number = 0;
-	while (isdigit(CH))
-	{
-		number *= 10 + CH - '0';
+void readNum(void) {
+	value = 0;
+	while (isdigit(CH)) {
+		value *= 10 + CH - '0';
 		getNextCH();
 	}
 }
 
-void scanning(void)
-{
-	enter();
+void nextTok(void) {
 	getNextCH();
 	while (isspace(CH))
 		getNextCH();
-	if (isalpha(CH))
-	{
+	if (isalpha(CH)) {
 		readIdent();
 	}
-	else if (isalnum)
-	{
+	else if (isalnum) {
 		readNum();
 	}
-	else
-	{
-		switch (CH)
+	else {
+		switch (CH)		
 		{
 		case '-':
 			tokenType = minusTok;
@@ -142,6 +109,9 @@ void scanning(void)
 		case '}':
 			tokenType = LbracesTok;
 			break;
+		case '%':
+			tokenType = modTok;
+			break;
 		default:
 			error("syntax error");
 			break;
@@ -149,12 +119,3 @@ void scanning(void)
 	}
 }
 
-void enter(void) 
-{
-	enterTableNames("var", varTok);
-	enterTableNames("mod", modTok);
-	enterTableNames("while", whileTok);
-	enterTableNames("if", ifTok);
-	enterTableNames("else", elseTok);
-	enterTableNames("for", forTok);
-}
