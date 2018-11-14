@@ -4,9 +4,10 @@
 #include <stdio.h>
 
 #include "error.h"
+#include "scan.h"
 
 void error(char* message)
 {
-	printf("error: %s", message);
+	printf("\nerror(%d, %d): %s", posLine, posSym, message);
 	exit(EXIT_FAILURE);
 }

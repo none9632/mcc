@@ -7,19 +7,16 @@
 #include "scan.h"
 
 extern FILE* file;
-char CH, bufferCH = ' ';
+char CH, bufferCH;
 TokenType tokenType;
 int value;
 char name[NAMESIZE];
+int posLine = 1, posSym = 0;
 
 void getNextCH(void) {
 	CH = bufferCH;
 	bufferCH = fgetc(file);
-}
-
-void eatComment(void) {
-	while (CH != EOF || (CH != '*' && bufferCH != '/'))
-		getNextCH();
+	posSym++;
 }
 
 void readIdent(void) {
@@ -30,87 +27,201 @@ void readIdent(void) {
 		name[i++] = CH;
 		getNextCH();
 	}
-	name[NAMESIZE] = '\0';
+	name[i] = '\0';
 	tokenType = searchTN(name);
-	if (tokenType == 0)
+	if (tokenType == noneTok)
 		tokenType = nameTok;
-
 }
 
 void readNum(void) {
 	value = 0;
 	while (isdigit(CH)) {
-		value *= 10 + CH - '0';
+		value = value * 10 + CH - '0';
 		getNextCH();
 	}
+	tokenType = numTok;
 }
 
 void nextTok(void) {
-	getNextCH();
-	while (isspace(CH))
+	while (isspace(CH)) {
+		if (CH == '\n') {
+			posSym = 0;
+			posLine++;
+		}
 		getNextCH();
-	if (isalpha(CH)) {
+	}
+	if (isalpha(CH)) 
 		readIdent();
-	}
-	else if (isalnum) {
+	else if (isalnum(CH)) 
 		readNum();
-	}
 	else {
-		switch (CH)		
-		{
-		case '-':
-			tokenType = minusTok;
-			break;
+		switch (CH)	{
 		case '+':
-			tokenType = plusTok;
+			if (bufferCH == '+') {
+				tokenType = doblPTok;
+				getNextCH();
+			}
+			else if (bufferCH == '=') {
+				tokenType = plusATok;
+				getNextCH();
+			}
+			else
+				tokenType = plusTok;
+			getNextCH();
+			break;
+		case '-':
+			if (bufferCH == '-') {
+				tokenType = doblMTok;
+				getNextCH();
+			}
+			else if (bufferCH == '=') {
+				tokenType = minusATok;
+				getNextCH();
+			}
+			else 
+				tokenType = minusTok;
+			getNextCH();
 			break;
 		case '/':
-			if (bufferCH == '*')
-				eatComment();
+			if (bufferCH == '*') {
+				while (CH != EOF) {
+					if (CH == '*' && bufferCH == '/')
+						break;
+					getNextCH();
+				}
+				getNextCH();
+				getNextCH();
+				nextTok();
+				break;
+			}
+			else if (bufferCH == '/') {
+				while (CH != EOF) {
+					if (CH == '\n')
+						break;
+					getNextCH();
+				}
+				getNextCH();
+				nextTok();
+				break;
+			}
+			else if (bufferCH == '=') {
+				tokenType = divATok;
+				getNextCH();
+			}
 			else
 				tokenType = divTok;
+			getNextCH();
 			break;
 		case '*':
-			tokenType = multTok;
+			if (bufferCH == '=') {
+				tokenType = multATok;
+				getNextCH();
+			}
+			else 
+				tokenType = multTok;
+			getNextCH();
 			break;
 		case '(':
 			tokenType = LbraketTok;
+			getNextCH();
 			break;
 		case ')':
 			tokenType = RbraketTok;
+			getNextCH();
 			break;
 		case ';':
 			tokenType = semiTok;
+			getNextCH();
 			break;
 		case ',':
 			tokenType = commaTok;
+			getNextCH();
 			break;
 		case '>':
-			if (bufferCH == '=')
+			if (bufferCH == '=') {
 				tokenType = moreEQTok;
+				getNextCH();
+			}
 			else
 				tokenType = moreTok;
+			getNextCH();
 			break;
 		case '<':
-			if (bufferCH == '=')
+			if (bufferCH == '=') {
 				tokenType = lessEQTok;
+				getNextCH();
+			}
 			else
 				tokenType = lessTok;
+			getNextCH();
 			break;
 		case '=':
-			if (bufferCH == '=')
-				tokenType = compTok;
-			else
+			if (bufferCH == '=') {
 				tokenType = equalTok;
+				getNextCH();
+			}
+			else 
+				tokenType = assignTok;
+			getNextCH();
 			break;
 		case '{':
-			tokenType = RbracesTok;
+			tokenType = LbracesTok;
+			getNextCH();
 			break;
 		case '}':
-			tokenType = LbracesTok;
+			tokenType = RbracesTok;
+			getNextCH();
 			break;
 		case '%':
-			tokenType = modTok;
+			if (bufferCH == '=') {
+				tokenType = modATok;
+				getNextCH();
+			}
+			else 
+				tokenType = modTok;
+			getNextCH();
+			break;
+		case '!':
+			if (bufferCH == '=') {
+				tokenType = notEQTok;
+				getNextCH();
+			}
+			else
+				error("syntax error");
+			getNextCH();
+			break;
+		case '\'':
+			tokenType = singlQuotTok;
+			getNextCH();
+			break;
+		case '\"':
+			tokenType = doblQuotTok;
+			getNextCH();
+			break;
+		case '\\':
+			tokenType = backSlashTok;
+			getNextCH();
+			break;
+		case '|':
+			if (bufferCH == '|') {
+				tokenType = orTok;
+				getNextCH();
+			}
+			else
+				error("syntax error");
+			getNextCH();
+			break;
+		case '&':
+			if (bufferCH == '&') {
+				tokenType = andTok;
+				getNextCH();
+			}
+			else
+				error("syntax error");
+			getNextCH();
+			break;
+		case EOF:
+			tokenType = eofTok;
 			break;
 		default:
 			error("syntax error");

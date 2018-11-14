@@ -6,7 +6,10 @@
 extern TokenType tokenType;
 extern int value;
 extern char name[NAMESIZE];
+extern char CH, bufferCH;
+extern int posLine, posSym;
 
+void getNextCH(void);
 void nextTok(void);	
 
 #endif

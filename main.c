@@ -10,22 +10,21 @@
 
 FILE* file;
 
-void openFile(char* fileName) 
-{
+void openFile(char* fileName) {
 	if ((file = fopen(fileName, "r")) == NULL)
 		error("file can't open");
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 	if (argc != 2) 
 		error("correct input \n\tmyCompiler.exe <input_file>");
 	openFile(argv[1]);
 	puts("compilation...");
 	enter();
+	CH = fgetc(file);
+	bufferCH = fgetc(file);
 	nextTok();
 	parsing();		
 	launching();	
-	fclose(file);
 	exit(EXIT_SUCCESS);
 }

@@ -4,17 +4,18 @@
 #include "table.h"
 
 StackTok *top = NULL;
-int count = 0;
+int _count = 0;
 
 void enterTableNames(char *_name, TokenType _type) {
-	strcpy(TableNames[count].name, _name);
-	TableNames[count++].type = _type;
+	strcpy(TableNames[_count].name, _name);
+	TableNames[_count++].type = _type;
 }
 
 void newToken(char *_name, int _value, TokenType _tokenType, TypeVar _typeVar) {
-	StackTok *newTok = (StackTok*)malloc(sizeof(*newTok));
+	StackTok *newTok = (StackTok*)malloc(sizeof(StackTok));
 	strcpy(newTok->name, _name);
-	newTok->value = _value;
+	if (_value == 1)
+		newTok->value = (int*)malloc(sizeof(int));
 	newTok->tokenType = _tokenType;
 	newTok->typeVar = _typeVar;
 	newTok->low = top;
@@ -24,32 +25,35 @@ void newToken(char *_name, int _value, TokenType _tokenType, TypeVar _typeVar) {
 StackTok* find(char *_name) {
 	StackTok *tokObj = top;
 	while (tokObj->tokenType != startTok) {
-		if (tokObj->name == _name) 
+		if (strcmp(_name, tokObj->name) == 0) 
 			break;
 		tokObj = tokObj->low;
 	}
-	if (tokObj->tokenType == startTok)
+	if (tokObj->tokenType == startTok) 
 		error("undeclared variable name");
 	return tokObj;
 }
 
 TypeVar findType(char *_name) {
-	if (*_name == "int")
+	if (strcmp(_name, "int") == 0)
 		return intType;
-	else if (*_name == "double")
+	else if (strcmp(_name, "double") == 0)
 		return doubleType;
-	else if (*_name == "char")
+	else if (strcmp(_name, "char") == 0)
 		return charType;
+	else if (strcmp(_name, "bool") == 0)
+		return boolType;
 	else
 		return noneType;
 }
 
-int searchTN(char *_name) {
+TokenType searchTN(char *_name) {
 	for (int i = 0; i < SIZETABLE; i++) {
-		if (TableNames[i].name == _name) 
-			tokenType = TableNames[i].type;
+		if (strcmp(_name, TableNames[i].name) == 0) {
+			return TableNames[i].type;
+		}
 	}
-	return 0;
+	return noneTok;
 }
 
 void enter(void) {
@@ -57,7 +61,11 @@ void enter(void) {
 	enterTableNames("if", ifTok);
 	enterTableNames("else", elseTok);
 	enterTableNames("for", forTok);
+	enterTableNames("const", typeTok);
 	enterTableNames("int", typeTok);
 	enterTableNames("double", typeTok);
 	enterTableNames("char", typeTok);
+	enterTableNames("bool", typeTok);
+	enterTableNames("print", printTok);
+	enterTableNames("scan", scanTok);
 }
