@@ -6,7 +6,7 @@
 #include "launch.h"
 #include "gen.h"
 
-int bufferCount;
+int bufferCount, countL = 0;
 int *point, *bufferPoint;
 
 int CDriver(Commands command, int *var) {
@@ -112,7 +112,32 @@ int CDriver(Commands command, int *var) {
 		bufferCount--;
 		*point = CDriver(commands[bufferCount], point);
 		bufferPoint = command.var;
-		*bufferPoint = *point;
+		bufferCount = countL;
+		bufferCount++;
+		switch (commands[bufferCount].command)
+		{
+		case CPLUSA:
+			*bufferPoint += *point;
+			break;
+		case CMINUSA:
+			*bufferPoint -= *point;
+			break;
+		case CMULTA:
+			*bufferPoint *= *point;
+			break;
+		case CDIVA:
+			*bufferPoint /= *point;
+			break;
+		case CMODA:
+			*bufferPoint %= *point;
+			break;
+		case CASSIGN:
+			*bufferPoint = *point;
+			break;
+		default:
+			error("syntax error");
+			break;
+		}
 		break;
 	}
 	if (var == NULL)
@@ -121,9 +146,8 @@ int CDriver(Commands command, int *var) {
 }
 
 void launching(void) {
-	int count = 0;
 	Commands command;
-	while (commands[count].command != CSTOP) {
+	while (commands[countL].command != CSTOP) {
 		/*switch (commands[count].command) {
 		case CNONE:
 			printf("cnone - %d - %d\n", commands[count].var, count);
@@ -176,9 +200,24 @@ void launching(void) {
 		case CMOD:
 			puts("cmod\n");
 			break;
+		case CMODA:
+			puts("cmoda\n");
+			break;
+		case CPLUSA:
+			puts("cplusa\n");
+			break;
+		case CMINUSA:
+			puts("cminusa\n");
+			break;
+		case CDIVA:
+			puts("cdiva\n");
+			break;
+		case CMULTA:
+			puts("cmulta\n");
+			break;
 		}*/
-		bufferCount = count;
-		CDriver(commands[count], NULL);
-		count++;
+		bufferCount = countL;
+		CDriver(commands[countL], NULL);
+		countL++;
 	}
 }

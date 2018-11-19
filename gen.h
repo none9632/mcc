@@ -24,7 +24,12 @@
 #define CPRINTS -19
 #define CNONEP -20
 #define CNEGP -21
-
+#define CPLUSA -22
+#define CMINUSA -23
+#define CMULTA -24
+#define CDIVA -25
+#define CMODA -26
+#define CASSIGN -27
 
 typedef struct Command {
 	int command;
