@@ -11,9 +11,9 @@ typedef enum {
 	equalTok, modTok, RbracesTok, LbracesTok, forTok,
 	elseTok, whileTok, ifTok, startTok, noneTok,
 	typeTok, varTok, notEQTok, printTok, scanTok,
-	doblPTok, doblMTok, doblQuotTok, singlQuotTok,
-	backSlashTok, eofTok, andTok, orTok, multATok,
-	divATok, plusATok, minusATok, modATok
+	doblQuotTok, singlQuotTok, backSlashTok,
+	eofTok, andTok, orTok, multATok, divATok, 
+	plusATok, minusATok, modATok
 } TokenType;
 
 typedef enum {

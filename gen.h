@@ -14,7 +14,7 @@
 #define CLESSEQ -9
 #define CEQUAL -10
 #define CNOTEQ -11
-#define CMINONE -12
+#define CMINUSONE -12
 #define CPLUSONE -13
 #define CPRINT -14
 #define CSCAN -15
@@ -30,6 +30,7 @@
 #define CDIVA -25
 #define CMODA -26
 #define CASSIGN -27
+#define CNEG -28
 
 typedef struct Command {
 	int command;

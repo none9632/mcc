@@ -21,6 +21,13 @@ int CDriver(Commands command, int *var) {
 			*var = *point;
 		}
 		break;
+	case CNEG:
+		if (var != NULL) {
+			point = (int*)malloc(sizeof(int));
+			*point = CDriver(commands[--bufferCount], point);
+			*var = -*point;
+		}
+		break;
 	case CNEGP:
 		if (var != NULL) {
 			int *point = command.var;
@@ -30,60 +37,42 @@ int CDriver(Commands command, int *var) {
 	case CPLUS:
 		if (var != NULL) {
 			int bufferVar;
-			bufferCount--;
-			*var = CDriver(commands[bufferCount], var);
-			bufferCount--;
+			*var = CDriver(commands[--bufferCount], var);
 			bufferVar = *var;
-			*var = CDriver(commands[bufferCount], var) + bufferVar;
+			*var = CDriver(commands[--bufferCount], var) + bufferVar;
 		}
 		break;
 	case CMINUS:
 		if (var != NULL) {
 			int bufferVar;
-			bufferCount--;
-			*var = CDriver(commands[bufferCount], var);
-			bufferCount--;
+			*var = CDriver(commands[--bufferCount], var);
 			bufferVar = *var;
-			*var = CDriver(commands[bufferCount], var) - bufferVar;
+			*var = CDriver(commands[--bufferCount], var) - bufferVar;
 		}
 		break;
 	case CMULT:
 		if (var != NULL) {
 			int bufferVar;
-			bufferCount--;
-			*var = CDriver(commands[bufferCount], var);
-			bufferCount--;
+			*var = CDriver(commands[--bufferCount], var);
 			bufferVar = *var;
-			*var = CDriver(commands[bufferCount], var) * bufferVar;
+			*var = CDriver(commands[--bufferCount], var) * bufferVar;
 		}
 		break;
 	case CDIV:
 		if (var != NULL) {
 			int bufferVar;
-			bufferCount--;
-			*var = CDriver(commands[bufferCount], var);
-			bufferCount--;
+			*var = CDriver(commands[--bufferCount], var);
 			bufferVar = *var;
-			*var = CDriver(commands[bufferCount], var) / bufferVar;
+			*var = CDriver(commands[--bufferCount], var) / bufferVar;
 		}
 		break;
 	case CMOD:
 		if (var != NULL) {
 			int bufferVar;
-			bufferCount--;
-			*var = CDriver(commands[bufferCount], var);
-			bufferCount--;
+			*var = CDriver(commands[--bufferCount], var);
 			bufferVar = *var;
-			*var = CDriver(commands[bufferCount], var) % bufferVar;
+			*var = CDriver(commands[--bufferCount], var) % bufferVar;
 		}
-		break;
-	case CPLUSONE:
-		if (var != NULL)
-			*var++;
-		break;
-	case CMINONE:
-		if (var != NULL)
-			*var--;
 		break;
 	case CMORE:
 		break;
@@ -98,7 +87,7 @@ int CDriver(Commands command, int *var) {
 	case CNOTEQ:
 		break;
 	case CPRINT:
-		if (command.var == NULL)
+		if (command.var == NULL) 
 			error("syntax error");
 		point = command.var;
 		printf("%d", *point);
@@ -109,12 +98,10 @@ int CDriver(Commands command, int *var) {
 		break;
 	case CLOAD:
 		point = (int*)malloc(sizeof(int));
-		bufferCount--;
-		*point = CDriver(commands[bufferCount], point);
+		*point = CDriver(commands[--bufferCount], point);
 		bufferPoint = command.var;
 		bufferCount = countL;
-		bufferCount++;
-		switch (commands[bufferCount].command)
+		switch (commands[++bufferCount].command)
 		{
 		case CPLUSA:
 			*bufferPoint += *point;
@@ -148,30 +135,30 @@ int CDriver(Commands command, int *var) {
 void launching(void) {
 	Commands command;
 	while (commands[countL].command != CSTOP) {
-		/*switch (commands[count].command) {
+		/*switch (commands[countL].command) {
 		case CNONE:
-			printf("cnone - %d - %d\n", commands[count].var, count);
+			printf("cnone - %d - %d\n", commands[countL].var, countL);
 			break;
 		case CNONEP:
-			printf("cnonep - %d - %d\n", commands[count].var, count);
+			printf("cnonep - %d - %d\n", commands[countL].var, countL);
 			break;
 		case CLOAD:
-			printf("cload - %d - %d\n", commands[count].var, count);
+			printf("cload - %d - %d\n", commands[countL].var, countL);
 			break;
 		case CMULT:
-			printf("cmult- %d\n", count);
+			printf("cmult- %d\n", countL);
 			break;
 		case CPLUS:
-			printf("cplus - %d\n", count);
+			printf("cplus - %d\n", countL);
 			break;
 		case CPRINT:
-			printf("cprint - %d - %d\n", commands[count].var, count);
+			printf("cprint - %d - %d\n", commands[countL].var, countL);
 			break;
 		case CSCAN:
 			puts("cscan\n");
 			break;
-		case CMINONE:
-			puts("cminone\n");
+		case CMINUSONE:
+			puts("cminusone\n");
 			break;
 		case CPLUSONE:
 			puts("cplusone\n");

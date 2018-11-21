@@ -57,11 +57,7 @@ void nextTok(void) {
 	else {
 		switch (CH)	{
 		case '+':
-			if (bufferCH == '+') {
-				tokenType = doblPTok;
-				getNextCH();
-			}
-			else if (bufferCH == '=') {
+			if (bufferCH == '=') {
 				tokenType = plusATok;
 				getNextCH();
 			}
@@ -70,11 +66,7 @@ void nextTok(void) {
 			getNextCH();
 			break;
 		case '-':
-			if (bufferCH == '-') {
-				tokenType = doblMTok;
-				getNextCH();
-			}
-			else if (bufferCH == '=') {
+			if (bufferCH == '=') {
 				tokenType = minusATok;
 				getNextCH();
 			}

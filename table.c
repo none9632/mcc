@@ -16,6 +16,8 @@ void newToken(char *_name, int _value, TokenType _tokenType, TypeVar _typeVar) {
 	strcpy(newTok->name, _name);
 	if (_value == 1)
 		newTok->value = (int*)malloc(sizeof(int));
+	else
+		newTok->value = NULL;
 	newTok->tokenType = _tokenType;
 	newTok->typeVar = _typeVar;
 	newTok->low = top;
