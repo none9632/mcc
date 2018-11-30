@@ -1,7 +1,7 @@
 #ifndef TABLE_H
 #define TABLE_H
 
-#define SIZETABLE 11
+#define SIZETABLE 12
 #define NAMESIZE 32
 
 typedef enum {
@@ -13,7 +13,7 @@ typedef enum {
 	typeTok, varTok, notEQTok, printTok, scanTok,
 	doblQuotTok, singlQuotTok, backSlashTok,
 	eofTok, andTok, orTok, multATok, divATok, 
-	plusATok, minusATok, modATok
+	plusATok, minusATok, modATok, printlnTok
 } TokenType;
 
 typedef enum {
@@ -22,7 +22,7 @@ typedef enum {
 } TypeVar;
 
 struct embeddedNames {
-	char name[6];
+	char name[7];
 	TokenType type;
 } TableNames[SIZETABLE];
 

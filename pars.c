@@ -10,6 +10,7 @@
 #include "error.h"
 #include "gen.h"
 
+extern FILE* file;
 int minus = 0;
 
 void checkTok(TokenType _tokenType) {
@@ -142,6 +143,7 @@ TypeVar test(void) {
 			case lessEQTok: gen(CLESSEQ, NULL); break;
 			case notEQTok: gen(CNOTEQ, NULL); break;
 			}
+			return boolType;
 		}
 	}
 	return typeVar;
@@ -204,30 +206,45 @@ void initVar(void) {
 }
 
 void initWhile(void) {
-	checkTok(whileTok);
+	int *point = (int*)malloc(sizeof(int));
+	nextTok();
 	checkTok(LbraketTok);
 	if (expr() != boolType)
 		error("syntax error");
 	checkTok(RbraketTok);
+	gen(CWHILE, cGen - 2);
+	gen(CJUMP, point);
 	checkTok(LbracesTok);
 	statement();
 	checkTok(RbracesTok);
+	*point = cGen;
+	gen(CSTOP, NULL);
 }
 
 void initIf(void) {
-	checkTok(ifTok);
+	int *point1 = (int*)malloc(sizeof(int)),
+		*point2 = (int*)malloc(sizeof(int));
+	nextTok();
 	checkTok(LbraketTok);
-	if (expr() != boolType)
+	if (expr() != boolType) 
 		error("syntax error");
 	checkTok(RbraketTok);
+	gen(CIF, NULL);
+	gen(CJUMP, point1);
 	checkTok(LbracesTok);
 	statement();
 	checkTok(RbracesTok);
+	*point1 = cGen - 1;
+	gen(CSTOP, NULL);
 	if (tokenType == elseTok) {
-		checkTok(elseTok);
+		gen(CELSE, NULL);
+		gen(CJUMP, point2);
+		nextTok();
 		checkTok(LbracesTok);
 		statement();
 		checkTok(RbracesTok);
+		*point2 = cGen - 1;
+		gen(CSTOP, NULL);
 	}
 }
 
@@ -253,10 +270,33 @@ void statement(void) {
 			puts("d");
 			nextTok();
 			checkTok(LbraketTok);
-			if (tokenType != nameTok)
+			if (tokenType == nameTok) {
+				gen(CPRINT, find(name)->value);
+				nextTok();
+			}
+			else if (tokenType == numTok) {
+				if (expr() != intType) 
+					error("syntax error");
+				gen(CPRINTN, NULL);
+			}
+			else if (tokenType == doblQuotTok) {
+				char *text = (char*)malloc(sizeof(char) * 1024);
+				int i = 0;
+				while (CH != '\"' && CH != EOF) {
+					if (i >= 1024)
+						error("big the text");
+					text[i++] = CH;
+					getNextCH();
+				}
+				if (CH == EOF) 
+					error("syntax error");
+				text[i] = '\0';
+				getNextCH();
+				gen(CPRINTS, text);
+				nextTok();
+			}
+			else
 				error("syntax error");
-			gen(CPRINT, find(name)->value);
-			nextTok();
 			checkTok(RbraketTok);
 			checkTok(semiTok);
 		}
@@ -275,6 +315,8 @@ void statement(void) {
 			checkTok(semiTok);
 		}
 	}
+	if (tokenType == eofTok)
+		error("syntax error");
 }
 
 void parsing(void) {
@@ -283,4 +325,5 @@ void parsing(void) {
 	statement();
 	checkTok(RbracesTok);
 	gen(CSTOP, NULL);
+	gen(CEND, NULL); // for the test
 }

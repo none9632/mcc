@@ -23,7 +23,7 @@ void readIdent(void) {
 	int i = 0;
 	while (isalnum(CH)) {
 		if (i > NAMESIZE - 1)
-			error("big a name");
+			error("big the name");
 		name[i++] = CH;
 		getNextCH();
 	}
@@ -34,6 +34,7 @@ void readIdent(void) {
 }
 
 void readNum(void) {
+	int IorD = 0;
 	value = 0;
 	while (isdigit(CH)) {
 		value = value * 10 + CH - '0';

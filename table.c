@@ -69,5 +69,6 @@ void enter(void) {
 	enterTableNames("char", typeTok);
 	enterTableNames("bool", typeTok);
 	enterTableNames("print", printTok);
+	enterTableNames("println", printlnTok);
 	enterTableNames("scan", scanTok);
 }

@@ -5,11 +5,12 @@
 #include "gen.h"
 
 Commands *commands;
-int count = 0, memory = 8192;
+int cGen = 0; // counter in file gen
+int memory = 8192; 
 
 void gen(int command, int var) {
-	if (commands == NULL || count >= memory)
+	if (commands == NULL || cGen >= memory) 
 		commands = malloc(sizeof(Commands) * memory);
-	commands[count].command = command;
-	commands[count++].var = var;
+	commands[cGen].command = command;
+	commands[cGen++].var = var;
 }
