@@ -1,25 +1,24 @@
-#define _CRT_SECURE_NO_WARNINGS
-
 #include <stdio.h>
 #include <string.h>
 #include <malloc.h>
 
-#include "pars.h"
 #include "table.h"
 #include "scan.h"
 #include "error.h"
 #include "gen.h"
+#include "launch.h"
+#include "pars.h"
 
 extern FILE* file;
 int minus = 0;
 
-void checkTok(TokenType _tokenType) {
+void checkTok(int _tokenType) {
 	if (tokenType != _tokenType)
-		error("syntax error");
+		error("syntax error", 1);
 	nextTok();
 }
 
-TypeVar term(void) {
+TypeVar term() {
 	if (tokenType == minusTok || tokenType == plusTok) {
 		if (tokenType == minusTok)
 			minus = 1;
@@ -27,31 +26,31 @@ TypeVar term(void) {
 	}
 	if (tokenType == numTok) {
 		if (minus == 1) {
-			value = -value;
+			nValue = -nValue;
 			minus = 0;
 		}
-		gen(CNONE, value);
+		gen(CNONE, nValue);
 		nextTok();
 		return intType;
 	}
 	else if (tokenType == nameTok) {
 		StackTok *nameVar = find(name);
 		if (nameVar->value == NULL)
-			error("syntax error");
+			error("syntax error", 1);
 		if (minus == 1) {
 			gen(CNEGP, nameVar->value);
 			minus = 0;
 		}
-		else 
+		else
 			gen(CNONEP, nameVar->value);
 		nextTok();
-		return nameVar->typeVar;
+		return intType;
 	}
 	else if (tokenType == LbraketTok) {
 		int bufferMinus = 0;
 		nextTok();
 		if (minus == 1) {
-			bufferMinus = 1; 
+			bufferMinus = 1;
 			minus = 0;
 		}
 		TypeVar typeVar = expr();
@@ -64,49 +63,41 @@ TypeVar term(void) {
 	return noneType;
 }
 
-TypeVar factor(void) {
+TypeVar factor() {
 	TypeVar typeVar = term();
 	TokenType op;
-	if (typeVar == intType) {
-		if (tokenType == multTok || tokenType == divTok) {
-			do {
-				op = tokenType;
-				nextTok();
-				typeVar = term();
-				if (typeVar != intType)
-					error("syntax error");
-				switch (op) {
-				case multTok: gen(CMULT, NULL); break;
-				case divTok: gen(CDIV, NULL); break;
-				}
-			} while (tokenType == multTok || tokenType == divTok);
-		}
+	if (tokenType == multTok || tokenType == divTok) {
+		do {
+			op = tokenType;
+			nextTok();
+			typeVar = term();
+			switch (op) {
+			case multTok: gen(CMULT, NULL); break;
+			case divTok: gen(CDIV, NULL); break;
+			}
+		} while (tokenType == multTok || tokenType == divTok);
 	}
 	return typeVar;
 }
 
-TypeVar addend(void) {
+TypeVar addend() {
 	TypeVar typeVar = factor();
 	TokenType op;
-	if (typeVar == intType) {
-		if (tokenType == plusTok || tokenType == minusTok) {
-			do {
-				op = tokenType;
-				nextTok();
-				typeVar = factor();
-				if (typeVar != intType) 
-					error("syntax error");
-				switch (op) {
-				case plusTok: gen(CPLUS, NULL); break;
-				case minusTok: gen(CMINUS, NULL); break;
-				}
-			} while (tokenType == plusTok || tokenType == minusTok);
-		}
+	if (tokenType == plusTok || tokenType == minusTok) {
+		do {
+			op = tokenType;
+			nextTok();
+			typeVar = factor();
+			switch (op) {
+			case plusTok: gen(CPLUS, NULL); break;
+			case minusTok: gen(CMINUS, NULL); break;
+			}
+		} while (tokenType == plusTok || tokenType == minusTok);
 	}
 	return typeVar;
 }
 
-TypeVar module(void){
+TypeVar module(){
 	TypeVar typeVar = addend();
 	TokenType op;
 	if (typeVar == intType) {
@@ -116,7 +107,7 @@ TypeVar module(void){
 				nextTok();
 				typeVar = addend();
 				if (typeVar != intType)
-					error("syntax error");
+					error("syntax error", 1);
 				gen(CMOD, NULL);
 			} while (tokenType == modTok);
 		}
@@ -124,50 +115,49 @@ TypeVar module(void){
 	return typeVar;
 }
 
-TypeVar test(void) {
+TypeVar test() {
 	TypeVar typeVar = module();
 	TokenType op;
-	if (typeVar == intType) {
-		if (tokenType == equalTok || tokenType == moreTok || tokenType == moreEQTok ||
-			tokenType == lessTok || tokenType == lessEQTok || tokenType == notEQTok) {
-			op = tokenType;
-			nextTok();
-			typeVar = module();
-			if (typeVar != intType)
-				error("syntax error");
-			switch (op) {
-			case equalTok: gen(CEQUAL, NULL); break;
-			case moreTok: gen(CMORE, NULL); break;
-			case moreEQTok: gen(CMOREEQ, NULL); break;
-			case lessTok: gen(CLESS, NULL); break;
-			case lessEQTok: gen(CLESSEQ, NULL); break;
-			case notEQTok: gen(CNOTEQ, NULL); break;
-			}
-			return boolType;
+	if (tokenType == equalTok || tokenType == moreTok || tokenType == moreEQTok ||
+		tokenType == lessTok || tokenType == lessEQTok || tokenType == notEQTok) {
+		op = tokenType;
+		nextTok();
+		typeVar = module();
+		switch (op) {
+		case equalTok: gen(CEQUAL, NULL); break;
+		case moreTok: gen(CMORE, NULL); break;
+		case moreEQTok: gen(CMOREEQ, NULL); break;
+		case lessTok: gen(CLESS, NULL); break;
+		case lessEQTok: gen(CLESSEQ, NULL); break;
+		case notEQTok: gen(CNOTEQ, NULL); break;
 		}
+		return boolType;
 	}
 	return typeVar;
 }
 
-TypeVar expr(void) { 
+TypeVar expr() {
 	TypeVar typeVar = test();
-	if (typeVar == noneType) 
-		error("syntax error");
+	if (typeVar == noneType)
+		error("syntax error", 1);
 	return typeVar;
 }
 
-void assing(void) {
+// assignment function
+void assing() {
 	StackTok *nameVar = find(name);
 	TokenType bufferTT;
+	if (nameVar->constType == 1)
+		error("syntax error", 1);
 	nextTok();
 	bufferTT = tokenType;
 	nextTok();
-	expr(); 
+	expr();
 	if (nameVar->value == NULL) {
 		if (tokenType == assignTok)
-			nameVar->value = (int*)malloc(sizeof(int));
+			nameVar->value = malloc(sizeof(int));
 		else
-			error("syntax error");
+			error("syntax error", 1);
 	}
 	gen(CLOAD, nameVar->value);
 	switch (bufferTT) {
@@ -177,40 +167,51 @@ void assing(void) {
 	case divATok: gen(CDIVA, NULL); break;
 	case modATok: gen(CMODA, NULL); break;
 	case assignTok: gen(CASSIGN, NULL); break;
-	default: error("syntax error"); break;
+	default: error("syntax error", 1); break;
 	}
 	checkTok(semiTok);
 }
 
-void initVar(void) {
+// initialization variable
+void initVar() {
 	TypeVar typeVar = findType(name);
-	if (typeVar != noneType) {
+	int buffer;
+	if (typeVar == constType) {
+		buffer = 1;
 		nextTok();
-		checkTok(nameTok);
-		if (tokenType == assignTok) {
-			char bufferName[NAMESIZE];
-			strcpy(bufferName, name);
+		typeVar = findType(name);
+	}
+	if (typeVar != noneType && typeVar != constType) {
+		do {
 			nextTok();
-			if (typeVar != expr())
-				error("syntax error");
-			newToken(bufferName, 1, varTok, typeVar);
-			gen(CLOAD, find(bufferName)->value);
-			gen(CASSIGN, NULL);
-		}
-		else
-			newToken(name, NULL, varTok, typeVar);
+			checkTok(nameTok);
+			if (tokenType == assignTok) {
+				char bufferName[NAMESIZE];
+				strcpy(bufferName, name);
+				nextTok();
+				if (typeVar != expr())
+					error("syntax error", 1);
+				newToken(bufferName, 1, buffer);
+				gen(CLOAD, find(bufferName)->value);
+				gen(CASSIGN, NULL);
+			}
+			else
+				newToken(name, NULL, buffer);
+		} while (tokenType == commaTok);
 	}
 	else
-		error("unknown type");
+		error("unknown type", 1);
 	checkTok(semiTok);
 }
 
-void initWhile(void) {
-	int *point = (int*)malloc(sizeof(int));
+
+// initialization while
+void initWhile() {
+	int *point = malloc(sizeof(int));
 	nextTok();
 	checkTok(LbraketTok);
 	if (expr() != boolType)
-		error("syntax error");
+		error("syntax error", 1);
 	checkTok(RbraketTok);
 	gen(CWHILE, cGen - 2);
 	gen(CJUMP, point);
@@ -221,13 +222,14 @@ void initWhile(void) {
 	gen(CSTOP, NULL);
 }
 
-void initIf(void) {
-	int *point1 = (int*)malloc(sizeof(int)),
-		*point2 = (int*)malloc(sizeof(int));
+// initialization if
+void initIf() {
+	int *point1 = malloc(sizeof(int)),
+		*point2 = malloc(sizeof(int));
 	nextTok();
 	checkTok(LbraketTok);
-	if (expr() != boolType) 
-		error("syntax error");
+	if (expr() != boolType)
+		error("syntax error", 1);
 	checkTok(RbraketTok);
 	gen(CIF, NULL);
 	gen(CJUMP, point1);
@@ -248,82 +250,82 @@ void initIf(void) {
 	}
 }
 
-void statement(void) {
+// output function initialization
+void initPrint() {
+	TokenType bufferTT = tokenType;
+	nextTok();
+	checkTok(LbraketTok);
+	if (tokenType == nameTok) {
+		gen(CPRINT, find(name)->value);
+		nextTok();
+	}
+	else if (tokenType == numTok) {
+		if (expr() != intType)
+			error("syntax error", 1);
+		gen(CPRINTN, NULL);
+	}
+	else if (tokenType == doblQuotTok) {
+		char *text = malloc(sizeof(char) * 1024);
+		int i = 0;
+		while (CH != '\"' && CH != EOF) {
+			if (i >= 1024)
+				error("big the text", 1);
+			text[i++] = CH;
+			getNextCH();
+		}
+		if (CH == EOF)
+			error("syntax error", 1);
+		text[i] = '\0';
+		getNextCH();
+		gen(CPRINTS, text);
+		nextTok();
+	}
+	else
+		error("syntax error", 1);
+	if (bufferTT == printlnTok)
+		gen(CPRINTLN, NULL);
+	checkTok(RbraketTok);
+	checkTok(semiTok);
+}
+
+// initialization of the input function
+void initInput() {
+	nextTok();
+	checkTok(LbraketTok);
+	if (tokenType != nameTok)
+		error("syntax error", 1);
+	StackTok *nameVar = find(name);
+	if (nameVar->value == NULL)
+		nameVar->value = malloc(sizeof(int));
+	gen(CINPUT, nameVar->value);
+	nextTok();
+	checkTok(RbraketTok);
+	checkTok(semiTok);
+}
+
+void statement() {
 	while (tokenType != RbracesTok && tokenType != eofTok) {
-		if (tokenType == nameTok) {
-			puts("a");
+		if (tokenType == nameTok)
 			assing();
-		}
-		else if (tokenType == typeTok) {
-			puts("b");
+		else if (tokenType == typeTok)
 			initVar();
-		}
-		else if (tokenType == whileTok) {
-			puts("c");
+		else if (tokenType == whileTok)
 			initWhile();
-		}
-		else if (tokenType == ifTok) {
-			puts("s");
+		else if (tokenType == ifTok)
 			initIf();
-		}
-		else if (tokenType == printTok) {
-			puts("d");
-			nextTok();
-			checkTok(LbraketTok);
-			if (tokenType == nameTok) {
-				gen(CPRINT, find(name)->value);
-				nextTok();
-			}
-			else if (tokenType == numTok) {
-				if (expr() != intType) 
-					error("syntax error");
-				gen(CPRINTN, NULL);
-			}
-			else if (tokenType == doblQuotTok) {
-				char *text = (char*)malloc(sizeof(char) * 1024);
-				int i = 0;
-				while (CH != '\"' && CH != EOF) {
-					if (i >= 1024)
-						error("big the text");
-					text[i++] = CH;
-					getNextCH();
-				}
-				if (CH == EOF) 
-					error("syntax error");
-				text[i] = '\0';
-				getNextCH();
-				gen(CPRINTS, text);
-				nextTok();
-			}
-			else
-				error("syntax error");
-			checkTok(RbraketTok);
-			checkTok(semiTok);
-		}
-		else if (tokenType == scanTok) {
-			puts("n");
-			nextTok();
-			checkTok(LbraketTok);
-			if (tokenType != nameTok)
-				error("syntax error");
-			StackTok *nameVar = find(name);
-			if (nameVar->value == NULL) 
-				nameVar->value = (int*)malloc(sizeof(int));
-			gen(CSCAN, nameVar->value);
-			nextTok();
-			checkTok(RbraketTok);
-			checkTok(semiTok);
-		}
+		else if (tokenType == printTok || tokenType == printlnTok)
+			initPrint();
+		else if (tokenType == inputTok)
+			initInput();
 	}
 	if (tokenType == eofTok)
-		error("syntax error");
+		error("syntax error", 1);
 }
 
 void parsing(void) {
-	newToken("", NULL, startTok, noneType);
+	newToken("", NULL, 2);
 	checkTok(LbracesTok);
 	statement();
 	checkTok(RbracesTok);
 	gen(CSTOP, NULL);
-	gen(CEND, NULL); // for the test
 }

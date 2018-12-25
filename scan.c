@@ -9,21 +9,21 @@
 extern FILE* file;
 char CH, bufferCH;
 TokenType tokenType;
-int value;
+int nValue; // num value
 char name[NAMESIZE];
-int posLine = 1, posSym = 0;
+int posLine = 1, posSym = 0; // character and line position
 
-void getNextCH(void) {
+void getNextCH() {
 	CH = bufferCH;
 	bufferCH = fgetc(file);
 	posSym++;
 }
 
-void readIdent(void) {
+void readIdent() {
 	int i = 0;
 	while (isalnum(CH)) {
 		if (i > NAMESIZE - 1)
-			error("big the name");
+			error("big the name", 1);
 		name[i++] = CH;
 		getNextCH();
 	}
@@ -33,17 +33,17 @@ void readIdent(void) {
 		tokenType = nameTok;
 }
 
-void readNum(void) {
-	int IorD = 0;
-	value = 0;
+void readNum() {
+	int i = 10;
+	nValue = 0;
 	while (isdigit(CH)) {
-		value = value * 10 + CH - '0';
+		nValue = nValue * 10 + CH - '0';
 		getNextCH();
 	}
 	tokenType = numTok;
 }
 
-void nextTok(void) {
+void nextTok() {
 	while (isspace(CH)) {
 		if (CH == '\n') {
 			posSym = 0;
@@ -51,9 +51,9 @@ void nextTok(void) {
 		}
 		getNextCH();
 	}
-	if (isalpha(CH)) 
+	if (isalpha(CH))
 		readIdent();
-	else if (isalnum(CH)) 
+	else if (isdigit(CH))
 		readNum();
 	else {
 		switch (CH)	{
@@ -71,7 +71,7 @@ void nextTok(void) {
 				tokenType = minusATok;
 				getNextCH();
 			}
-			else 
+			else
 				tokenType = minusTok;
 			getNextCH();
 			break;
@@ -110,7 +110,7 @@ void nextTok(void) {
 				tokenType = multATok;
 				getNextCH();
 			}
-			else 
+			else
 				tokenType = multTok;
 			getNextCH();
 			break;
@@ -153,7 +153,7 @@ void nextTok(void) {
 				tokenType = equalTok;
 				getNextCH();
 			}
-			else 
+			else
 				tokenType = assignTok;
 			getNextCH();
 			break;
@@ -170,7 +170,7 @@ void nextTok(void) {
 				tokenType = modATok;
 				getNextCH();
 			}
-			else 
+			else
 				tokenType = modTok;
 			getNextCH();
 			break;
@@ -180,46 +180,19 @@ void nextTok(void) {
 				getNextCH();
 			}
 			else
-				error("syntax error");
-			getNextCH();
-			break;
-		case '\'':
-			tokenType = singlQuotTok;
+				error("syntax error", 1);
 			getNextCH();
 			break;
 		case '\"':
 			tokenType = doblQuotTok;
 			getNextCH();
 			break;
-		case '\\':
-			tokenType = backSlashTok;
-			getNextCH();
-			break;
-		case '|':
-			if (bufferCH == '|') {
-				tokenType = orTok;
-				getNextCH();
-			}
-			else
-				error("syntax error");
-			getNextCH();
-			break;
-		case '&':
-			if (bufferCH == '&') {
-				tokenType = andTok;
-				getNextCH();
-			}
-			else
-				error("syntax error");
-			getNextCH();
-			break;
 		case EOF:
 			tokenType = eofTok;
 			break;
 		default:
-			error("syntax error");
+			error("syntax error", 1);
 			break;
 		}
 	}
 }
-

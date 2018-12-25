@@ -1,11 +1,8 @@
 #ifndef PARS_H
 #define PARS_H
 
-#include "scan.h"
-
-extern TokenType bufferTT;
-
-void statement(void);
-void parsing(void);
+TypeVar expr();
+void statement();
+void parsing();
 
 #endif

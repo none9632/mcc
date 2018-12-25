@@ -1,95 +1,92 @@
-#define _CRT_SECURE_NO_WARNINGS
-
-#include <stdio.h> 
+#include <stdio.h>
 #include <malloc.h>
 #include <string.h>
 
 #include "launch.h"
 #include "gen.h"
+#include "launch.h"
 
-int b = 0;
 int cLaunch = 0;  // counter in file launch
 int bufferCount;
-int *point; // for go to the pointer
-int *bufferPoint;
 
-int CDriver(Commands command, int *var) {
+// executes commands from the list of commands
+int *CDriver(Commands command, int *var) {
 	switch (command.command) {
 	case CNONE:
 		if (var != NULL)
 			*var = command.var;
 		break;
 	case CNONEP:
-		if (var != NULL) {
-			int *point = command.var;
-			*var = *point;
-		}
+		if (var != NULL)
+			*var = *command.var;
 		break;
 	case CNEG:
 		if (var != NULL) {
-			point = (int*)malloc(sizeof(int));
-			*point = CDriver(commands[--bufferCount], point);
+			int *point = malloc(sizeof(int));
+			CDriver(commands[--bufferCount], point);
 			*var = -*point;
 		}
 		break;
 	case CNEGP:
-		if (var != NULL) {
-			int *point = command.var;
-			*var = -*point;
-		}
+		if (var != NULL)
+			*var = -*command.var;
 		break;
 	case CPLUS:
 		if (var != NULL) {
 			int bufferVar;
-			*var = CDriver(commands[--bufferCount], var);
+			CDriver(commands[--bufferCount], var);
 			bufferVar = *var;
-			*var = CDriver(commands[--bufferCount], var) + bufferVar;
+			CDriver(commands[--bufferCount], var);
+			*var += bufferVar;
 		}
 		break;
 	case CMINUS:
 		if (var != NULL) {
 			int bufferVar;
-			*var = CDriver(commands[--bufferCount], var);
+			CDriver(commands[--bufferCount], var);
 			bufferVar = *var;
-			*var = CDriver(commands[--bufferCount], var) - bufferVar;
+			CDriver(commands[--bufferCount], var);
+			*var -= bufferVar;
 		}
 		break;
 	case CMULT:
 		if (var != NULL) {
 			int bufferVar;
-			*var = CDriver(commands[--bufferCount], var);
+			CDriver(commands[--bufferCount], var);
 			bufferVar = *var;
-			*var = CDriver(commands[--bufferCount], var) * bufferVar;
+			CDriver(commands[--bufferCount], var);
+			*var *= bufferVar;
 		}
 		break;
 	case CDIV:
 		if (var != NULL) {
 			int bufferVar;
-			*var = CDriver(commands[--bufferCount], var);
+			CDriver(commands[--bufferCount], var);
 			bufferVar = *var;
-			*var = CDriver(commands[--bufferCount], var) / bufferVar;
+			CDriver(commands[--bufferCount], var);
+			*var /= bufferVar;
 		}
 		break;
 	case CMOD:
 		if (var != NULL) {
 			int bufferVar;
-			*var = CDriver(commands[--bufferCount], var);
+			CDriver(commands[--bufferCount], var);
 			bufferVar = *var;
-			*var = CDriver(commands[--bufferCount], var) % bufferVar;
+			CDriver(commands[--bufferCount], var);
+			*var %= bufferVar;
 		}
 		break;
 	case CJUMP: {
-		int *point = command.var;
-		cLaunch = *point;
+		cLaunch = *command.var;
 		break;
 	}
 	case CIF: {
 		int saveCommand = commands[--bufferCount].command,
-			*point = (int*)malloc(sizeof(int)),
-			*bufferPoint = (int*)malloc(sizeof(int)),
+			*point = malloc(sizeof(int)),
+			*bufferPoint = malloc(sizeof(int)),
 			buffer = 0;
-		*point = CDriver(commands[--bufferCount], point);
-		*bufferPoint = CDriver(commands[--bufferCount], bufferPoint);
+		CDriver(commands[--bufferCount], point);
+		CDriver(commands[--bufferCount], bufferPoint);
 		cLaunch++;
 		switch (saveCommand) {
 		case CEQUAL:
@@ -129,11 +126,11 @@ int CDriver(Commands command, int *var) {
 				buffer++;
 			break;
 		}
-		launching(); 
+		launching();
 		if (commands[++cLaunch].command == CELSE) {
-			if (buffer == 1) 
+			if (buffer == 1)
 				cLaunch += 2;
-			else 
+			else
 				cLaunch++;
 			launching();
 		}
@@ -143,10 +140,10 @@ int CDriver(Commands command, int *var) {
 	}
 	case CWHILE: {
 		int saveCommand = commands[--bufferCount].command,
-			*point = (int*)malloc(sizeof(int)),
-			*bufferPoint = (int*)malloc(sizeof(int));
-		*point = CDriver(commands[--bufferCount], point);
-		*bufferPoint = CDriver(commands[--bufferCount], bufferPoint);
+			*point = malloc(sizeof(int)),
+			*bufferPoint = malloc(sizeof(int));
+		CDriver(commands[--bufferCount], point);
+		CDriver(commands[--bufferCount], bufferPoint);
 		switch (saveCommand) {
 		case CEQUAL:
 			if (*bufferPoint == *point) {
@@ -196,148 +193,58 @@ int CDriver(Commands command, int *var) {
 	case CPRINT:
 		if (command.var == NULL)
 			error("syntax error");
-		point = command.var;
-		printf("%d", *point);
+		printf("%d", *command.var);
 		break;
 	case CPRINTN: {
-		int *point = (int*)malloc(sizeof(int));
-		*point = CDriver(commands[--bufferCount], point);
+		int *point = malloc(sizeof(double));
+		CDriver(commands[--bufferCount], point);
 		printf("%d", *point);
 		break;
 	}
-	case CPRINTS: 
+	case CPRINTS:
 		printf("%s", command.var);
 		break;
-	case CSCAN:
-		point = command.var;
-		scanf("%d", point);
+	case CPRINTLN:
+		printf("\n");
 		break;
-	case CLOAD:
-		point = (int*)malloc(sizeof(int));
-		*point = CDriver(commands[--bufferCount], point);
-		bufferPoint = command.var;
+	case CINPUT:
+		scanf("%d", command.var);
+		break;
+	case CLOAD: {
+		int *point = malloc(sizeof(double));
+		CDriver(commands[--bufferCount], point);
 		bufferCount = cLaunch;
 		switch (commands[++bufferCount].command) {
 		case CPLUSA:
-			*bufferPoint += *point;
+			*command.var += *point;
 			break;
 		case CMINUSA:
-			*bufferPoint -= *point;
+			*command.var -= *point;
 			break;
 		case CMULTA:
-			*bufferPoint *= *point;
+			*command.var *= *point;
 			break;
 		case CDIVA:
-			*bufferPoint /= *point;
+			*command.var /= *point;
 			break;
 		case CMODA:
-			*bufferPoint %= *point;
+			*command.var %= *point;
 			break;
 		case CASSIGN:
-			*bufferPoint = *point;
+			*command.var = *point;
 			break;
 		}
+		free(point);
 		break;
+	}
 	}
 	if (var == NULL)
 		return 0;
 	return *var;
 }
 
-void a(void) {
-	int count = 0;
-	while (commands[count].command != CEND) {
-		switch (commands[count].command) {
-		case CNONE:
-			printf("%d cnone - %d\n", cLaunch, commands[count].var);
-			break;
-		case CNONEP:
-			printf("%d cnonep - %d\n", cLaunch, commands[count].var);
-			break;
-		case CLOAD:
-			printf("%d cload - %d\n", cLaunch, commands[count].var);
-			break;
-		case CMULT:
-			printf("%d cmult\n", cLaunch);
-			break;
-		case CPLUS:
-			printf("%d cplus\n", cLaunch);
-			break;
-		case CPRINT:
-			printf("%d cprint - %d\n", cLaunch, commands[count].var);
-			break;
-		case CSCAN:
-			printf("%d cscan\n", cLaunch);
-			break;
-		case CMORE:
-			printf("%d cmore\n", cLaunch);
-			break;
-		case CLESS:
-			printf("%d cless\n", cLaunch);
-			break;
-		case CNOTEQ:
-			printf("%d cnoteq\n", cLaunch);
-			break;
-		case CEQUAL:
-			printf("%d cequal\n", cLaunch);
-			break;
-		case CLESSEQ:
-			printf("%d clesseq\n", cLaunch);
-			break;
-		case CMOREEQ:
-			printf("%d cmoreeq\n", cLaunch);
-			break;
-		case CDIV:
-			printf("%d cdiv\n", cLaunch);
-			break;
-		case CMOD:
-			printf("%d cmod\n", cLaunch);
-			break;
-		case CMODA:
-			printf("%d cmoda\n", cLaunch);
-			break;
-		case CPLUSA:
-			printf("%d cplusa\n", cLaunch);
-			break;
-		case CMINUSA:
-			printf("%d cminusa\n", cLaunch);
-			break;
-		case CDIVA:
-			printf("%d cdiva\n", cLaunch);
-			break;
-		case CMULTA:
-			printf("%d cmulta\n", cLaunch);
-			break;
-		case CIF:
-			printf("%d cif - %d\n", cLaunch, commands[count].var);
-			break;
-		case CELSE:
-			printf("%d celse - %d\n", cLaunch, commands[count].var);
-			break;
-		case CWHILE:
-			printf("%d cwhile - %d\n", cLaunch, commands[count].var);
-			break;
-		case CJUMP: {
-			int *point = commands[count].var;
-			printf("%d cjump - %d\n", cLaunch, *point);
-			break;
-		}
-		case CASSIGN:
-			printf("%d cassign\n", cLaunch);
-			break;
-		case CSTOP:
-			printf("%d cstop\n", cLaunch);
-			break;
-		}
-		count++;
-		cLaunch++;
-	}
-	b++;
-	cLaunch = 0;
-}
-
-void launching(void) {
-	//if (b == 0) a();
+// runs command execution
+void launching() {
 	while (commands[cLaunch].command != CSTOP) {
 		bufferCount = cLaunch;
 		CDriver(commands[cLaunch], NULL);

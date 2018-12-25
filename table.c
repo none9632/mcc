@@ -3,72 +3,68 @@
 #include "scan.h"
 #include "table.h"
 
-StackTok *top = NULL;
-int _count = 0;
+StackTok *top;
 
-void enterTableNames(char *_name, TokenType _type) {
-	strcpy(TableNames[_count].name, _name);
-	TableNames[_count++].type = _type;
+void enterTableNames(char *name, TokenType type) {
+	static int count = 0;
+	strcpy(TableNames[count].name, name);
+	TableNames[count++].type = type;
 }
 
-void newToken(char *_name, int _value, TokenType _tokenType, TypeVar _typeVar) {
-	StackTok *newTok = (StackTok*)malloc(sizeof(StackTok));
-	strcpy(newTok->name, _name);
-	if (_value == 1)
-		newTok->value = (int*)malloc(sizeof(int));
+// will create a new token in the stack
+void newToken(char *name, int value, int constType) {
+	StackTok *newTok = malloc(sizeof(StackTok));
+	strcpy(newTok->name, name);
+	if (value == 1)
+		newTok->value = malloc(sizeof(int));
 	else
 		newTok->value = NULL;
-	newTok->tokenType = _tokenType;
-	newTok->typeVar = _typeVar;
+	newTok->constType = constType;
 	newTok->low = top;
 	top = newTok;
 }
 
-StackTok* find(char *_name) {
+// searches for matches with the name on the stack
+StackTok* find(char *name) {
 	StackTok *tokObj = top;
-	while (tokObj->tokenType != startTok) {
-		if (strcmp(_name, tokObj->name) == 0) 
+	while (tokObj->constType != 2) {
+		if (strcmp(name, tokObj->name) == 0)
 			break;
 		tokObj = tokObj->low;
 	}
-	if (tokObj->tokenType == startTok) 
-		error("undeclared variable name");
+	if (tokObj->constType == 2)
+		error("not identifier defined");
 	return tokObj;
 }
 
+// looking for type
 TypeVar findType(char *_name) {
 	if (strcmp(_name, "int") == 0)
 		return intType;
-	else if (strcmp(_name, "double") == 0)
-		return doubleType;
-	else if (strcmp(_name, "char") == 0)
-		return charType;
-	else if (strcmp(_name, "bool") == 0)
-		return boolType;
+	else if (strcmp(_name, "const") == 0)
+		return constType;
 	else
 		return noneType;
 }
 
-TokenType searchTN(char *_name) {
+// searches for matches in the name table
+TokenType searchTN(char *name) {
 	for (int i = 0; i < SIZETABLE; i++) {
-		if (strcmp(_name, TableNames[i].name) == 0) {
+		if (strcmp(name, TableNames[i].name) == 0) {
 			return TableNames[i].type;
 		}
 	}
 	return noneTok;
 }
 
-void enter(void) {
+void enter() {
 	enterTableNames("while", whileTok);
 	enterTableNames("if", ifTok);
 	enterTableNames("else", elseTok);
 	enterTableNames("for", forTok);
 	enterTableNames("const", typeTok);
 	enterTableNames("int", typeTok);
-	enterTableNames("double", typeTok);
-	enterTableNames("char", typeTok);
-	enterTableNames("bool", typeTok);
 	enterTableNames("print", printTok);
 	enterTableNames("println", printlnTok);
-	enterTableNames("scan", scanTok);
+	enterTableNames("input", inputTok);
 }

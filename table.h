@@ -1,7 +1,7 @@
 #ifndef TABLE_H
 #define TABLE_H
 
-#define SIZETABLE 12
+#define SIZETABLE 9
 #define NAMESIZE 32
 
 typedef enum {
@@ -9,16 +9,14 @@ typedef enum {
 	RbraketTok, multTok, divTok, moreTok, lessTok,
 	moreEQTok, lessEQTok, assignTok, minusTok, plusTok,
 	equalTok, modTok, RbracesTok, LbracesTok, forTok,
-	elseTok, whileTok, ifTok, startTok, noneTok,
-	typeTok, varTok, notEQTok, printTok, scanTok,
-	doblQuotTok, singlQuotTok, backSlashTok,
-	eofTok, andTok, orTok, multATok, divATok, 
-	plusATok, minusATok, modATok, printlnTok
+	elseTok, whileTok, ifTok, typeTok, varTok, noneTok,
+	notEQTok, printTok, inputTok, doblQuotTok, eofTok,
+	multATok, divATok, plusATok, minusATok, modATok,
+	printlnTok,
 } TokenType;
 
 typedef enum {
-	intType, doubleType, charType, noneType, 
-	boolType, constType
+	intType, noneType, constType, boolType
 } TypeVar;
 
 struct embeddedNames {
@@ -29,17 +27,16 @@ struct embeddedNames {
 typedef struct Token {
 	char name[NAMESIZE];
 	int *value;
-	TokenType tokenType;
-	TypeVar typeVar;
+	int constType;
 	struct Token* low;
 } StackTok;
 
 extern StackTok *top;
 
-void newToken(char *_name, int _value, TokenType _tokenType, TypeVar _typeVar);
-int searchTN(char *_name);
-StackTok* find(char *_name);
-TypeVar findType(char *_name);
-void enter(void);
+void newToken(char *name, int value, int constType);
+TokenType searchTN(char *name);
+StackTok* find(char *name);
+TypeVar findType(char *name);
+void enter();
 
 #endif
