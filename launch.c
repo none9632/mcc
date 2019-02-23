@@ -4,13 +4,13 @@
 
 #include "launch.h"
 #include "gen.h"
-#include "launch.h"
+#include "error.h"
 
 int cLaunch = 0;  // counter in file launch
 int bufferCount;
 
 // executes commands from the list of commands
-int *CDriver(Commands command, int *var) {
+int CDriver(Commands command, int *var) {
 	switch (command.command) {
 	case CNONE:
 		if (var != NULL)
@@ -192,7 +192,7 @@ int *CDriver(Commands command, int *var) {
 	}
 	case CPRINT:
 		if (command.var == NULL)
-			error("syntax error");
+			error("syntax error", 0);
 		printf("%d", *command.var);
 		break;
 	case CPRINTN: {
@@ -241,6 +241,114 @@ int *CDriver(Commands command, int *var) {
 	if (var == NULL)
 		return 0;
 	return *var;
+}
+
+void printCommands() {
+	int b = 0;
+	while (commands[b].command != CSTOP) {
+		switch (commands[b].command) {
+			case CPLUS:
+				printf("cplus - %p\n", commands[b].var);
+				break;
+			case CMINUS:
+				printf("cminus - %p\n", commands[b].var);
+				break;
+			case CMULT:
+				printf("cmult - %p\n", commands[b].var);
+				break;
+			case CDIV:
+				printf("cdiv - %p\n", commands[b].var);
+				break;
+			case CMOD:
+				printf("cmod - %p\n", commands[b].var);
+				break;
+			case CIF:
+				printf("cif - %p\n", commands[b].var);
+				break;
+			case CWHILE:
+				printf("cwhile - %p\n", commands[b].var);
+				break;
+			case CPRINT:
+				printf("cprint - %p\n", commands[b].var);
+				break;
+			case CPRINTN:
+				printf("cprintn - %p\n", commands[b].var);
+				break;
+			case CPRINTS:
+				printf("cprints - %p\n", commands[b].var);
+				break;
+			case CPRINTLN:
+				printf("cprintln - %p\n", commands[b].var);
+				break;
+			case CSTOP:
+				printf("cstop - %p\n", commands[b].var);
+				break;
+			case CDOUBLE:
+				printf("cdouble - %p\n", commands[b].var);
+				break;
+			case CNONE:
+				printf("cnone - %p\n", commands[b].var);
+				break;
+			case CNEG:
+				printf("cneg - %p\n", commands[b].var);
+				break;
+			case CNONEP:
+				printf("cnonep - %p\n", commands[b].var);
+				break;
+			case CINPUT:
+				printf("cinput - %p\n", commands[b].var);
+				break;
+			case CPLUSA:
+				printf("cplusa - %p\n", commands[b].var);
+				break;
+			case CMINUSA:
+				printf("cminusa - %p\n", commands[b].var);
+				break;
+			case CMULTA:
+				printf("cmulta - %p\n", commands[b].var);
+				break;
+			case CDIVA:
+				printf("cdiva - %p\n", commands[b].var);
+				break;
+			case CMODA:
+				printf("cmoda - %p\n", commands[b].var);
+				break;
+			case CASSIGN:
+				printf("cassign - %p\n", commands[b].var);
+				break;
+			case CLOAD:
+				printf("cload - %p\n", commands[b].var);
+				break;
+			case CEQUAL:
+				printf("cequal - %p\n", commands[b].var);
+				break;
+			case CNOTEQ:
+				printf("cnoteq - %p\n", commands[b].var);
+				break;
+			case CMORE:
+				printf("cmore - %p\n", commands[b].var);
+				break;
+			case CLESS:
+				printf("cless - %p\n", commands[b].var);
+				break;
+			case CMOREEQ:
+				printf("cmoreeq - %p\n", commands[b].var);
+				break;
+			case CLESSEQ:
+				printf("clesseq - %p\n", commands[b].var);
+				break;
+			case CJUMP:
+				printf("cjump - %p\n", commands[b].var);
+				break;
+			case CNEGP:
+				printf("cnegp - %p\n", commands[b].var);
+				break;
+			case CELSE:
+				printf("celse - %p\n", commands[b].var);
+				break;
+		}
+		b++;
+	}
 }
 
 // runs command execution

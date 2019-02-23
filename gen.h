@@ -7,7 +7,7 @@ typedef struct Command {
 } Commands;
 
 extern Commands *commands;
-extern cGen;
+extern int cGen;
 
 void gen(int command, int *var);
 

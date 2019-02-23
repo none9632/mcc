@@ -5,7 +5,7 @@
 #include "pars.h"
 #include "error.h"
 #include "scan.h"
-
+//test
 extern FILE* file;
 char CH, bufferCH;
 TokenType tokenType;

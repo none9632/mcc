@@ -11,6 +11,7 @@ enum {
 	CLESSEQ, CJUMP, CNEGP, CELSE
 };
 
+void printCommands();
 void launching();
 
 #endif

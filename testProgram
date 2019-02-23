@@ -1,3 +1,9 @@
 {
-  println("hello world");
+    int n;
+    print("input number: ");
+    input(n);
+    while (n > 0) {
+        println(n);
+        n -= 1;
+    }
 }

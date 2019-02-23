@@ -1,5 +1,7 @@
 #include <stdlib.h>
+#include <string.h>
 
+#include "error.h"
 #include "scan.h"
 #include "table.h"
 
@@ -33,7 +35,7 @@ StackTok* find(char *name) {
 		tokObj = tokObj->low;
 	}
 	if (tokObj->constType == 2)
-		error("not identifier defined");
+		error("not identifier defined", 1);
 	return tokObj;
 }
 

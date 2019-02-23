@@ -196,7 +196,7 @@ void initVar() {
 				gen(CASSIGN, NULL);
 			}
 			else
-				newToken(name, NULL, buffer);
+				newToken(name, 0, buffer);
 		} while (tokenType == commaTok);
 	}
 	else
@@ -323,7 +323,7 @@ void statement() {
 }
 
 void parsing(void) {
-	newToken("", NULL, 2);
+	newToken("", 0, 2);
 	checkTok(LbracesTok);
 	statement();
 	checkTok(RbracesTok);

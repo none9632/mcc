@@ -1,0 +1,50 @@
+launch.c: In function ‘CDriver’:
+launch.c:17:9: warning: assignment makes integer from pointer without a cast [-Wint-conversion]
+    *var = command.var;
+         ^
+launch.c:152:13: warning: assignment makes integer from pointer without a cast [-Wint-conversion]
+     cLaunch = command.var;
+             ^
+launch.c:159:13: warning: assignment makes integer from pointer without a cast [-Wint-conversion]
+     cLaunch = command.var;
+             ^
+launch.c:166:13: warning: assignment makes integer from pointer without a cast [-Wint-conversion]
+     cLaunch = command.var;
+             ^
+launch.c:173:13: warning: assignment makes integer from pointer without a cast [-Wint-conversion]
+     cLaunch = command.var;
+             ^
+launch.c:180:13: warning: assignment makes integer from pointer without a cast [-Wint-conversion]
+     cLaunch = command.var;
+             ^
+launch.c:187:13: warning: assignment makes integer from pointer without a cast [-Wint-conversion]
+     cLaunch = command.var;
+             ^
+launch.c:205:12: warning: format ‘%s’ expects argument of type ‘char *’, but argument 2 has type ‘int *’ [-Wformat=]
+   printf("%s", command.var);
+           ~^   ~~~~~~~~~~~
+           %ls
+pars.c: In function ‘term’:
+pars.c:32:14: warning: passing argument 2 of ‘gen’ makes pointer from integer without a cast [-Wint-conversion]
+   gen(CNONE, nValue);
+              ^~~~~~
+In file included from pars.c:8:0:
+gen.h:12:6: note: expected ‘int *’ but argument is of type ‘int’
+ void gen(int command, int *var);
+      ^~~
+pars.c: In function ‘initWhile’:
+pars.c:216:14: warning: passing argument 2 of ‘gen’ makes pointer from integer without a cast [-Wint-conversion]
+  gen(CWHILE, cGen - 2);
+              ^~~~
+In file included from pars.c:8:0:
+gen.h:12:6: note: expected ‘int *’ but argument is of type ‘int’
+ void gen(int command, int *var);
+      ^~~
+pars.c: In function ‘initPrint’:
+pars.c:280:16: warning: passing argument 2 of ‘gen’ from incompatible pointer type [-Wincompatible-pointer-types]
+   gen(CPRINTS, text);
+                ^~~~
+In file included from pars.c:8:0:
+gen.h:12:6: note: expected ‘int *’ but argument is of type ‘char *’
+ void gen(int command, int *var);
+      ^~~
