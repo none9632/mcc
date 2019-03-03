@@ -10,69 +10,69 @@ int cLaunch = 0;  // counter in file launch
 int bufferCount;
 
 // executes commands from the list of commands
-int CDriver(Commands command, int *var) {
+int *CDriver(Commands command, int bufferBit) {
+	int *var;
 	switch (command.command) {
 	case CNONE:
-		if (var != NULL)
-			*var = command.var;
+		if (bufferBit == 1)
+			var = command.var;
 		break;
 	case CNONEP:
-		if (var != NULL)
+		if (bufferBit == 1)
 			*var = *command.var;
 		break;
 	case CNEG:
-		if (var != NULL) {
-			int *point = malloc(sizeof(int));
-			CDriver(commands[--bufferCount], point);
+		if (bufferBit == 1) {
+			int *point = CDriver(commands[--bufferCount], 1);
 			*var = -*point;
 		}
 		break;
 	case CNEGP:
-		if (var != NULL)
+		if (bufferBit == 1)
 			*var = -*command.var;
 		break;
 	case CPLUS:
-		if (var != NULL) {
+		if (bufferBit == 1) {
 			int bufferVar;
-			CDriver(commands[--bufferCount], var);
+			var = CDriver(commands[--bufferCount], 1);
 			bufferVar = *var;
-			CDriver(commands[--bufferCount], var);
+			var = CDriver(commands[--bufferCount], 1);
 			*var += bufferVar;
 		}
 		break;
 	case CMINUS:
-		if (var != NULL) {
+		if (bufferBit == 1) {
 			int bufferVar;
-			CDriver(commands[--bufferCount], var);
+			var = CDriver(commands[--bufferCount], 1);
 			bufferVar = *var;
-			CDriver(commands[--bufferCount], var);
+			var = CDriver(commands[--bufferCount], 1);
 			*var -= bufferVar;
 		}
 		break;
 	case CMULT:
-		if (var != NULL) {
+		if (bufferBit == 1) {
 			int bufferVar;
-			CDriver(commands[--bufferCount], var);
+			var = CDriver(commands[--bufferCount], 1);
 			bufferVar = *var;
-			CDriver(commands[--bufferCount], var);
+			var = CDriver(commands[--bufferCount], 1);
 			*var *= bufferVar;
 		}
 		break;
 	case CDIV:
-		if (var != NULL) {
+		if (bufferBit == 1) {
 			int bufferVar;
-			CDriver(commands[--bufferCount], var);
+			var = CDriver(commands[--bufferCount], 1);
 			bufferVar = *var;
-			CDriver(commands[--bufferCount], var);
+			var = CDriver(commands[--bufferCount], 1);
 			*var /= bufferVar;
 		}
 		break;
 	case CMOD:
-		if (var != NULL) {
+		if (bufferBit == 1) {
 			int bufferVar;
-			CDriver(commands[--bufferCount], var);
+			var = CDriver(commands[--bufferCount], 1);
 			bufferVar = *var;
-			CDriver(commands[--bufferCount], var);
+			var = CDriver(commands[--bufferCount], 1);
 			*var %= bufferVar;
 		}
 		break;
@@ -82,11 +82,9 @@ int CDriver(Commands command, int *var) {
 	}
 	case CIF: {
 		int saveCommand = commands[--bufferCount].command,
-			*point = malloc(sizeof(int)),
-			*bufferPoint = malloc(sizeof(int)),
+			*point = CDriver(commands[--bufferCount], 1),
+			*bufferPoint = CDriver(commands[--bufferCount], 1),
 			buffer = 0;
-		CDriver(commands[--bufferCount], point);
-		CDriver(commands[--bufferCount], bufferPoint);
 		cLaunch++;
 		switch (saveCommand) {
 		case CEQUAL:
@@ -140,51 +138,49 @@ int CDriver(Commands command, int *var) {
 	}
 	case CWHILE: {
 		int saveCommand = commands[--bufferCount].command,
-			*point = malloc(sizeof(int)),
-			*bufferPoint = malloc(sizeof(int));
-		CDriver(commands[--bufferCount], point);
-		CDriver(commands[--bufferCount], bufferPoint);
+			*point = CDriver(commands[--bufferCount], 1),
+			*bufferPoint = CDriver(commands[--bufferCount], 1);
 		switch (saveCommand) {
 		case CEQUAL:
 			if (*bufferPoint == *point) {
 				cLaunch += 2;
 				launching();
-				cLaunch = command.var;
+				cLaunch = *command.var;
 			}
 			break;
 		case CNOTEQ:
 			if (*bufferPoint != *point) {
 				cLaunch += 2;
 				launching();
-				cLaunch = command.var;
+				cLaunch = *command.var;
 			}
 			break;
 		case CMORE:
 			if (*bufferPoint > *point) {
 				cLaunch += 2;
 				launching();
-				cLaunch = command.var;
+				cLaunch = *command.var;
 			}
 			break;
 		case CLESS:
 			if (*bufferPoint < *point) {
 				cLaunch += 2;
 				launching();
-				cLaunch = command.var;
+				cLaunch = *command.var;
 			}
 			break;
 		case CMOREEQ:
 			if (*bufferPoint >= *point) {
 				cLaunch += 2;
 				launching();
-				cLaunch = command.var;
+				cLaunch = *command.var;
 			}
 			break;
 		case CLESSEQ:
 			if (*bufferPoint <= *point) {
 				cLaunch += 2;
 				launching();
-				cLaunch = command.var;
+				cLaunch = *command.var;
 			}
 			break;
 		}
@@ -196,13 +192,12 @@ int CDriver(Commands command, int *var) {
 		printf("%d", *command.var);
 		break;
 	case CPRINTN: {
-		int *point = malloc(sizeof(double));
-		CDriver(commands[--bufferCount], point);
+		int *point = CDriver(commands[--bufferCount], 1);
 		printf("%d", *point);
 		break;
 	}
 	case CPRINTS:
-		printf("%s", command.var);
+		printf("%ls", command.var);
 		break;
 	case CPRINTLN:
 		printf("\n");
@@ -211,8 +206,7 @@ int CDriver(Commands command, int *var) {
 		scanf("%d", command.var);
 		break;
 	case CLOAD: {
-		int *point = malloc(sizeof(double));
-		CDriver(commands[--bufferCount], point);
+		int *point = CDriver(commands[--bufferCount], 1);
 		bufferCount = cLaunch;
 		switch (commands[++bufferCount].command) {
 		case CPLUSA:
@@ -238,9 +232,7 @@ int CDriver(Commands command, int *var) {
 		break;
 	}
 	}
-	if (var == NULL)
-		return 0;
-	return *var;
+	return var;
 }
 
 void printCommands() {
@@ -355,7 +347,7 @@ void printCommands() {
 void launching() {
 	while (commands[cLaunch].command != CSTOP) {
 		bufferCount = cLaunch;
-		CDriver(commands[cLaunch], NULL);
+		CDriver(commands[cLaunch], 0);
 		cLaunch++;
 	}
 }

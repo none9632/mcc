@@ -1,9 +1,6 @@
 {
-    int n;
-    print("input number: ");
-    input(n);
-    while (n > 0) {
-        println(n);
-        n -= 1;
-    }
+    int a = (23 + 3) - 2;
+    a = -a;
+    a *= -2;
+    println(a);
 }

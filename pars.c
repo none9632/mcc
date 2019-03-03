@@ -29,7 +29,9 @@ TypeVar term() {
 			nValue = -nValue;
 			minus = 0;
 		}
-		gen(CNONE, nValue);
+		int *bufferPoint = malloc(sizeof(int));
+		*bufferPoint = nValue;
+		gen(CNONE, bufferPoint);
 		nextTok();
 		return intType;
 	}
@@ -207,13 +209,15 @@ void initVar() {
 
 // initialization while
 void initWhile() {
-	int *point = malloc(sizeof(int));
+	int *point = malloc(sizeof(int)),
+		*bufferPoint = malloc(sizeof(int));
 	nextTok();
 	checkTok(LbraketTok);
 	if (expr() != boolType)
 		error("syntax error", 1);
 	checkTok(RbraketTok);
-	gen(CWHILE, cGen - 2);
+	*bufferPoint = cGen - 2;
+	gen(CWHILE, bufferPoint);
 	gen(CJUMP, point);
 	checkTok(LbracesTok);
 	statement();
@@ -265,7 +269,7 @@ void initPrint() {
 		gen(CPRINTN, NULL);
 	}
 	else if (tokenType == doblQuotTok) {
-		char *text = malloc(sizeof(char) * 1024);
+		int *text = malloc(sizeof(char) * 1024);
 		int i = 0;
 		while (CH != '\"' && CH != EOF) {
 			if (i >= 1024)
