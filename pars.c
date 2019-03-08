@@ -216,7 +216,7 @@ void initWhile() {
 	if (expr() != boolType)
 		error("syntax error", 1);
 	checkTok(RbraketTok);
-	*bufferPoint = cGen - 2;
+	*bufferPoint = cGen - 1;
 	gen(CWHILE, bufferPoint);
 	gen(CJUMP, point);
 	checkTok(LbracesTok);

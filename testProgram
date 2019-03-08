@@ -1,6 +1,7 @@
 {
-    int a = (23 + 3) - 2;
-    a = -a;
-    a *= -2;
-    println(a);
+    int a = 8;
+    while (a > 0) {
+        println(a);
+        a -= 1;
+    }
 }

@@ -19,7 +19,7 @@ int *CDriver(Commands command, int bufferBit) {
 		break;
 	case CNONEP:
 		if (bufferBit == 1)
-			*var = *command.var;
+			var = command.var;
 		break;
 	case CNEG:
 		if (bufferBit == 1) {
@@ -228,7 +228,6 @@ int *CDriver(Commands command, int bufferBit) {
 			*command.var = *point;
 			break;
 		}
-		free(point);
 		break;
 	}
 	}
@@ -258,7 +257,7 @@ void printCommands() {
 				printf("cif - %p\n", commands[b].var);
 				break;
 			case CWHILE:
-				printf("cwhile - %p\n", commands[b].var);
+				printf("cwhile - %p\n", *commands[b].var);
 				break;
 			case CPRINT:
 				printf("cprint - %p\n", commands[b].var);

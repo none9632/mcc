@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
 	bufferCH = fgetc(file);
 	nextTok();
 	parsing();
-	printCommands();
+//	printCommands();
 	launching();
 	exit(EXIT_SUCCESS);
 }
