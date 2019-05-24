@@ -1,7 +1,14 @@
 {
-    int a = 8;
-    while (a > 0) {
-        println(a);
-        a -= 1;
-    }
+	int a = 23;
+	a *= 3;
+	if (a % 2 == 0) {
+		print("even number");
+	}
+	else {
+		print("odd number");
+	}
+	while (a > 0) {
+		print(a);
+		a -= 1;
+	}
 }
