@@ -1,8 +1,18 @@
 #ifndef PARS_H
 #define PARS_H
 
-TypeVar expr();
-void statement();
-void parsing();
+#include "lib.h"
+#include "table_names.h"
+
+struct command {
+	char   *data;
+	Name   *table_TN;
+	int     command;
+	int     value;
+};
+
+typedef struct command Command;
+
+Vector* parsing(Vector *_tokens);
 
 #endif

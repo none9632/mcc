@@ -1,0 +1,23 @@
+{
+	int a = 2, b = 67;
+	a = a + 23 * (1 - 10);
+	input(a);
+	print("test:\n", a, 23 + 23, "\n");
+	while (a > 0) {
+		print(a, "\n");
+		a -= 1;
+		if (a <= 23) {
+			print("a <= 23\n");
+		}
+	}
+	if (a == 0) {
+		print("success\n");
+		int i = 12;
+		while (i >= a) {
+			print("i = ", i, "\n");
+		}
+	}
+	else {
+		print("fail\n");
+	}
+}

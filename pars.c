@@ -2,332 +2,361 @@
 #include <string.h>
 #include <malloc.h>
 
+#include "pars.h"
 #include "lib.h"
-#include "table.h"
+#include "table_names.h"
 #include "lex.h"
 #include "error.h"
-#include "gen.h"
 #include "launch.h"
-#include "pars.h"
 
-int minus = 0;
+Vector *commands;
+Vector *tokens;
+Vector *table_names;
+int     count_tk;
 
-void checkTok(int _tokenType) {
-	if (tokenType != _tokenType)
-		error("syntax error", 1);
-	nextTok();
+static Command* new_command(int command, int value) 
+{
+	Command *c = malloc(sizeof(Command));
+	c->command = command;
+	c->value = value;
+	return c;
 }
 
-TypeVar term() {
-	if (tokenType == MINUS_TOK || tokenType == PLUS_TOK) {
-		if (tokenType == MINUS_TOK)
-			minus = 1;
-		nextTok();
+static Token* check_tok(int type) 
+{
+	Token *t = tokens->data[count_tk];
+	if (t->type != type)
+		error("syntax error", 1);
+	t = tokens->data[++count_tk];
+	return t;
+}
+
+static void expr();
+static void statement();
+
+static void term() 
+{
+	Token *t = tokens->data[count_tk];
+
+	if (t->type == '-' || t->type == '+') {
+		if (t->type == '-')
+			vec_push(commands, new_command(CM_NEG, 0));
+		count_tk++;
 	}
-	if (tokenType == NUM_TOK) {
-		if (minus == 1) {
-			nValue = -nValue;
-			minus = 0;
-		}
-		int *bufferPoint = malloc(sizeof(int));
-		*bufferPoint = nValue;
-		gen(CNONE, bufferPoint);
-		nextTok();
-		return intType;
+
+	if (t->type == TK_NUM) {
+		vec_push(commands, new_command(CM_GET, t->value));
+		count_tk++;
 	}
-	else if (tokenType == IDENT_TOK) {
-		StackTok *nameVar = find(name);
-		if (nameVar->value == NULL)
+	else if (t->type == TK_IDENT) {
+		Name *v = find(table_names, t->name);
+		if (v == NULL)
 			error("syntax error", 1);
-		if (minus == 1) {
-			gen(CNEGP, nameVar->value);
-			minus = 0;
-		}
-		else
-			gen(CNONEP, nameVar->value);
-		nextTok();
-		return intType;
+		vec_push(commands, new_command(CM_GET_TABLE, v->value));
+		count_tk++;
 	}
-	else if (tokenType == LBRAKET_TOK) {
-		int bufferMinus = 0;
-		nextTok();
-		if (minus == 1) {
-			bufferMinus = 1;
-			minus = 0;
-		}
-		TypeVar typeVar = expr();
-		checkTok(RBRAKET_TOK);
-		if (bufferMinus == 1) {
-			gen(CNEG, NULL);
-		}
-		return typeVar;
+	else if (t->type == '(') {
+		count_tk++;
+		expr();
+		check_tok(')');
 	}
-	return noneType;
 }
 
-TypeVar factor() {
-	TypeVar typeVar = term();
-	TokenType op;
-	if (tokenType == MULT_TOK || tokenType == DIV_TOK) {
+static void factor()
+{
+	term();
+	Token *t = tokens->data[count_tk];
+
+	if (t->type == '*' || t->type == '/') {
 		do {
-			op = tokenType;
-			nextTok();
-			typeVar = term();
-			switch (op) {
-			case MULT_TOK: gen(CMULT, NULL); break;
-			case DIV_TOK: gen(CDIV, NULL); break;
+			count_tk++;
+			term();
+
+			Command *c = malloc(sizeof(Command));
+			switch (t->type) {
+			case '*': c->command = CM_MULT; break;
+			case '/': c->command = CM_DIV;  break;
 			}
-		} while (tokenType == MULT_TOK || tokenType == DIV_TOK);
+			vec_push(commands, c);
+
+			t = tokens->data[count_tk];
+		} while (t->type == '*' || t->type == '/');
 	}
-	return typeVar;
 }
 
-TypeVar addend() {
-	TypeVar typeVar = factor();
-	TokenType op;
-	if (tokenType == PLUS_TOK || tokenType == MINUS_TOK) {
+static void addend()
+{
+	factor();
+	Token *t = tokens->data[count_tk];
+
+	if (t->type == '+' || t->type == '-') {
 		do {
-			op = tokenType;
-			nextTok();
-			typeVar = factor();
-			switch (op) {
-			case PLUS_TOK: gen(CPLUS, NULL); break;
-			case MINUS_TOK: gen(CMINUS, NULL); break;
+			count_tk++;
+			factor();
+
+			Command *c = malloc(sizeof(Command));
+			switch (t->type) {
+			case '+': c->command = CM_PLUS;  break;
+			case '-': c->command = CM_MINUS; break;
 			}
-		} while (tokenType == PLUS_TOK || tokenType == MINUS_TOK);
+			vec_push(commands, c);
+
+			t = tokens->data[count_tk];
+		} while (t->type == '+' || t->type == '-');
 	}
-	return typeVar;
 }
 
-TypeVar module(){
-	TypeVar typeVar = addend();
-	TokenType op;
-	if (typeVar == intType) {
-		if (tokenType == MOD_TOK) {
-			do {
-				op = tokenType;
-				nextTok();
-				typeVar = addend();
-				if (typeVar != intType)
-					error("syntax error", 1);
-				gen(CMOD, NULL);
-			} while (tokenType == MOD_TOK);
+static void module()
+{
+	addend();
+	Token *t = tokens->data[count_tk];
+
+	if (t->type == '%') {
+		do {
+			count_tk++;
+			addend();
+			vec_push(commands, new_command(CM_MOD, 0));
+			t = tokens->data[count_tk];
+		} while (t->type == '%');
+	}
+}
+
+static void test() 
+{
+	module();
+	Token *t = tokens->data[count_tk];
+
+	if (t->type == '>' || t->type == '<' || t->type == TK_MOREEQ ||
+		t->type == TK_LESSEQ || t->type == TK_EQUAL || t->type == TK_NOTEQ) {
+		count_tk++;
+		module();
+
+		Command *c = malloc(sizeof(Command));
+		switch (t->type) {
+		case '>':       c->command = CM_MORE;   break;
+		case '<':       c->command = CM_LESS;   break;
+		case TK_MOREEQ: c->command = CM_MOREEQ; break;
+		case TK_LESSEQ: c->command = CM_LESSEQ; break;
+		case TK_EQUAL:  c->command = CM_EQUAL;  break;
+		case TK_NOTEQ:  c->command = CM_NOTEQ;  break;
 		}
+		vec_push(commands, c);
 	}
-	return typeVar;
 }
 
-TypeVar test() {
-	TypeVar typeVar = module();
-	TokenType op;
-	if (tokenType == EQUAL_TOK || tokenType == MORE_TOK || tokenType == MOREEQ_TOK ||
-		tokenType == LESS_TOK || tokenType == LESSEQ_TOK || tokenType == NOTEQ_TOK) {
-		op = tokenType;
-		nextTok();
-		typeVar = module();
-		switch (op) {
-		case EQUAL_TOK: gen(CEQUAL, NULL); break;
-		case MORE_TOK: gen(CMORE, NULL); break;
-		case MOREEQ_TOK: gen(CMOREEQ, NULL); break;
-		case LESS_TOK: gen(CLESS, NULL); break;
-		case LESSEQ_TOK: gen(CLESSEQ, NULL); break;
-		case NOTEQ_TOK: gen(CNOTEQ, NULL); break;
-		}
-		return boolType;
-	}
-	return typeVar;
-}
-
-TypeVar expr() {
-	TypeVar typeVar = test();
-	if (typeVar == noneType)
-		error("syntax error", 1);
-	return typeVar;
+static void expr()
+{
+	test();
 }
 
 // assignment function
-void assing() {
-	StackTok *nameVar = find(name);
-	TokenType bufferTT;
-	if (nameVar->constType == 1)
-		error("syntax error", 1);
-	nextTok();
-	bufferTT = tokenType;
-	nextTok();
+static void assign () 
+{
+	Token *t = tokens->data[count_tk];
+	Name *n = find(table_names, t->name);
+
+	if (n == NULL)
+		error("syntax error", 0);
+
+	t = tokens->data[++count_tk];
+	++count_tk;
 	expr();
-	if (nameVar->value == NULL) {
-		if (tokenType == ASSIGN_TOK)
-			nameVar->value = malloc(sizeof(int));
-		else
-			error("syntax error", 1);
+
+	vec_push(commands, new_command(CM_STORE, n->value));
+	Command *c = malloc(sizeof(Command));
+	switch (t->type) {
+	case TK_PLUSA:  c->command = CM_PLUSA;  break;
+	case TK_MINUSA: c->command = CM_MINUSA; break;
+	case TK_MULTA:  c->command = CM_MULTA;  break;
+	case TK_DIVA:   c->command = CM_DIVA;   break;
+	case TK_MODA:   c->command = CM_MODA;   break;
+	case '=':      	c->command = CM_ASSIGN; break;
+	default: error("syntax error", 0);    break;
 	}
-	gen(CLOAD, nameVar->value);
-	switch (bufferTT) {
-	case PLUSA_TOK: gen(CPLUSA, NULL); break;
-	case MINUSA_TOK: gen(CMINUSA, NULL); break;
-	case MULTA_TOK: gen(CMULTA, NULL); break;
-	case DIVA_TOK: gen(CDIVA, NULL); break;
-	case MODA_TOK: gen(CMODA, NULL); break;
-	case ASSIGN_TOK: gen(CASSIGN, NULL); break;
-	default: error("syntax error", 1); break;
-	}
-	checkTok(SEMI_TOK);
+	vec_push(commands, c);
 }
 
 // initialization variable
-void initVar() {
-	TypeVar typeVar = findType(name);
-	int buffer;
-	if (typeVar == constType) {
-		buffer = 1;
-		nextTok();
-		typeVar = findType(name);
+static void init_var() 
+{
+	Token *t = tokens->data[count_tk];
+	Name *general_n = new_name();
+
+	if (t->type == TK_CONST) {
+		general_n->is_const = 1;
+		t = tokens->data[++count_tk];
 	}
-	if (typeVar != noneType && typeVar != constType) {
+	general_n->type = t->type;
+
+	if (t->type == TK_BOOL || t->type == TK_INT || t->type == TK_CHAR ) {
 		do {
-			nextTok();
-			checkTok(IDENT_TOK);
-			if (tokenType == ASSIGN_TOK) {
-				char *bufferName = malloc(sizeof(char) * 32);
-				strcpy(bufferName, name);
-				nextTok();
-				if (typeVar != expr())
-					error("syntax error", 1);
-				newToken(bufferName, 1, buffer);
-				gen(CLOAD, find(bufferName)->value);
-				gen(CASSIGN, NULL);
+			Name *n = new_name();
+			n->is_const = general_n->is_const;
+			n->type = general_n->type;
+
+			t = tokens->data[++count_tk];
+			check_tok(TK_IDENT);
+			if (find(table_names, t->name) != NULL) 
+				error("syntax error", 0);
+			n->name = t->name;
+			t = tokens->data[count_tk];
+
+			if (t->type == '=') {
+				count_tk++;
+				expr();
+				vec_push(commands, new_command(CM_STORE, 0));
+				vec_push(commands, new_command(CM_ASSIGN, 0));
 			}
-			else
-				newToken(name, 0, buffer);
-		} while (tokenType == COMMA_TOK);
+			vec_push(table_names, n);
+			t = tokens->data[count_tk];
+		} while (t->type == ',' && count_tk < tokens->len);
+
+		if (count_tk == tokens->len)
+			error("syntax error", 0);
 	}
 	else
 		error("unknown type", 1);
-	checkToks(SEMI_TOK);
 }
 
 
 // initialization while
-void initWhile() {
-	int *point = malloc(sizeof(int)),
-		*bufferPoint = malloc(sizeof(int));
-	nextTok();
-	checkTok(LBRAKET_TOK);
-	if (expr() != boolType)
-		error("syntax error", 1);
-	checkTok(RBRAKET_TOK);
-	*bufferPoint = cGen - 1;
-	gen(CWHILE, bufferPoint);
-	gen(CJUMP, point);
-	checkTok(LBRACES_TOK);
+static void init_while()
+{
+	count_tk++;
+
+	check_tok('(');
+	expr();
+	check_tok(')');
+
+	vec_push(commands, new_command(CM_WHILE, 0));
 	statement();
-	checkTok(RBRACES_TOK);
-	*point = cGen;
-	gen(CSTOP, NULL);
+	vec_push(commands, new_command(CM_STOP, 0));
 }
 
 // initialization if
-void initIf() {
-	int *point1 = malloc(sizeof(int)),
-		*point2 = malloc(sizeof(int));
-	nextTok();
-	checkTok(LBRAKET_TOK);
-	if (expr() != boolType)
-		error("syntax error", 1);
-	checkTok(RBRAKET_TOK);
-	gen(CIF, NULL);
-	gen(CJUMP, point1);
-	checkTok(LBRACES_TOK);
+static void init_if()
+{
+	count_tk++;
+
+	check_tok('(');
+	expr();
+	check_tok(')');
+
+	vec_push(commands, new_command(CM_IF, 0));
 	statement();
-	checkTok(RBRACES_TOK);
-	*point1 = cGen - 1;
-	gen(CSTOP, NULL);
-	if (tokenType == ELSE_TOK) {
-		gen(CELSE, NULL);
-		gen(CJUMP, point2);
-		nextTok();
-		checkTok(LBRACES_TOK);
+	vec_push(commands, new_command(CM_STOP, 0));
+
+	Token *t = tokens->data[count_tk];
+	if (t->type == TK_ELSE) {
+		vec_push(commands, new_command(CM_ELSE, 0));
+		count_tk++;
 		statement();
-		checkTok(RBRACES_TOK);
-		*point2 = cGen - 1;
-		gen(CSTOP, NULL);
+		vec_push(commands, new_command(CM_STOP, 0));
 	}
 }
 
 // output function initialization
-void initPrint() {
-	TokenType bufferTT = tokenType;
-	nextTok();
-	checkTok(LBRAKET_TOK);
-	if (tokenType == IDENT_TOK) {
-		gen(CPRINT, find(name)->value);
-		nextTok();
-	}
-	else if (tokenType == NUM_TOK) {
-		if (expr() != intType)
-			error("syntax error", 1);
-		gen(CPRINTN, NULL);
-	}
-	else if (tokenType == DOBLQUOT_TOK) {
-		int *text = malloc(sizeof(char) * 1024);
-		int i = 0;
-		while (CH != '\"' && CH != EOF) {
-			if (i >= 1024)
-				error("big the text", 1);
-			text[i++] = CH;
-			getNextCH();
+static void init_print() 
+{
+	count_tk++;
+	Token *t = check_tok('(');
+	count_tk--;
+
+	do {
+		t = tokens->data[++count_tk];
+
+		if (t->type == TK_IDENT || t->type == TK_NUM || t->type == '(') {
+			int bufferTT = t->type;
+			expr();
+			Command *c = new_command(CM_PRINT, 0);
+			vec_push(commands, c);
 		}
-		if (CH == EOF)
+		else if (t->type == TK_STR) {
+			Command *c = new_command(CM_PRINTS, 0);
+			
+			c->data = t->name;
+			vec_push(commands, c);
+			count_tk++;
+		}
+		else
 			error("syntax error", 1);
-		text[i] = '\0';
-		getNextCH();
-		gen(CPRINTS, text);
-		nextTok();
-	}
-	else
-		error("syntax error", 1);
-	if (bufferTT == PRINTLN_TOK)
-		gen(CPRINTLN, NULL);
-	checkTok(RBRAKET_TOK);
-	checkTok(SEMI_TOK);
+
+		t = tokens->data[count_tk];
+	} while (t->type == ',' && count_tk < tokens->len);
+
+	if (count_tk == tokens->len)
+		error("syntax error", 0);
+
+	check_tok(')');
 }
 
 // initialization of the input function
-void initInput() {
-	nextTok();
-	checkTok(LBRAKET_TOK);
-	if (tokenType != IDENT_TOK)
+static void init_input()
+{
+	count_tk++;
+	Token *t = check_tok('(');
+
+	if (t->type != TK_IDENT)
 		error("syntax error", 1);
-	StackTok *nameVar = find(name);
-	if (nameVar->value == NULL)
-		nameVar->value = malloc(sizeof(int));
-	gen(CINPUT, nameVar->value);
-	nextTok();
-	checkTok(RBRAKET_TOK);
-	checkTok(SEMI_TOK);
+	count_tk++;
+
+	Name *n = find(table_names, t->name);
+	Command *c = new_command(CM_INPUT, 0);
+	c->table_TN = n;
+	vec_push(commands, c);
+
+	check_tok(')');
 }
 
-void statement() {
-	while (tokenType != RBRACES_TOK && tokenType != EOF_TOK) {
-		if (tokenType == IDENT_TOK)
-			assing();
-		else if (tokenType == TYPE_TOK)
-			initVar();
-		else if (tokenType == WHILE_TOK)
-			initWhile();
-		else if (tokenType == IF_TOK)
-			initIf();
-		else if (tokenType == PRINT_TOK || tokenType == PRINTLN_TOK)
-			initPrint();
-		else if (tokenType == INPUT_TOK)
-			initInput();
+static void statement()
+{
+	Token *t = tokens->data[count_tk];
+
+	t = check_tok('{');
+
+	while (t->type != '}' && count_tk < tokens->len) {
+		if (t->type == TK_IDENT)
+			assign();
+		else if (t->type == TK_INT || t->type == TK_BOOL || t->type == TK_CHAR 
+				|| t->type == TK_CONST)
+			init_var();
+		else if (t->type == TK_WHILE) {
+			init_while();
+			t = tokens->data[count_tk];
+			continue;
+		}
+		else if (t->type == TK_IF) {
+			init_if();
+			t = tokens->data[count_tk];
+			continue;
+		}
+		else if (t->type == TK_PRINT)
+			init_print();
+		else if (t->type == TK_INPUT)
+			init_input();
+
+		t = check_tok(';');
 	}
+
+	if (count_tk == tokens->len)
+		error("syntax error", 0);
+
+	check_tok('}');
 }
 
-void parsing(Vector *tokens) {
-	newToken("", 0, 2);
-	checkTok(LBRACES_TOK);
+Vector* parsing(Vector *_tokens)
+{
+	tokens = _tokens;
+	commands = new_vec();
+	table_names = new_vec();
+	count_tk = 0;
+
 	statement();
-	checkTok(RBRACES_TOK);
-	gen(CSTOP, NULL);
+
+	// for (int i = 0; i < commands->len; i++) {
+	// 	Command *c1 = commands->data[i];
+	// 	printf("%i, %i, %s\n", c1->command, c1->value, c1->data);
+	// }
+
+	return commands;
 }

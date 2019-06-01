@@ -2,7 +2,8 @@
 #include <malloc.h>
 #include <string.h>
 
-Vector* new_vec() {
+Vector* new_vec()
+{
 	Vector *v = malloc(sizeof(v));
 	v->capacity = 16;
 	v->len = 0;
@@ -10,7 +11,8 @@ Vector* new_vec() {
 	return v;
 }
 
-void vec_push(Vector *v, void *elem) {
+void vec_push(Vector *v, void *elem)
+{
 	if (v->len + 1 >= v->capacity) {
 		v->capacity *= 2;
 		v->data = realloc(v->data, sizeof(void*) * v->capacity);

@@ -5,15 +5,19 @@
 #include "lex.h"
 #include "pars.h"
 #include "launch.h"
-#include "error.h"
 
-int main(int argc, char *argv[]) {
+void usage()
+{
+	printf("Usage: myCompiler <file>\n");
+	exit(EXIT_FAILURE);
+}
+
+int main(int argc, char *argv[])
+{
 	if (argc != 2)
-		error("no input files", 0);
-	puts("compilation...");
+		usage();
 	Vector *tokens = tokenize(argv[1]);
-//	parsing(tokens);
-//	printCommands();
-//	launching();
+	Vector *commands = parsing(tokens);
+	//launching(commands);
 	exit(EXIT_SUCCESS);
 }
