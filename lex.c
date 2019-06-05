@@ -11,7 +11,7 @@ Keyword  symbols[] = {
 	{"+=", TK_PLUSA},  {"-=", TK_MINUSA}, {"*=", TK_MULTA},
 	{"/=", TK_DIVA},   {"%=", TK_MODA},   {"<=", TK_LESSEQ},
 	{">=", TK_MOREEQ}, {"==", TK_EQUAL},  {"!=", TK_NOTEQ},
-	{NULL, 0}
+	{"||", TK_OR},     {"&&", TK_AND},    {NULL, 0}
 };
 
 static void push_table(char *data, int type)
@@ -109,6 +109,43 @@ static char* read_num(Token *t, char *p_str)
 	return p_str;
 }
 
+static char* remove_backslash(char *prev_str, int len)
+{
+	char *buf_str = malloc(sizeof(char) * len);
+	int count = 0;
+
+	while (*prev_str != '\0') {
+		if (*prev_str == '\\') {
+			switch (*++prev_str) {
+			case 'n':
+				buf_str[count++] = '\n';
+				++prev_str;
+				break;
+			case 't':
+				buf_str[count++] = '\t';
+				++prev_str;
+				break;
+			case 'r':
+				buf_str[count++] = '\r';
+				++prev_str;
+				break;
+			default:
+				buf_str[count++] = '\\';
+				break;
+			}
+		}
+		else 
+			buf_str[count++] = *prev_str++;
+	}
+	buf_str[count] = '\0';
+
+	char *str = malloc(sizeof(char) * count);
+	strcpy(str, buf_str);
+	free(buf_str);
+
+	return str;
+}
+
 static char* read_str(Token *t, char *p_str)
 {
 	char *buf_p = ++p_str;
@@ -125,6 +162,8 @@ static char* read_str(Token *t, char *p_str)
 	memcpy(t->name, buf_p, len - 1);
 	t->name[len] = '\0';
 	t->type = TK_STR;
+	t->name = remove_backslash(t->name, len);
+
 	return ++p_str;
 }
 
@@ -141,16 +180,16 @@ static int read_symbol(Token *t, char *p_str)
 
 static char *read_comment(char *p_str)
 {
-	if (*++p_str == '/') {
+	if (!strncmp(p_str, "//", 2)) {
 		while (*p_str != '\0') {
 			if (*++p_str == '\n')
 				break;
 		}
 		p_str++;
 	}
-	else if (*p_str == '*') {
+	else if (!strncmp(p_str, "/*", 2)) {
 		while (*p_str != '\0') {
-			if (*p_str == '*' && *++p_str == '/')
+			if (*++p_str == '*' && *++p_str == '/')
 				break;
 		}
 		p_str++;
@@ -169,9 +208,18 @@ static Vector* scan(char *p_str)
 		while (isspace(*p_str))
 			p_str++;
 
+		// Multi-letter symbol
+		if (read_symbol(t, p_str) == 0) {
+			vec_push(tokens, t);
+			p_str += 2;
+			continue;
+		}
+
 		// Comment
-		if (*p_str == '/')
+		if (*p_str == '/') {
 			p_str = read_comment(p_str);
+			continue;
+		}
 
 		//Identifier
 		if (isalpha(*p_str) || *p_str == '_') {
@@ -184,13 +232,6 @@ static Vector* scan(char *p_str)
 		if (isdigit(*p_str)) {
 			p_str = read_num(t, p_str);
 			vec_push(tokens, t);
-			continue;
-		}
-
-		// Multi-letter symbol
-		if (read_symbol(t, p_str) == 0) {
-			vec_push(tokens, t);
-			p_str += 2;
 			continue;
 		}
 
@@ -221,7 +262,7 @@ Vector* tokenize(char *file_name)
 	char *str = read_file(file);
 	Vector *tokens = scan(str);
 
-	// Token *t;
+	Token *t;
 	// for (int i = 0; i < tokens->len; i++) {
 	// 	t = tokens->data[i];
 	// 	printf("%s, %i, %i\n", t->name, t->type, t->value);

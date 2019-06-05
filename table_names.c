@@ -14,7 +14,7 @@ Name *new_name()
 
 Name *find(Vector *table_names, char *name)
 {
-	for (int i = 0; i < table_names->len; i++) {
+	for (int i = 0; i < table_names->len; ++i) {
 		Name *v = table_names->data[i];
 		if (!strcmp(name, v->name))
 			return v;

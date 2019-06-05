@@ -1,8 +1,7 @@
-objects = main.o error.o launch.o pars.o scan.o
-objects_test = main.o error.o lex.o lib.o pars.o table_names.o
+objects = main.o error.o lex.o lib.o pars.o table_names.o launch.o
 
-myCompiler : $(objects_test)
-	gcc -g3 $(objects_test) -o myCompiler
+myCompiler : $(objects)
+	gcc -g3 $(objects) -o myCompiler
 main.o : main.c
 	gcc -g3 -c main.c -o main.o
 lib.o : lib.c
@@ -18,4 +17,4 @@ lex.o : lex.c
 table_names.o : table_names.c
 	gcc -g3 -c table_names.c -o table_names.o
 clean :
-	rm $(objects_test)
+	rm $(objects) myCompiler

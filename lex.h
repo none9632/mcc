@@ -16,6 +16,8 @@ enum {
 	TK_PLUSA,        // +=
 	TK_MINUSA,       // -=
 	TK_MODA,         // %=
+	TK_OR,           // ||
+	TK_AND,          // &&
 	TK_ELSE,         // "else"
 	TK_WHILE,        // "while"
 	TK_IF,           // "if"

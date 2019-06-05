@@ -12,12 +12,15 @@ void usage()
 	exit(EXIT_FAILURE);
 }
 
-int main(int argc, char *argv[])
+void main(int argc, char *argv[])
 {
 	if (argc != 2)
 		usage();
+
+	Vector *table_names = new_vec();
 	Vector *tokens = tokenize(argv[1]);
-	Vector *commands = parsing(tokens);
-	//launching(commands);
+	Vector *commands = parsing(table_names, tokens);
+	launching_VM(commands);
+
 	exit(EXIT_SUCCESS);
 }

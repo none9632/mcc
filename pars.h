@@ -13,6 +13,6 @@ struct command {
 
 typedef struct command Command;
 
-Vector* parsing(Vector *_tokens);
+Vector* parsing(Vector *_table_names, Vector *_tokens);
 
 #endif

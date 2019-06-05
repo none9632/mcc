@@ -2,8 +2,8 @@
 #include <string.h>
 #include <malloc.h>
 
-#include "pars.h"
 #include "lib.h"
+#include "pars.h"
 #include "table_names.h"
 #include "lex.h"
 #include "error.h"
@@ -14,7 +14,7 @@ Vector *tokens;
 Vector *table_names;
 int     count_tk;
 
-static Command* new_command(int command, int value) 
+static Command* new_command(int command, int value)
 {
 	Command *c = malloc(sizeof(Command));
 	c->command = command;
@@ -22,7 +22,7 @@ static Command* new_command(int command, int value)
 	return c;
 }
 
-static Token* check_tok(int type) 
+static Token* check_tok(int type)
 {
 	Token *t = tokens->data[count_tk];
 	if (t->type != type)
@@ -34,32 +34,40 @@ static Token* check_tok(int type)
 static void expr();
 static void statement();
 
-static void term() 
+static void term()
 {
+	if (count_tk >= tokens->len)
+		error("syntax error", 0);
+
 	Token *t = tokens->data[count_tk];
+	char bufferTT = 0;
 
 	if (t->type == '-' || t->type == '+') {
-		if (t->type == '-')
-			vec_push(commands, new_command(CM_NEG, 0));
-		count_tk++;
+		bufferTT = t->type;
+		t = tokens->data[++count_tk];
 	}
 
 	if (t->type == TK_NUM) {
 		vec_push(commands, new_command(CM_GET, t->value));
-		count_tk++;
+		++count_tk;
 	}
 	else if (t->type == TK_IDENT) {
-		Name *v = find(table_names, t->name);
-		if (v == NULL)
+		Name *n = find(table_names, t->name);
+		if (n == NULL)
 			error("syntax error", 1);
-		vec_push(commands, new_command(CM_GET_TABLE, v->value));
-		count_tk++;
+		Command *c = new_command(CM_GET_TABLE, 0);
+		c->table_TN = n;
+		vec_push(commands, c);
+		++count_tk;
 	}
 	else if (t->type == '(') {
-		count_tk++;
+		++count_tk;
 		expr();
 		check_tok(')');
 	}
+
+	if (bufferTT == '-')
+		vec_push(commands, new_command(CM_NEG, 0));
 }
 
 static void factor()
@@ -67,20 +75,18 @@ static void factor()
 	term();
 	Token *t = tokens->data[count_tk];
 
-	if (t->type == '*' || t->type == '/') {
-		do {
-			count_tk++;
-			term();
+	while (count_tk < tokens->len && (t->type == '*' || t->type == '/')) {
+		++count_tk;
+		term();
 
-			Command *c = malloc(sizeof(Command));
-			switch (t->type) {
-			case '*': c->command = CM_MULT; break;
-			case '/': c->command = CM_DIV;  break;
-			}
-			vec_push(commands, c);
+		Command *c = malloc(sizeof(Command));
+		switch (t->type) {
+		case '*': c->command = CM_MULT; break;
+		case '/': c->command = CM_DIV;  break;
+		}
+		vec_push(commands, c);
 
-			t = tokens->data[count_tk];
-		} while (t->type == '*' || t->type == '/');
+		t = tokens->data[count_tk];
 	}
 }
 
@@ -89,20 +95,18 @@ static void addend()
 	factor();
 	Token *t = tokens->data[count_tk];
 
-	if (t->type == '+' || t->type == '-') {
-		do {
-			count_tk++;
-			factor();
+	while (count_tk < tokens->len && (t->type == '+' || t->type == '-')) {
+		++count_tk;
+		factor();
 
-			Command *c = malloc(sizeof(Command));
-			switch (t->type) {
-			case '+': c->command = CM_PLUS;  break;
-			case '-': c->command = CM_MINUS; break;
-			}
-			vec_push(commands, c);
+		Command *c = malloc(sizeof(Command));
+		switch (t->type) {
+		case '+': c->command = CM_PLUS;  break;
+		case '-': c->command = CM_MINUS; break;
+		}
+		vec_push(commands, c);
 
-			t = tokens->data[count_tk];
-		} while (t->type == '+' || t->type == '-');
+		t = tokens->data[count_tk];
 	}
 }
 
@@ -111,24 +115,23 @@ static void module()
 	addend();
 	Token *t = tokens->data[count_tk];
 
-	if (t->type == '%') {
-		do {
-			count_tk++;
-			addend();
-			vec_push(commands, new_command(CM_MOD, 0));
-			t = tokens->data[count_tk];
-		} while (t->type == '%');
+	while (count_tk < tokens->len && (t->type == '%')) {
+		++count_tk;
+		addend();
+		vec_push(commands, new_command(CM_MOD, 0));
+		t = tokens->data[count_tk];
 	}
 }
 
-static void test() 
+static void test()
 {
 	module();
 	Token *t = tokens->data[count_tk];
 
-	if (t->type == '>' || t->type == '<' || t->type == TK_MOREEQ ||
-		t->type == TK_LESSEQ || t->type == TK_EQUAL || t->type == TK_NOTEQ) {
-		count_tk++;
+	while (count_tk < tokens->len &&
+			(t->type == '>'       || t->type == '<'      || t->type == TK_MOREEQ ||
+			 t->type == TK_LESSEQ || t->type == TK_EQUAL || t->type == TK_NOTEQ)) {
+		++count_tk;
 		module();
 
 		Command *c = malloc(sizeof(Command));
@@ -141,16 +144,55 @@ static void test()
 		case TK_NOTEQ:  c->command = CM_NOTEQ;  break;
 		}
 		vec_push(commands, c);
+
+		t = tokens->data[count_tk];
+	}
+}
+
+static void and()
+{
+	test();
+	Token *t = tokens->data[count_tk];
+
+	while (count_tk < tokens->len && t->type == TK_AND) {
+		++count_tk;
+		test();
+
+		Command *c = malloc(sizeof(Command));
+		c->command = CM_AND;
+		vec_push(commands, c);
+
+		t = tokens->data[count_tk];
+	}
+}
+
+static void or()
+{
+	and();
+	Token *t = tokens->data[count_tk];
+
+	while (count_tk < tokens->len && t->type == TK_OR) {
+		++count_tk;
+		and();
+
+		Command *c = malloc(sizeof(Command));
+		c->command = CM_OR;
+		vec_push(commands, c);
+
+		t = tokens->data[count_tk];
 	}
 }
 
 static void expr()
 {
-	test();
+	or();
+
+	if (count_tk == tokens->len)
+		error("syntax error", 0);
 }
 
 // assignment function
-static void assign () 
+static void assign ()
 {
 	Token *t = tokens->data[count_tk];
 	Name *n = find(table_names, t->name);
@@ -162,8 +204,11 @@ static void assign ()
 	++count_tk;
 	expr();
 
-	vec_push(commands, new_command(CM_STORE, n->value));
-	Command *c = malloc(sizeof(Command));
+	Command *c = new_command(CM_STORE, 0);
+	c->table_TN = n;
+	vec_push(commands, c);
+
+	c = malloc(sizeof(Command));
 	switch (t->type) {
 	case TK_PLUSA:  c->command = CM_PLUSA;  break;
 	case TK_MINUSA: c->command = CM_MINUSA; break;
@@ -177,7 +222,7 @@ static void assign ()
 }
 
 // initialization variable
-static void init_var() 
+static void init_var()
 {
 	Token *t = tokens->data[count_tk];
 	Name *general_n = new_name();
@@ -202,10 +247,13 @@ static void init_var()
 			t = tokens->data[count_tk];
 
 			if (t->type == '=') {
-				count_tk++;
+				++count_tk;
 				expr();
-				vec_push(commands, new_command(CM_STORE, 0));
-				vec_push(commands, new_command(CM_ASSIGN, 0));
+				Command *c = new_command(CM_STORE, 0);
+				c->table_TN = n;
+				vec_push(commands, c);
+				c = new_command(CM_ASSIGN, 0);
+				vec_push(commands, c);
 			}
 			vec_push(table_names, n);
 			t = tokens->data[count_tk];
@@ -222,7 +270,7 @@ static void init_var()
 // initialization while
 static void init_while()
 {
-	count_tk++;
+	++count_tk;
 
 	check_tok('(');
 	expr();
@@ -230,13 +278,13 @@ static void init_while()
 
 	vec_push(commands, new_command(CM_WHILE, 0));
 	statement();
-	vec_push(commands, new_command(CM_STOP, 0));
+	vec_push(commands, new_command(CM_STOP_WHILE, 0));
 }
 
 // initialization if
 static void init_if()
 {
-	count_tk++;
+	++count_tk;
 
 	check_tok('(');
 	expr();
@@ -244,39 +292,37 @@ static void init_if()
 
 	vec_push(commands, new_command(CM_IF, 0));
 	statement();
-	vec_push(commands, new_command(CM_STOP, 0));
+	vec_push(commands, new_command(CM_STOP_IF, 0));
 
 	Token *t = tokens->data[count_tk];
 	if (t->type == TK_ELSE) {
 		vec_push(commands, new_command(CM_ELSE, 0));
-		count_tk++;
+		++count_tk;
 		statement();
-		vec_push(commands, new_command(CM_STOP, 0));
+		vec_push(commands, new_command(CM_STOP_ELSE, 0));
 	}
 }
 
 // output function initialization
-static void init_print() 
+static void init_print()
 {
-	count_tk++;
+	++count_tk;
 	Token *t = check_tok('(');
-	count_tk--;
+	--count_tk;
 
 	do {
 		t = tokens->data[++count_tk];
 
 		if (t->type == TK_IDENT || t->type == TK_NUM || t->type == '(') {
-			int bufferTT = t->type;
 			expr();
 			Command *c = new_command(CM_PRINT, 0);
 			vec_push(commands, c);
 		}
 		else if (t->type == TK_STR) {
 			Command *c = new_command(CM_PRINTS, 0);
-			
 			c->data = t->name;
 			vec_push(commands, c);
-			count_tk++;
+			++count_tk;
 		}
 		else
 			error("syntax error", 1);
@@ -293,12 +339,12 @@ static void init_print()
 // initialization of the input function
 static void init_input()
 {
-	count_tk++;
+	++count_tk;
 	Token *t = check_tok('(');
 
 	if (t->type != TK_IDENT)
 		error("syntax error", 1);
-	count_tk++;
+	++count_tk;
 
 	Name *n = find(table_names, t->name);
 	Command *c = new_command(CM_INPUT, 0);
@@ -314,7 +360,7 @@ static void statement()
 
 	t = check_tok('{');
 
-	while (t->type != '}' && count_tk < tokens->len) {
+	while (count_tk < tokens->len && t->type != '}') {
 		if (t->type == TK_IDENT)
 			assign();
 		else if (t->type == TK_INT || t->type == TK_BOOL || t->type == TK_CHAR 
@@ -344,11 +390,11 @@ static void statement()
 	check_tok('}');
 }
 
-Vector* parsing(Vector *_tokens)
+Vector* parsing(Vector *_table_names, Vector *_tokens)
 {
+	table_names = _table_names;
 	tokens = _tokens;
 	commands = new_vec();
-	table_names = new_vec();
 	count_tk = 0;
 
 	statement();
@@ -357,6 +403,8 @@ Vector* parsing(Vector *_tokens)
 	// 	Command *c1 = commands->data[i];
 	// 	printf("%i, %i, %s\n", c1->command, c1->value, c1->data);
 	// }
+
+	vec_push(commands, new_command(CM_STOP, 0));
 
 	return commands;
 }
