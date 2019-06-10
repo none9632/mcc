@@ -4,6 +4,14 @@
 #include "table_names.h"
 #include "error.h"
 
+Table_N* new_table_n(Table_N *prev)
+{
+	Table_N *tn = malloc(sizeof(Table_N));
+	tn->names = new_vec();
+	tn->prev = prev;
+	return tn;
+}
+
 Name *new_name()
 {
 	Name *n = malloc(sizeof(Name));
@@ -12,12 +20,15 @@ Name *new_name()
 	return n;
 }
 
-Name *find(Vector *table_names, char *name)
+Name *find(Table_N *table_names, char *name)
 {
-	for (int i = 0; i < table_names->len; ++i) {
-		Name *v = table_names->data[i];
-		if (!strcmp(name, v->name))
-			return v;
+	while (table_names != NULL) {
+		for (int i = 0; i < table_names->names->len; ++i) {
+			Name *n = table_names->names->data[i];
+			if (!strcmp(name, n->name))
+				return n;
+		}
+		table_names = table_names->prev;
 	}
 	return NULL;
 }

@@ -1,7 +1,7 @@
 #ifndef LEX_H
 #define LEX_H
 
-#include "lib.h"
+#include "vector.h"
 
 enum {
 	TK_IDENT = 128,  // Identifier
@@ -26,24 +26,19 @@ enum {
 	TK_INPUT,        // "input"
 	TK_INT,          // "int"
 	TK_CONST,        // "const"
-	TK_BOOL,         // "bool"
-	TK_CHAR,         // "char"
 	TK_DO,           // "do"
 };
 
 struct token {
-	char   *name;
-	int     type;
-	int     value;
-};
-struct keyword {
-	char   *data;
-	int     type;
+	char *name;
+	int len;
+	int type;
+	int value;
+	int line;
+	int column;
 };
 
-typedef struct token   Token;
-typedef struct keyword Keyword;
-
+typedef struct token Token;
 
 Vector* tokenize (char *fileName);
 

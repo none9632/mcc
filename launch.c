@@ -2,7 +2,7 @@
 #include <malloc.h>
 #include <string.h>
 
-#include "lib.h"
+#include "vector.h"
 #include "pars.h"
 #include "launch.h"
 
@@ -19,7 +19,8 @@ typedef struct double_value Double_value;
 static int  expr_processing();
 static void VM();
 
-static Double_value get_val() {
+static Double_value get_val()
+{
 	Double_value dv;
 
 	dv.value2 = expr_processing(commands->data[--count_com]);

@@ -1,7 +1,7 @@
 #ifndef PARS_H
 #define PARS_H
 
-#include "lib.h"
+#include "vector.h"
 #include "table_names.h"
 
 struct command {
@@ -13,6 +13,6 @@ struct command {
 
 typedef struct command Command;
 
-Vector* parsing(Vector *_table_names, Vector *_tokens);
+Vector* parsing(Vector *_tokens);
 
 #endif

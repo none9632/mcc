@@ -1,11 +1,11 @@
-objects = main.o error.o lex.o lib.o pars.o table_names.o launch.o
+objects = main.o error.o lex.o vector.o pars.o table_names.o launch.o
 
 myCompiler : $(objects)
 	gcc -g3 $(objects) -o myCompiler
 main.o : main.c
 	gcc -g3 -c main.c -o main.o
-lib.o : lib.c
-	gcc -g3 -c lib.c -o lib.o
+vector.o : vector.c
+	gcc -g3 -c vector.c -o vector.o
 error.o : error.c
 	gcc -g3 -c error.c -o error.o
 launch.o : launch.c

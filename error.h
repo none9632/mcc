@@ -1,6 +1,8 @@
 #ifndef ERROR_H
 #define ERROR_H
 
-void error(char *message, int type);
+#include "lex.h"
+
+void error(char *message, int line, int column);
 
 #endif
