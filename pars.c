@@ -26,8 +26,10 @@ static Token* check_tok(int type)
 {
 	Token *t = tokens->data[count_tk];
 
-	if (count_tk >= tokens->len || t->type != type)
-	{
+	if (count_tk == tokens->len)
+		t = tokens->data[--count_tk];
+
+	if (t->type != type) {
 		char message[t->len + 50];
 		snprintf(message, sizeof(message), "%s%c%s",
 			"expected '", type, "' character");
@@ -423,6 +425,11 @@ static void statement()
 
 	t = check_tok('{');
 
+	if (t->type == '}') {
+		++count_tk;
+		return;
+	}
+
 	while (count_tk < tokens->len && t->type != '}')
 	{
 		if (t->type == TK_IDENT)
@@ -445,6 +452,9 @@ static void statement()
 			init_print();
 		else if (t->type == TK_INPUT)
 			init_input();
+		else if (t->type == ';');
+		else 
+			error("syntax error", t->line, t->column);
 
 		t = check_tok(';');
 	}
