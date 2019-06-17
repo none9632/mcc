@@ -1,10 +1,11 @@
 #ifndef LIB_H
 #define LIB_H
 
-struct vector {
-	void  **data;
-	int     len;
-	int     capacity;
+struct vector
+{
+	void **data;
+	int len;
+	int capacity;
 };
 
 typedef struct vector Vector;

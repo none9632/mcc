@@ -16,8 +16,8 @@ typedef struct keyword Keyword;
 
 int line;
 int column;
-Vector  *table_keywords;
-Keyword  symbols[] = {
+Vector *table_keywords;
+Keyword symbols[] = {
 	{"+=", TK_PLUSA},  {"-=", TK_MINUSA}, {"*=", TK_MULTA},
 	{"/=", TK_DIVA},   {"%=", TK_MODA},   {"<=", TK_LESSEQ},
 	{">=", TK_MOREEQ}, {"==", TK_EQUAL},  {"!=", TK_NOTEQ},
@@ -35,15 +35,17 @@ static void push_table(char *data, int type)
 static void enter_TK()
 {
 	table_keywords = new_vec();
-	push_table("if",     TK_IF);
-	push_table("else",   TK_ELSE);
-	push_table("do",     TK_DO);
-	push_table("while",  TK_WHILE);
-	push_table("for",    TK_FOR);
-	push_table("int",    TK_INT);
-	push_table("const",  TK_CONST);
-	push_table("input",  TK_INPUT);
-	push_table("print",  TK_PRINT);
+	push_table("if",       TK_IF);
+	push_table("else",     TK_ELSE);
+	push_table("do",       TK_DO);
+	push_table("while",    TK_WHILE);
+	push_table("for",      TK_FOR);
+	push_table("int",      TK_INT);
+	push_table("const",    TK_CONST);
+	push_table("input",    TK_INPUT);
+	push_table("print",    TK_PRINT);
+	push_table("break",    TK_BREAK);
+	push_table("continue", TK_CONTINUE);
 }
 
 static int search_TK(char *name)
@@ -60,7 +62,7 @@ static int search_TK(char *name)
 	return TK_IDENT;
 }
 
-static FILE* openFile(char* file_name)
+static FILE *openFile(char *file_name)
 {
 	FILE *file;
 
@@ -70,7 +72,7 @@ static FILE* openFile(char* file_name)
 	return file;
 }
 
-static char* read_file(FILE *file)
+static char *read_file(FILE *file)
 {
 	char *str;
 	char buffer[4096];
@@ -82,13 +84,12 @@ static char* read_file(FILE *file)
 		len += cread;
 		str = realloc(str, len);
 		memcpy(str, buffer, cread);
-	}
-	while (cread != 0);
+	} while (cread != 0);
 
 	return str;
 }
 
-static char* read_ident(Token *t, char* p_str)
+static char *read_ident(Token *t, char *p_str)
 {
 	char *buf_p = p_str;
 	int len = 1;
@@ -109,7 +110,7 @@ static char* read_ident(Token *t, char* p_str)
 	return p_str;
 }
 
-static char* read_num(Token *t, char *p_str)
+static char *read_num(Token *t, char *p_str)
 {
 	t->value = 0;
 
@@ -125,7 +126,7 @@ static char* read_num(Token *t, char *p_str)
 	return p_str;
 }
 
-static char* remove_backslash(char *prev_str, int len)
+static char *remove_backslash(char *prev_str, int len)
 {
 	char *buf_str = malloc(sizeof(char) * len);
 	int count = 0;
@@ -153,7 +154,7 @@ static char* remove_backslash(char *prev_str, int len)
 				break;
 			}
 		}
-		else 
+		else
 			buf_str[count++] = *prev_str++;
 	}
 	buf_str[count] = '\0';
@@ -165,7 +166,7 @@ static char* remove_backslash(char *prev_str, int len)
 	return str;
 }
 
-static char* read_str(Token *t, char *p_str)
+static char *read_str(Token *t, char *p_str)
 {
 	char *buf_p = ++p_str;
 	int len = 1;
@@ -250,7 +251,7 @@ static char *read_comment(char *p_str)
 	return p_str;
 }
 
-static Vector* scan(char *p_str)
+static Vector *scan(char *p_str)
 {
 	Vector *tokens = new_vec();
 
@@ -336,7 +337,7 @@ static Vector* scan(char *p_str)
 	return tokens;
 }
 
-Vector* tokenize(char *file_name)
+Vector *tokenize(char *file_name)
 {
 	enter_TK();
 

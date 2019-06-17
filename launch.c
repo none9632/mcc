@@ -7,16 +7,17 @@
 #include "launch.h"
 
 Vector *commands;
-int     count_com;
+int count_com;
 
-struct double_value {
+struct double_value
+{
 	int value1;
 	int value2;
 };
 
 typedef struct double_value Double_value;
 
-static int  expr_processing();
+static int expr_processing();
 static void VM();
 
 static Double_value get_val()
@@ -40,7 +41,8 @@ static int expr_processing(Command *c)
 		value = c->table_TN->value;
 	else if (c->command == CM_NEG)
 		value = -expr_processing(commands->data[--count_com]);
-	else {
+	else
+	{
 		dv = get_val();
 
 		switch (c->command) {
@@ -66,50 +68,47 @@ static int expr_processing(Command *c)
 	return value;
 }
 
-// executes commands from the list of commands
 static int CDriver(Command *c)
 {
 	int buffer_count = count_com;
 	int value;
 
-	switch (c->command)
-	{
-	case CM_IF:
-		value = expr_processing(commands->data[--count_com]);
-		count_com = buffer_count;
-
-		if (value == 1)
+	if (c->command == CM_IF) {
+		do
 		{
-			++count_com;
-
-			VM(CM_STOP_IF);
-
-			c = commands->data[count_com + 1];
+			buffer_count = count_com;
 			if (c->command == CM_ELSE)
+				value = 1;
+			else
 			{
-				while (c->command != CM_STOP_ELSE)
+				value = expr_processing(commands->data[--count_com]);
+				count_com = buffer_count;
+			}
+
+			if (value >= 1)
+			{
+				++count_com;
+
+				VM(CM_STOP_IF);
+
+				while (c->command != CM_END_IF)
 					c = commands->data[++count_com];
 			}
-		}
-		else {
-			c = commands->data[count_com];
-			
-			while (c->command != CM_STOP_IF)
+			else
+			{
 				c = commands->data[++count_com];
 
-			c = commands->data[count_com + 1];
-			if (c->command == CM_ELSE) {
-				count_com += 2;
-
-				VM(CM_STOP_ELSE);
+				while (c->command != CM_ELSE_IF && c->command != CM_ELSE && c->command != CM_END_IF)
+					c = commands->data[++count_com];
 			}
-		}
-		break;
-	case CM_WHILE:
+		} while (c->command == CM_ELSE_IF || c->command == CM_ELSE);
+	}
+	else if (c->command == CM_WHILE) {
 		value = expr_processing(commands->data[--count_com]);
 		count_com = buffer_count;
 
-		while (value == 1) {
+		while (value >= 1)
+		{
 			++count_com;
 
 			VM(CM_STOP_WHILE);
@@ -121,22 +120,40 @@ static int CDriver(Command *c)
 
 		while (c->command != CM_STOP_WHILE)
 			c = commands->data[++count_com];
-		break;
-	case CM_PRINT:
+	}
+	else if (c->command == CM_DO){
+		do {
+			count_com = buffer_count;
+			++count_com;
+
+			VM(CM_STOP_WHILE);
+
+			c = commands->data[count_com];
+			while (c->command != CM_WHILE)
+				c = commands->data[++count_com];
+
+			value = expr_processing(commands->data[--count_com]);
+		} while (value >= 1);
+
+		c = commands->data[count_com];
+		while (c->command != CM_WHILE)
+			c = commands->data[++count_com];
+	}
+	else if (c->command == CM_PRINT) {
 		printf("%i", expr_processing(commands->data[--count_com]));
 		count_com = buffer_count;
-		break;
-	case CM_PRINTS:
+	}
+	else if (c->command == CM_PRINTS) {
 		printf("%s", c->data);
-		break;
-	case CM_INPUT:
+	}
+	else if (c->command == CM_INPUT) {
 		scanf("%i", &c->table_TN->value);
-		break;
-	case CM_STORE: {
+	}
+	else if (c->command == CM_STORE) {
 		value = c->table_TN->value;
-		Command *buf_c = commands->data[++count_com];
-		count_com -= 2;
-		c = commands->data[count_com];
+		Command *buf_c = commands->data[--count_com];
+		c = commands->data[--count_com];
+
 		switch (buf_c->command)
 		{
 		case CM_PLUSA:  value += expr_processing(c); break;
@@ -146,11 +163,10 @@ static int CDriver(Command *c)
 		case CM_MODA:   value %= expr_processing(c); break;
 		case CM_ASSIGN: value = expr_processing(c);  break;
 		}
+
 		c = commands->data[buffer_count];
 		c->table_TN->value = value;
-		count_com = ++buffer_count;
-		break;
-	}
+		count_com = buffer_count;
 	}
 }
 
@@ -158,13 +174,13 @@ static void VM(int stop)
 {
 	Command *c = commands->data[count_com];
 
-	while (c->command != stop) {
+	while (c->command != stop)
+	{
 		CDriver(c);
 		c = commands->data[++count_com];
 	}
 }
 
-// runs command execution
 void launching_VM(Vector *_commands)
 {
 	commands = _commands;
