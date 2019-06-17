@@ -3,7 +3,8 @@
 
 #include "vector.h"
 
-enum {
+enum
+{
 	TK_IDENT = 128,  // Identifier
 	TK_NUM,          // Number literal
 	TK_STR,          // String literal
@@ -27,9 +28,12 @@ enum {
 	TK_INT,          // "int"
 	TK_CONST,        // "const"
 	TK_DO,           // "do"
+	TK_BREAK,        // "break"
+	TK_CONTINUE,     // "continue"
 };
 
-struct token {
+struct token
+{
 	char *name;
 	int len;
 	int type;
@@ -40,6 +44,6 @@ struct token {
 
 typedef struct token Token;
 
-Vector* tokenize (char *fileName);
+Vector *tokenize(char *fileName);
 
 #endif

@@ -4,7 +4,7 @@
 #include "table_names.h"
 #include "error.h"
 
-Table_N* new_table_n(Table_N *prev)
+Table_N *new_table_n(Table_N *prev)
 {
 	Table_N *tn = malloc(sizeof(Table_N));
 	tn->names = new_vec();
@@ -22,8 +22,10 @@ Name *new_name()
 
 Name *find(Table_N *table_names, char *name)
 {
-	while (table_names != NULL) {
-		for (int i = 0; i < table_names->names->len; ++i) {
+	while (table_names != NULL)
+	{
+		for (int i = 0; i < table_names->names->len; ++i)
+		{
 			Name *n = table_names->names->data[i];
 			if (!strcmp(name, n->name))
 				return n;

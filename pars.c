@@ -9,12 +9,12 @@
 #include "error.h"
 #include "launch.h"
 
-Vector  *commands;
-Vector  *tokens;
+Vector *commands;
+Vector *tokens;
 Table_N *table_names;
-int      count_tk;
+int count_tk;
 
-static Command* new_command(int command, int value)
+static Command *new_command(int command, int value)
 {
 	Command *c = malloc(sizeof(Command));
 	c->command = command;
@@ -22,17 +22,18 @@ static Command* new_command(int command, int value)
 	return c;
 }
 
-static Token* check_tok(int type)
+static Token *check_tok(int type)
 {
 	Token *t = tokens->data[count_tk];
 
 	if (count_tk == tokens->len)
 		t = tokens->data[--count_tk];
 
-	if (t->type != type) {
+	if (t->type != type)
+	{
 		char message[t->len + 50];
 		snprintf(message, sizeof(message), "%s%c%s",
-			"expected '", type, "' character");
+				 "expected '", type, "' character");
 		error(message, t->line, t->column);
 	}
 
@@ -46,30 +47,28 @@ static void statement();
 static void term()
 {
 	Token *t = tokens->data[count_tk];
-	char bufferTT = 0;
 
-	if (count_tk < tokens->len && (t->type == '-' || t->type == '+')) {
-		bufferTT = t->type;
-		t = tokens->data[++count_tk];
-	}
-
-	if (count_tk == tokens->len) {
+	if (count_tk == tokens->len)
+	{
 		t = tokens->data[--count_tk];
 		error("expected declaration or statement at end of input",
-			t->line, t->column);
+			  t->line, t->column);
 	}
 
-	if (t->type == TK_NUM) {
+	if (t->type == TK_NUM)
+	{
 		vec_push(commands, new_command(CM_GET, t->value));
 		++count_tk;
 	}
-	else if (t->type == TK_IDENT) {
+	else if (t->type == TK_IDENT)
+	{
 		Name *n = find(table_names, t->name);
 
-		if (n == NULL) {
+		if (n == NULL)
+		{
 			char message[t->len + 50];
 			snprintf(message, sizeof(message), "%c%s%s",
-				'\'', t->name, "' undeclared");
+					 '\'', t->name, "' undeclared");
 			error(message, t->line, t->column);
 		}
 
@@ -78,34 +77,61 @@ static void term()
 		vec_push(commands, c);
 		++count_tk;
 	}
-	else if (t->type == '(') {
+	else if (t->type == '(')
+	{
 		++count_tk;
 		expr();
 		check_tok(')');
 	}
-	else if (t->type != ';') {
-		error("expected expression before token", t->line, t->column);
-	}
-
-	if (bufferTT == '-')
-		vec_push(commands, new_command(CM_NEG, 0));
 }
 
-static void factor()
+static void unary()
 {
 	term();
 	Token *t = tokens->data[count_tk];
 
-	while (count_tk < tokens->len && (t->type == '*' || t->type == '/'))
+	while (count_tk < tokens->len && (t->type == '-' || t->type == '+'))
 	{
-		++count_tk;
+		int buffer_count = ++count_tk;
 		term();
+		if (buffer_count == count_tk)
+		{
+			t = tokens->data[count_tk];
+			error("expected expression", t->line, t->column);
+		}
+
+		Command *c = malloc(sizeof(Command));
+
+		if (t->type == '-')
+			c->command = CM_NEG;
+
+		vec_push(commands, c);
+
+		t = tokens->data[count_tk];
+	}
+}
+
+static void factor()
+{
+	unary();
+	Token *t = tokens->data[count_tk];
+
+	while (count_tk < tokens->len && (t->type == '*' || t->type == '/' || t->type == '%'))
+	{
+		int buffer_count = ++count_tk;
+		unary();
+		if (buffer_count == count_tk)
+		{
+			t = tokens->data[count_tk];
+			error("expected expression", t->line, t->column);
+		}
 
 		Command *c = malloc(sizeof(Command));
 		switch (t->type)
 		{
 		case '*': c->command = CM_MULT; break;
 		case '/': c->command = CM_DIV;  break;
+		case '%': c->command = CM_MOD;  break;
 		}
 		vec_push(commands, c);
 
@@ -120,8 +146,13 @@ static void add_and_sub()
 
 	while (count_tk < tokens->len && (t->type == '+' || t->type == '-'))
 	{
-		++count_tk;
+		int buffer_count = ++count_tk;
 		factor();
+		if (buffer_count == count_tk)
+		{
+			t = tokens->data[count_tk];
+			error("expected expression", t->line, t->column);
+		}
 
 		Command *c = malloc(sizeof(Command));
 		switch (t->type)
@@ -135,33 +166,22 @@ static void add_and_sub()
 	}
 }
 
-static void module()
+// comparison operators
+static void comp_op()
 {
 	add_and_sub();
 	Token *t = tokens->data[count_tk];
 
-	while (count_tk < tokens->len && (t->type == '%'))
-	{
-		++count_tk;
-		add_and_sub();
-
-		vec_push(commands, new_command(CM_MOD, 0));
-		t = tokens->data[count_tk];
-	}
-}
-
-// comparison operators
-static void comp_op()
-{
-	module();
-	Token *t = tokens->data[count_tk];
-
 	while (count_tk < tokens->len &&
-			(t->type == '>'       || t->type == '<'      || t->type == TK_MOREEQ ||
-			 t->type == TK_LESSEQ || t->type == TK_EQUAL || t->type == TK_NOTEQ))
+			(t->type == '>' || t->type == '<' || t->type == TK_MOREEQ ||
+			 t->type == TK_LESSEQ))
 		{
-		++count_tk;
-		module();
+		int buffer_count = ++count_tk;
+		add_and_sub();
+		if (buffer_count == count_tk) {
+			t = tokens->data[count_tk];
+			error("expected expression", t->line, t->column);
+		}
 
 		Command *c = malloc(sizeof(Command));
 		switch (t->type)
@@ -170,6 +190,30 @@ static void comp_op()
 		case '<':       c->command = CM_LESS;   break;
 		case TK_MOREEQ: c->command = CM_MOREEQ; break;
 		case TK_LESSEQ: c->command = CM_LESSEQ; break;
+		}
+		vec_push(commands, c);
+
+		t = tokens->data[count_tk];
+	}
+}
+
+static void equality_op()
+{
+	comp_op();
+	Token *t = tokens->data[count_tk];
+
+	while (count_tk < tokens->len && (t->type == TK_EQUAL || t->type == TK_NOTEQ))
+		{
+		int buffer_count = ++count_tk;
+		comp_op();
+		if (buffer_count == count_tk) {
+			t = tokens->data[count_tk];
+			error("expected expression", t->line, t->column);
+		}
+
+		Command *c = malloc(sizeof(Command));
+		switch (t->type)
+		{
 		case TK_EQUAL:  c->command = CM_EQUAL;  break;
 		case TK_NOTEQ:  c->command = CM_NOTEQ;  break;
 		}
@@ -181,13 +225,17 @@ static void comp_op()
 
 static void and()
 {
-	comp_op();
+	equality_op();
 	Token *t = tokens->data[count_tk];
 
 	while (count_tk < tokens->len && t->type == TK_AND)
 	{
-		++count_tk;
-		comp_op();
+		int buffer_count = ++count_tk;
+		equality_op();
+		if (buffer_count == count_tk) {
+			t = tokens->data[count_tk];
+			error("expected expression", t->line, t->column);
+		}
 
 		Command *c = malloc(sizeof(Command));
 		c->command = CM_AND;
@@ -197,15 +245,19 @@ static void and()
 	}
 }
 
-static void or()
+static int or()
 {
 	and();
 	Token *t = tokens->data[count_tk];
 
 	while (count_tk < tokens->len && t->type == TK_OR)
 	{
-		++count_tk;
+		int buffer_count = ++count_tk;
 		and();
+		if (buffer_count == count_tk) {
+			t = tokens->data[count_tk];
+			error("expected expression", t->line, t->column);
+		}
 
 		Command *c = malloc(sizeof(Command));
 		c->command = CM_OR;
@@ -217,43 +269,64 @@ static void or()
 
 static void expr()
 {
+	int buffer_count = count_tk;
+
 	or();
+
+	if (buffer_count == count_tk) {
+		Token *t = tokens->data[count_tk];
+		error("expected expression", t->line, t->column);
+	}
+
 }
 
 // assignment function
-static void assign ()
+static void assign()
 {
-	Token *t = tokens->data[count_tk];
-	Name *n = find(table_names, t->name);
+	Token *t = tokens->data[++count_tk];
+	Command *c = malloc(sizeof(Command));
+	c->command = -1;
 
-	if (n == NULL)
+	switch (t->type)
 	{
-		char message[t->len + 50];
-		snprintf(message, sizeof(message), "%c%s%s",
-			'\'', t->name, "' undeclared");
-		error(message, t->line, t->column);
-	}
-
-	t = tokens->data[++count_tk];
-	++count_tk;
-	expr();
-
-	Command *c = new_command(CM_STORE, 0);
-	c->table_TN = n;
-	vec_push(commands, c);
-
-	c = malloc(sizeof(Command));
-	switch (t->type) {
 	case TK_PLUSA:  c->command = CM_PLUSA;  break;
 	case TK_MINUSA: c->command = CM_MINUSA; break;
 	case TK_MULTA:  c->command = CM_MULTA;  break;
 	case TK_DIVA:   c->command = CM_DIVA;   break;
 	case TK_MODA:   c->command = CM_MODA;   break;
-	case '=':      	c->command = CM_ASSIGN; break;
-	default: error("expected '=', '+=', '-=', '*=', '/=', '%='",
-		t->line, t->column); break;
+	case '=':       c->command = CM_ASSIGN; break;
 	}
-	vec_push(commands, c);
+
+	if (c->command == -1)
+	{
+		--count_tk;
+		expr();
+	}
+	else
+	{
+		t = tokens->data[count_tk - 1];
+
+		if (t->type != TK_IDENT)
+			error("expected identifier", t->line, t->column);
+
+		Name *n = find(table_names, t->name);
+
+		if (n == NULL)
+		{
+			char message[t->len + 50];
+			snprintf(message, sizeof(message), "%c%s%s",
+					 '\'', t->name, "' undeclared");
+			error(message, t->line, t->column);
+		}
+
+		++count_tk;
+		expr();
+
+		vec_push(commands, c);
+		c = new_command(CM_STORE, 0);
+		c->table_TN = n;
+		vec_push(commands, c);
+	}
 }
 
 // initialization variable
@@ -262,36 +335,41 @@ static void init_var()
 	Token *t = tokens->data[count_tk];
 	Name *general_n = new_name();
 
-	if (t->type == TK_CONST) {
+	if (t->type == TK_CONST)
+	{
 		general_n->is_const = 1;
 		t = tokens->data[++count_tk];
 	}
 
 	general_n->type = t->type;
 
-	if (t->type == TK_INT) {
+	if (t->type == TK_INT)
+	{
 		do {
 			Name *n = new_name();
 			n->is_const = general_n->is_const;
 			n->type = general_n->type;
 
 			t = tokens->data[++count_tk];
-			check_tok(TK_IDENT);
 
-			if (find(table_names, t->name) != NULL) 
+			if (t->type != TK_IDENT)
+				error("expected identifier", t->line, t->column);
+
+			if (find(table_names, t->name) != NULL)
 				error("redefinition", t->line, t->column);
 
 			n->name = t->name;
-			t = tokens->data[count_tk];
+			t = tokens->data[++count_tk];
 
-			if (t->type == '=') {
+			if (t->type == '=')
+			{
 				++count_tk;
 				expr();
 
+				vec_push(commands, new_command(CM_ASSIGN, 0));
 				Command *c = new_command(CM_STORE, 0);
 				c->table_TN = n;
 				vec_push(commands, c);
-				vec_push(commands, new_command(CM_ASSIGN, 0));
 			}
 			else if (t->type != ';' && t->type != ',')
 				error("expected ‘=’, ‘,’, ‘;’", t->line, t->column);
@@ -301,7 +379,8 @@ static void init_var()
 			t = tokens->data[count_tk];
 		} while (count_tk < tokens->len && t->type == ',');
 
-		if (count_tk == tokens->len) {
+		if (count_tk == tokens->len)
+		{
 			t = tokens->data[--count_tk];
 			error("expected ';' character", t->line, t->column);
 		}
@@ -310,46 +389,89 @@ static void init_var()
 		error("unknown type", t->line, t->column);
 }
 
-
 // initialization while
 static void init_while()
 {
+	Token *t = tokens->data[count_tk];
 	++count_tk;
 
-	check_tok('(');
-	expr();
-	check_tok(')');
+	if (t->type == TK_DO) {
+		vec_push(commands, new_command(CM_DO, 0));
+		statement();
+		vec_push(commands, new_command(CM_STOP_WHILE, 0));
+		
+		t = tokens->data[count_tk++];
 
-	vec_push(commands, new_command(CM_WHILE, 0));
-	statement();
-	vec_push(commands, new_command(CM_STOP_WHILE, 0));
+		if (t->type != TK_WHILE)
+			error("expected 'while' token", t->line, t->column);
+
+		check_tok('(');
+		expr();
+		check_tok(')');
+
+		vec_push(commands, new_command(CM_WHILE, 0));
+	}
+	else {
+		check_tok('(');
+		expr();
+		check_tok(')');
+	
+		vec_push(commands, new_command(CM_WHILE, 0));
+		statement();
+		vec_push(commands, new_command(CM_STOP_WHILE, 0));
+	}
 }
 
 // initialization if
 static void init_if()
 {
-	++count_tk;
+	Token *t, *buf_tok;
+	int is_else = 0;
 
-	check_tok('(');
-	expr();
-	check_tok(')');
+	do 
+	{
+		++count_tk;
 
-	vec_push(commands, new_command(CM_IF, 0));
-	statement();
-	vec_push(commands, new_command(CM_STOP_IF, 0));
+		check_tok('(');
+		expr();
+		check_tok(')');
 
-	Token *t = tokens->data[count_tk];
+		if (is_else == 0)
+			vec_push(commands, new_command(CM_IF, 0));
+		else
+			vec_push(commands, new_command(CM_ELSE_IF, 0));
 
-	if (t->type == TK_ELSE)
+		statement();
+		vec_push(commands, new_command(CM_STOP_IF, 0));
+
+		t = tokens->data[count_tk];
+		is_else = 0;
+		if (t->type == TK_ELSE) {
+			t = tokens->data[++count_tk];
+			is_else = 1;
+		}
+	} while (t->type == TK_IF);
+
+	if (is_else)
 	{
 		vec_push(commands, new_command(CM_ELSE, 0));
-		++count_tk;
 		statement();
-		vec_push(commands, new_command(CM_STOP_ELSE, 0));
+		vec_push(commands, new_command(CM_STOP_IF, 0));
 	}
+
+	vec_push(commands, new_command(CM_END_IF, 0));
 }
 
-// output function initialization
+static void init_for()
+{
+	++count_tk;
+	check_tok('(');
+	check_tok(')');
+
+	statement();
+	vec_push(commands, new_command(CM_STOP_FOR, 0));
+}
+
 static void init_print()
 {
 	++count_tk;
@@ -378,8 +500,7 @@ static void init_print()
 			error("expected \"string\" or identifier", t->line, t->column);
 
 		t = tokens->data[count_tk];
-	}
-	while (count_tk < tokens->len && t->type == ',');
+	} while (count_tk < tokens->len && t->type == ',');
 
 	if (count_tk == tokens->len)
 	{
@@ -390,7 +511,6 @@ static void init_print()
 	check_tok(')');
 }
 
-// initialization of the input function
 static void init_input()
 {
 	++count_tk;
@@ -406,7 +526,7 @@ static void init_input()
 	{
 		char message[t->len + 50];
 		snprintf(message, sizeof(message), "%c%s%s",
-			'\'', t->name, "' undeclared");
+				 '\'', t->name, "' undeclared");
 		error(message, t->line, t->column);
 	}
 
@@ -425,18 +545,13 @@ static void statement()
 
 	t = check_tok('{');
 
-	if (t->type == '}') {
-		++count_tk;
-		return;
-	}
-
 	while (count_tk < tokens->len && t->type != '}')
 	{
-		if (t->type == TK_IDENT)
+		if (t->type == TK_IDENT || t->type == TK_NUM || t->type == '(')
 			assign();
 		else if (t->type == TK_INT || t->type == TK_CONST)
 			init_var();
-		else if (t->type == TK_WHILE)
+		else if (t->type == TK_WHILE || t->type == TK_DO)
 		{
 			init_while();
 			t = tokens->data[count_tk];
@@ -448,13 +563,24 @@ static void statement()
 			t = tokens->data[count_tk];
 			continue;
 		}
+		else if (t->type == TK_FOR)
+		{
+			init_for();
+			t = tokens->data[count_tk];
+			continue;
+		}
 		else if (t->type == TK_PRINT)
 			init_print();
 		else if (t->type == TK_INPUT)
 			init_input();
-		else if (t->type == ';');
-		else 
-			error("syntax error", t->line, t->column);
+		else if (t->type == TK_BREAK) {
+			vec_push(commands, new_command(CM_BREAK, 0));
+			++count_tk;
+		}
+		else if (t->type == TK_CONTINUE) {
+			vec_push(commands, new_command(CM_CONTINUE, 0));
+			++count_tk;
+		}
 
 		t = check_tok(';');
 	}
@@ -470,7 +596,7 @@ static void statement()
 	table_names = prev_tn;
 }
 
-Vector* parsing(Vector *_tokens)
+Vector *parsing(Vector *_tokens)
 {
 	tokens = _tokens;
 	commands = new_vec();
