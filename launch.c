@@ -73,7 +73,8 @@ static int CDriver(Command *c)
 	int buffer_count = count_com;
 	int value;
 
-	if (c->command == CM_IF) {
+	if (c->command == CM_IF)
+	{
 		do
 		{
 			buffer_count = count_com;
@@ -91,6 +92,13 @@ static int CDriver(Command *c)
 
 				VM(CM_STOP_IF);
 
+				c = commands->data[count_com];
+				if (c->command == CM_BREAK || c->command == CM_CONTINUE)
+				{
+					--count_com;
+					return 0;
+				}
+
 				while (c->command != CM_END_IF)
 					c = commands->data[++count_com];
 			}
@@ -103,30 +111,46 @@ static int CDriver(Command *c)
 			}
 		} while (c->command == CM_ELSE_IF || c->command == CM_ELSE);
 	}
-	else if (c->command == CM_WHILE) {
-		value = expr_processing(commands->data[--count_com]);
-		count_com = buffer_count;
-
-		while (value >= 1)
+	else if (c->command == CM_WHILE)
+	{
+		while (1)
 		{
-			++count_com;
-
-			VM(CM_STOP_WHILE);
-
 			count_com = buffer_count;
 			value = expr_processing(commands->data[--count_com]);
 			count_com = buffer_count;
+
+			if (value == 0)
+				break;
+
+			++count_com;
+
+			VM(CM_STOP_WHILE);
+
+			c = commands->data[count_com];
+			if (c->command == CM_BREAK)
+				break;
+			else if (c->command == CM_CONTINUE)
+				continue;
 		}
 
+		c = commands->data[count_com];
 		while (c->command != CM_STOP_WHILE)
 			c = commands->data[++count_com];
 	}
-	else if (c->command == CM_DO){
-		do {
+	else if (c->command == CM_DO)
+	{
+		do
+		{
 			count_com = buffer_count;
 			++count_com;
 
 			VM(CM_STOP_WHILE);
+
+			c = commands->data[count_com];
+			if (c->command == CM_BREAK)
+				break;
+			else if (c->command == CM_CONTINUE)
+				continue;
 
 			c = commands->data[count_com];
 			while (c->command != CM_WHILE)
@@ -139,17 +163,21 @@ static int CDriver(Command *c)
 		while (c->command != CM_WHILE)
 			c = commands->data[++count_com];
 	}
-	else if (c->command == CM_PRINT) {
+	else if (c->command == CM_PRINT)
+	{
 		printf("%i", expr_processing(commands->data[--count_com]));
 		count_com = buffer_count;
 	}
-	else if (c->command == CM_PRINTS) {
+	else if (c->command == CM_PRINTS)
+	{
 		printf("%s", c->data);
 	}
-	else if (c->command == CM_INPUT) {
+	else if (c->command == CM_INPUT)
+	{
 		scanf("%i", &c->table_TN->value);
 	}
-	else if (c->command == CM_STORE) {
+	else if (c->command == CM_STORE)
+	{
 		value = c->table_TN->value;
 		Command *buf_c = commands->data[--count_com];
 		c = commands->data[--count_com];
@@ -176,6 +204,8 @@ static void VM(int stop)
 
 	while (c->command != stop)
 	{
+		if (c->command == CM_BREAK || c->command == CM_CONTINUE)
+			break;
 		CDriver(c);
 		c = commands->data[++count_com];
 	}

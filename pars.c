@@ -42,7 +42,7 @@ static Token *check_tok(int type)
 }
 
 static void expr();
-static void statement();
+static void statement(int is_loop);
 
 static void term()
 {
@@ -87,10 +87,9 @@ static void term()
 
 static void unary()
 {
-	term();
 	Token *t = tokens->data[count_tk];
 
-	while (count_tk < tokens->len && (t->type == '-' || t->type == '+'))
+	if (count_tk < tokens->len && (t->type == '-' || t->type == '+'))
 	{
 		int buffer_count = ++count_tk;
 		term();
@@ -109,6 +108,8 @@ static void unary()
 
 		t = tokens->data[count_tk];
 	}
+
+	term();
 }
 
 static void factor()
@@ -203,7 +204,7 @@ static void equality_op()
 	Token *t = tokens->data[count_tk];
 
 	while (count_tk < tokens->len && (t->type == TK_EQUAL || t->type == TK_NOTEQ))
-		{
+	{
 		int buffer_count = ++count_tk;
 		comp_op();
 		if (buffer_count == count_tk) {
@@ -285,7 +286,7 @@ static void assign()
 {
 	Token *t = tokens->data[++count_tk];
 	Command *c = malloc(sizeof(Command));
-	c->command = -1;
+	c->command = 0;
 
 	switch (t->type)
 	{
@@ -297,7 +298,7 @@ static void assign()
 	case '=':       c->command = CM_ASSIGN; break;
 	}
 
-	if (c->command == -1)
+	if (c->command == 0)
 	{
 		--count_tk;
 		expr();
@@ -319,6 +320,14 @@ static void assign()
 			error(message, t->line, t->column);
 		}
 
+		if (n->is_const == 1)
+		{
+			char message[t->len + 50];
+			snprintf(message, sizeof(message), "%s%s%c",
+					 "assignment of read-only variable '", t->name, '\'');
+			error(message, t->line, t->column);
+		}
+
 		++count_tk;
 		expr();
 
@@ -327,6 +336,8 @@ static void assign()
 		c->table_TN = n;
 		vec_push(commands, c);
 	}
+
+	check_tok(';');
 }
 
 // initialization variable
@@ -384,48 +395,53 @@ static void init_var()
 			t = tokens->data[--count_tk];
 			error("expected ';' character", t->line, t->column);
 		}
+
+		check_tok(';');
 	}
 	else
-		error("unknown type", t->line, t->column);
+		error("unknown type name", t->line, t->column);
 }
 
 // initialization while
 static void init_while()
 {
-	Token *t = tokens->data[count_tk];
 	++count_tk;
 
-	if (t->type == TK_DO) {
-		vec_push(commands, new_command(CM_DO, 0));
-		statement();
-		vec_push(commands, new_command(CM_STOP_WHILE, 0));
-		
-		t = tokens->data[count_tk++];
+	check_tok('(');
+	expr();
+	check_tok(')');
 
-		if (t->type != TK_WHILE)
-			error("expected 'while' token", t->line, t->column);
+	vec_push(commands, new_command(CM_WHILE, 0));
+	statement(1);
+	vec_push(commands, new_command(CM_STOP_WHILE, 0));
+}
 
-		check_tok('(');
-		expr();
-		check_tok(')');
+// initialization do while
+static void init_do_while()
+{
+	++count_tk;
 
-		vec_push(commands, new_command(CM_WHILE, 0));
-	}
-	else {
-		check_tok('(');
-		expr();
-		check_tok(')');
+	vec_push(commands, new_command(CM_DO, 0));
+	statement(1);
+	vec_push(commands, new_command(CM_STOP_WHILE, 0));
 	
-		vec_push(commands, new_command(CM_WHILE, 0));
-		statement();
-		vec_push(commands, new_command(CM_STOP_WHILE, 0));
-	}
+	Token *t = tokens->data[count_tk++];
+
+	if (t->type != TK_WHILE)
+		error("expected 'while' token", t->line, t->column);
+
+	check_tok('(');
+	expr();
+	check_tok(')');
+
+	vec_push(commands, new_command(CM_WHILE, 0));
+	check_tok(';');
 }
 
 // initialization if
-static void init_if()
+static void init_if(int is_loop)
 {
-	Token *t, *buf_tok;
+	Token *t;
 	int is_else = 0;
 
 	do 
@@ -441,7 +457,7 @@ static void init_if()
 		else
 			vec_push(commands, new_command(CM_ELSE_IF, 0));
 
-		statement();
+		statement(is_loop);
 		vec_push(commands, new_command(CM_STOP_IF, 0));
 
 		t = tokens->data[count_tk];
@@ -455,21 +471,11 @@ static void init_if()
 	if (is_else)
 	{
 		vec_push(commands, new_command(CM_ELSE, 0));
-		statement();
+		statement(is_loop);
 		vec_push(commands, new_command(CM_STOP_IF, 0));
 	}
 
 	vec_push(commands, new_command(CM_END_IF, 0));
-}
-
-static void init_for()
-{
-	++count_tk;
-	check_tok('(');
-	check_tok(')');
-
-	statement();
-	vec_push(commands, new_command(CM_STOP_FOR, 0));
 }
 
 static void init_print()
@@ -485,9 +491,7 @@ static void init_print()
 		if (t->type == TK_IDENT || t->type == TK_NUM || t->type == '(')
 		{
 			expr();
-
-			Command *c = new_command(CM_PRINT, 0);
-			vec_push(commands, c);
+			vec_push(commands, new_command(CM_PRINT, 0));
 		}
 		else if (t->type == TK_STR)
 		{
@@ -509,6 +513,7 @@ static void init_print()
 	}
 
 	check_tok(')');
+	check_tok(';');
 }
 
 static void init_input()
@@ -535,9 +540,10 @@ static void init_input()
 	vec_push(commands, c);
 
 	check_tok(')');
+	check_tok(';');
 }
 
-static void statement()
+static void statement(int is_loop)
 {
 	Table_N *prev_tn = table_names;
 	table_names = new_table_n(table_names);
@@ -547,42 +553,47 @@ static void statement()
 
 	while (count_tk < tokens->len && t->type != '}')
 	{
-		if (t->type == TK_IDENT || t->type == TK_NUM || t->type == '(')
-			assign();
-		else if (t->type == TK_INT || t->type == TK_CONST)
-			init_var();
-		else if (t->type == TK_WHILE || t->type == TK_DO)
+		switch (t->type)
 		{
+		case TK_IF:
+			init_if(is_loop);
+			break;;
+		case TK_WHILE:
 			init_while();
-			t = tokens->data[count_tk];
-			continue;
-		}
-		else if (t->type == TK_IF)
-		{
-			init_if();
-			t = tokens->data[count_tk];
-			continue;
-		}
-		else if (t->type == TK_FOR)
-		{
-			init_for();
-			t = tokens->data[count_tk];
-			continue;
-		}
-		else if (t->type == TK_PRINT)
+			break;;
+		case TK_DO:
+			init_do_while();
+			break;;
+		case TK_PRINT:
 			init_print();
-		else if (t->type == TK_INPUT)
+			break;
+		case TK_INPUT:
 			init_input();
-		else if (t->type == TK_BREAK) {
+			break;
+		case TK_BREAK:
+			if (!is_loop)
+				error("break statement not within loop", t->line, t->column);
 			vec_push(commands, new_command(CM_BREAK, 0));
 			++count_tk;
-		}
-		else if (t->type == TK_CONTINUE) {
+			break;
+		case TK_CONTINUE:
+			if (!is_loop)
+				error("continue statement not within loop", t->line, t->column);
 			vec_push(commands, new_command(CM_CONTINUE, 0));
 			++count_tk;
+			break;
+		case TK_CONST: case TK_INT:
+			init_var();
+			break;
+		case TK_IDENT: case TK_NUM: case '(':
+			assign();
+			break;
+		case ';':
+			++count_tk;
+			break;
 		}
 
-		t = check_tok(';');
+		t = tokens->data[count_tk];
 	}
 
 	if (count_tk == tokens->len)
@@ -593,6 +604,7 @@ static void statement()
 
 	check_tok('}');
 
+	free(table_names);
 	table_names = prev_tn;
 }
 
@@ -602,14 +614,14 @@ Vector *parsing(Vector *_tokens)
 	commands = new_vec();
 	count_tk = 0;
 
-	statement();
+	statement(0);
 
 	// for test
 	/*
 	for (int i = 0; i < commands->len; i++)
 	{
 		Command *c1 = commands->data[i];
-		printf("%i, %i, %s\n", c1->command, c1->value, c1->data);
+		printf("%i. %i, %i, %s\n", i + 1, c1->command, c1->value, c1->data);
 	}
 	*/
 

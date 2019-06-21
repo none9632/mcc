@@ -39,7 +39,6 @@ static void enter_TK()
 	push_table("else",     TK_ELSE);
 	push_table("do",       TK_DO);
 	push_table("while",    TK_WHILE);
-	push_table("for",      TK_FOR);
 	push_table("int",      TK_INT);
 	push_table("const",    TK_CONST);
 	push_table("input",    TK_INPUT);

@@ -23,7 +23,6 @@ enum
 	TK_WHILE,        // "while"
 	TK_IF,           // "if"
 	TK_PRINT,        // "print"
-	TK_FOR,          // "for"
 	TK_INPUT,        // "input"
 	TK_INT,          // "int"
 	TK_CONST,        // "const"
