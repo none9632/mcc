@@ -282,34 +282,29 @@ static Vector *scan(char *p_str)
 		}
 
 		// Comment
-		if (!strncmp(p_str, "/*", 2) || !strncmp(p_str, "//", 2))
-		{
+		else if (!strncmp(p_str, "/*", 2) || !strncmp(p_str, "//", 2))
 			p_str = read_comment(p_str);
-			continue;
-		}
 
 		//Identifier
-		if (isalpha(*p_str) || *p_str == '_')
+		else if (isalpha(*p_str) || *p_str == '_')
 		{
 			t->line = line;
 			t->column = column;
 			p_str = read_ident(t, p_str);
 			vec_push(tokens, t);
-			continue;
 		}
 
 		// Number literal
-		if (isdigit(*p_str))
+		else if (isdigit(*p_str))
 		{
 			t->line = line;
 			t->column = column;
 			p_str = read_num(t, p_str);
 			vec_push(tokens, t);
-			continue;
 		}
 
 		// Single-letter symbol
-		if (strchr("():;{},*/+-%=<>", *p_str))
+		else if (strchr("():;{},*/+-%=<>", *p_str))
 		{
 			if (*p_str == '\0')
 				continue;
@@ -318,20 +313,20 @@ static Vector *scan(char *p_str)
 			t->line = line;
 			t->column = column++;
 			vec_push(tokens, t);
-			continue;
 		}
 
 		// String literal
-		if (*p_str == '\"')
+		else if (*p_str == '\"')
 		{
 			t->line = line;
 			t->column = column;
 			p_str = read_str(t, p_str);
 			vec_push(tokens, t);
-			continue;
 		}
-
-		error("unknown character", line, column);
+		
+		// Unknown character
+		else
+			error("unknown character", line, column);
 	}
 	return tokens;
 }
@@ -347,15 +342,7 @@ Vector *tokenize(char *file_name)
 	char *str = read_file(file);
 	Vector *tokens = scan(str);
 
-	// for test
-	/*
-	for (int i = 0; i < tokens->len; i++)
-	{
-		Token *t = tokens->data[i];
-		printf("n: %s, t: %i, val: %i,\t\t ln: %i, col: %i\n", t->name, t->type, t->value, t->line, t->column);
-	}
-	*/
-
 	fclose(file);
+	free(str);
 	return tokens;
 }

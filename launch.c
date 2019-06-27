@@ -52,6 +52,7 @@ static int expr_processing(Command *c)
 		case CM_DIV:    value = dv.value1 / dv.value2;  break;
 		case CM_MOD:    value = dv.value1 % dv.value2;  break;
 		case CM_EQUAL:  value = dv.value1 == dv.value2; break;
+		case CM_NOTEQ:  value = dv.value1 != dv.value2; break;
 		case CM_MORE:   value = dv.value1 > dv.value2;  break;
 		case CM_LESS:   value = dv.value1 < dv.value2;  break;
 		case CM_MOREEQ: value = dv.value1 >= dv.value2; break;
@@ -73,7 +74,27 @@ static int CDriver(Command *c)
 	int buffer_count = count_com;
 	int value;
 
-	if (c->command == CM_IF)
+	if (c->command == CM_STORE)
+	{
+		value = c->table_TN->value;
+		Command *buf_c = commands->data[--count_com];
+		c = commands->data[--count_com];
+
+		switch (buf_c->command)
+		{
+		case CM_PLUSA:  value += expr_processing(c); break;
+		case CM_MINUSA: value -= expr_processing(c); break;
+		case CM_MULTA:  value *= expr_processing(c); break;
+		case CM_DIVA:   value /= expr_processing(c); break;
+		case CM_MODA:   value %= expr_processing(c); break;
+		case CM_ASSIGN: value = expr_processing(c);  break;
+		}
+
+		c = commands->data[buffer_count];
+		c->table_TN->value = value;
+		count_com = buffer_count;
+	}
+	else if (c->command == CM_IF)
 	{
 		do
 		{
@@ -129,13 +150,10 @@ static int CDriver(Command *c)
 			c = commands->data[count_com];
 			if (c->command == CM_BREAK)
 				break;
-			else if (c->command == CM_CONTINUE)
-				continue;
 		}
 
-		c = commands->data[count_com];
-		while (c->command != CM_STOP_WHILE)
-			c = commands->data[++count_com];
+		c = commands->data[buffer_count];
+		count_com = c->value;
 	}
 	else if (c->command == CM_DO)
 	{
@@ -152,16 +170,14 @@ static int CDriver(Command *c)
 			else if (c->command == CM_CONTINUE)
 				continue;
 
-			c = commands->data[count_com];
-			while (c->command != CM_WHILE)
-				c = commands->data[++count_com];
+			c = commands->data[buffer_count];
+			count_com = c->value;
 
 			value = expr_processing(commands->data[--count_com]);
 		} while (value >= 1);
 
-		c = commands->data[count_com];
-		while (c->command != CM_WHILE)
-			c = commands->data[++count_com];
+		c = commands->data[buffer_count];
+		count_com = c->value;
 	}
 	else if (c->command == CM_PRINT)
 	{
@@ -169,33 +185,9 @@ static int CDriver(Command *c)
 		count_com = buffer_count;
 	}
 	else if (c->command == CM_PRINTS)
-	{
 		printf("%s", c->data);
-	}
 	else if (c->command == CM_INPUT)
-	{
 		scanf("%i", &c->table_TN->value);
-	}
-	else if (c->command == CM_STORE)
-	{
-		value = c->table_TN->value;
-		Command *buf_c = commands->data[--count_com];
-		c = commands->data[--count_com];
-
-		switch (buf_c->command)
-		{
-		case CM_PLUSA:  value += expr_processing(c); break;
-		case CM_MINUSA: value -= expr_processing(c); break;
-		case CM_MULTA:  value *= expr_processing(c); break;
-		case CM_DIVA:   value /= expr_processing(c); break;
-		case CM_MODA:   value %= expr_processing(c); break;
-		case CM_ASSIGN: value = expr_processing(c);  break;
-		}
-
-		c = commands->data[buffer_count];
-		c->table_TN->value = value;
-		count_com = buffer_count;
-	}
 }
 
 static void VM(int stop)

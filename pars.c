@@ -26,11 +26,12 @@ static Token *check_tok(int type)
 {
 	Token *t = tokens->data[count_tk];
 
-	if (count_tk == tokens->len)
-		t = tokens->data[--count_tk];
-
-	if (t->type != type)
+	if (count_tk >= tokens->len || t->type != type)
 	{
+		// Take last token
+		if (count_tk >= tokens->len)
+			t = tokens->data[--tokens->len];
+
 		char message[t->len + 50];
 		snprintf(message, sizeof(message), "%s%c%s",
 				 "expected '", type, "' character");
@@ -48,9 +49,10 @@ static void term()
 {
 	Token *t = tokens->data[count_tk];
 
-	if (count_tk == tokens->len)
+	// Take last token
+	if (count_tk >= tokens->len)
 	{
-		t = tokens->data[--count_tk];
+		t = tokens->data[--tokens->len];
 		error("expected declaration or statement at end of input",
 			  t->line, t->column);
 	}
@@ -92,21 +94,15 @@ static void unary()
 	if (count_tk < tokens->len && (t->type == '-' || t->type == '+'))
 	{
 		int buffer_count = ++count_tk;
-		term();
+		unary();
 		if (buffer_count == count_tk)
 		{
 			t = tokens->data[count_tk];
 			error("expected expression", t->line, t->column);
 		}
 
-		Command *c = malloc(sizeof(Command));
-
 		if (t->type == '-')
-			c->command = CM_NEG;
-
-		vec_push(commands, c);
-
-		t = tokens->data[count_tk];
+			vec_push(commands, new_command(CM_NEG, 0));
 	}
 
 	term();
@@ -176,10 +172,11 @@ static void comp_op()
 	while (count_tk < tokens->len &&
 			(t->type == '>' || t->type == '<' || t->type == TK_MOREEQ ||
 			 t->type == TK_LESSEQ))
-		{
+	{
 		int buffer_count = ++count_tk;
 		add_and_sub();
-		if (buffer_count == count_tk) {
+		if (buffer_count == count_tk)
+		{
 			t = tokens->data[count_tk];
 			error("expected expression", t->line, t->column);
 		}
@@ -207,7 +204,8 @@ static void equality_op()
 	{
 		int buffer_count = ++count_tk;
 		comp_op();
-		if (buffer_count == count_tk) {
+		if (buffer_count == count_tk)
+		{
 			t = tokens->data[count_tk];
 			error("expected expression", t->line, t->column);
 		}
@@ -233,7 +231,8 @@ static void and()
 	{
 		int buffer_count = ++count_tk;
 		equality_op();
-		if (buffer_count == count_tk) {
+		if (buffer_count == count_tk)
+		{
 			t = tokens->data[count_tk];
 			error("expected expression", t->line, t->column);
 		}
@@ -356,7 +355,8 @@ static void init_var()
 
 	if (t->type == TK_INT)
 	{
-		do {
+		do
+		{
 			Name *n = new_name();
 			n->is_const = general_n->is_const;
 			n->type = general_n->type;
@@ -390,12 +390,6 @@ static void init_var()
 			t = tokens->data[count_tk];
 		} while (count_tk < tokens->len && t->type == ',');
 
-		if (count_tk == tokens->len)
-		{
-			t = tokens->data[--count_tk];
-			error("expected ';' character", t->line, t->column);
-		}
-
 		check_tok(';');
 	}
 	else
@@ -411,9 +405,13 @@ static void init_while()
 	expr();
 	check_tok(')');
 
-	vec_push(commands, new_command(CM_WHILE, 0));
+	Command *c = new_command(CM_WHILE, 0);
+
+	vec_push(commands, c);
 	statement(1);
 	vec_push(commands, new_command(CM_STOP_WHILE, 0));
+
+	c->value = commands->len - 1;
 }
 
 // initialization do while
@@ -421,12 +419,13 @@ static void init_do_while()
 {
 	++count_tk;
 
-	vec_push(commands, new_command(CM_DO, 0));
+	Command *c = new_command(CM_DO, 0);
+
+	vec_push(commands, c);
 	statement(1);
 	vec_push(commands, new_command(CM_STOP_WHILE, 0));
 	
 	Token *t = tokens->data[count_tk++];
-
 	if (t->type != TK_WHILE)
 		error("expected 'while' token", t->line, t->column);
 
@@ -435,6 +434,9 @@ static void init_do_while()
 	check_tok(')');
 
 	vec_push(commands, new_command(CM_WHILE, 0));
+
+	c->value = commands->len - 1;
+
 	check_tok(';');
 }
 
@@ -462,11 +464,12 @@ static void init_if(int is_loop)
 
 		t = tokens->data[count_tk];
 		is_else = 0;
-		if (t->type == TK_ELSE) {
+		if (t->type == TK_ELSE)
+		{
 			t = tokens->data[++count_tk];
 			is_else = 1;
 		}
-	} while (t->type == TK_IF);
+	} while (is_else == 1 && t->type == TK_IF);
 
 	if (is_else)
 	{
@@ -506,12 +509,6 @@ static void init_print()
 		t = tokens->data[count_tk];
 	} while (count_tk < tokens->len && t->type == ',');
 
-	if (count_tk == tokens->len)
-	{
-		t = tokens->data[--count_tk];
-		error("expected ) character", t->line, t->column);
-	}
-
 	check_tok(')');
 	check_tok(';');
 }
@@ -543,6 +540,7 @@ static void init_input()
 	check_tok(';');
 }
 
+// is_loop need for check break or continue within loop or not
 static void statement(int is_loop)
 {
 	Table_N *prev_tn = table_names;
@@ -596,12 +594,6 @@ static void statement(int is_loop)
 		t = tokens->data[count_tk];
 	}
 
-	if (count_tk == tokens->len)
-	{
-		t = tokens->data[--count_tk];
-		error("missing terminating } character", t->line, t->column);
-	}
-
 	check_tok('}');
 
 	free(table_names);
@@ -615,16 +607,6 @@ Vector *parsing(Vector *_tokens)
 	count_tk = 0;
 
 	statement(0);
-
-	// for test
-	/*
-	for (int i = 0; i < commands->len; i++)
-	{
-		Command *c1 = commands->data[i];
-		printf("%i. %i, %i, %s\n", i + 1, c1->command, c1->value, c1->data);
-	}
-	*/
-
 	vec_push(commands, new_command(CM_STOP, 0));
 
 	return commands;
