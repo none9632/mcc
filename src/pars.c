@@ -3,11 +3,10 @@
 #include <malloc.h>
 
 #include "vector.h"
-#include "pars.h"
 #include "table_names.h"
-#include "lex.h"
-#include "error.h"
-#include "launch.h"
+#include "src/lex.h"
+#include "src/error.h"
+#include "src/launch.h"
 
 Vector *commands;
 Vector *tokens;
@@ -245,7 +244,7 @@ static void and()
 	}
 }
 
-static int or()
+static void or()
 {
 	and();
 	Token *t = tokens->data[count_tk];
@@ -483,8 +482,10 @@ static void init_if(int is_loop)
 
 static void init_print()
 {
+	Token *t;
+
 	++count_tk;
-	Token *t = check_tok('(');
+	check_tok('(');
 	--count_tk;
 
 	do
@@ -545,9 +546,7 @@ static void statement(int is_loop)
 {
 	Table_N *prev_tn = table_names;
 	table_names = new_table_n(table_names);
-	Token *t = tokens->data[count_tk];
-
-	t = check_tok('{');
+	Token *t = check_tok('{');
 
 	while (count_tk < tokens->len && t->type != '}')
 	{
@@ -555,13 +554,13 @@ static void statement(int is_loop)
 		{
 		case TK_IF:
 			init_if(is_loop);
-			break;;
+			break;
 		case TK_WHILE:
 			init_while();
-			break;;
+			break;
 		case TK_DO:
 			init_do_while();
-			break;;
+			break;
 		case TK_PRINT:
 			init_print();
 			break;

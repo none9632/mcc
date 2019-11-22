@@ -1,8 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "error.h"
-
 void error(char *message, int line, int column)
 {
 	if (line == 0)

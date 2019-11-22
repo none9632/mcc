@@ -12,7 +12,7 @@ void usage()
 	exit(EXIT_FAILURE);
 }
 
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	if (argc != 2)
 		usage();
@@ -20,6 +20,9 @@ void main(int argc, char **argv)
 	Vector *tokens = tokenize(argv[1]);
 	Vector *commands = parsing(tokens);
 	launching_VM(commands);
+
+	free(tokens);
+	free(commands);
 
 	exit(EXIT_SUCCESS);
 }

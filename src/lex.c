@@ -61,7 +61,7 @@ static int search_TK(char *name)
 	return TK_IDENT;
 }
 
-static FILE *openFile(char *file_name)
+static FILE *open_file(char *file_name)
 {
 	FILE *file;
 
@@ -73,17 +73,17 @@ static FILE *openFile(char *file_name)
 
 static char *read_file(FILE *file)
 {
-	char *str;
+	char *str = NULL;
 	char buffer[4096];
-	int cread, len = 1;
+	unsigned int count_read, len = 1;
 
 	do
 	{
-		cread = fread(buffer, sizeof(char), 4096, file);
-		len += cread;
+		count_read = fread(buffer, sizeof(char), 4096, file);
+		len += count_read;
 		str = realloc(str, len);
-		memcpy(str, buffer, cread);
-	} while (cread != 0);
+		memcpy(str, buffer, count_read);
+	} while (count_read != 0);
 
 	return str;
 }
@@ -338,7 +338,7 @@ Vector *tokenize(char *file_name)
 	line = 1;
 	column = 1;
 
-	FILE *file = openFile(file_name);
+	FILE *file = open_file(file_name);
 	char *str = read_file(file);
 	Vector *tokens = scan(str);
 

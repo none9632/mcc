@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "table_names.h"
-#include "error.h"
+#include "src/error.h"
 
 Table_N *new_table_n(Table_N *prev)
 {
