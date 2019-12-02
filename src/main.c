@@ -18,11 +18,11 @@ int main(int argc, char **argv)
 		usage();
 
 	Vector *tokens = tokenize(argv[1]);
-	Vector *commands = parsing(tokens);
-	launching_VM(commands);
+	//Vector *commands = parsing(tokens);
+	//launching_VM(commands);
 
 	free(tokens);
-	free(commands);
+	//free(commands);
 
 	exit(EXIT_SUCCESS);
 }

@@ -4,9 +4,9 @@
 
 #include "vector.h"
 #include "table_names.h"
-#include "src/lex.h"
-#include "src/error.h"
-#include "src/launch.h"
+#include "lex.h"
+#include "error.h"
+#include "launch.h"
 
 Vector *commands;
 Vector *tokens;

@@ -4,7 +4,7 @@
 struct vector
 {
 	void **data;
-	int len;
+	int length;
 	int capacity;
 };
 

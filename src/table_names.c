@@ -2,7 +2,6 @@
 #include <string.h>
 
 #include "table_names.h"
-#include "src/error.h"
 
 Table_N *new_table_n(Table_N *prev)
 {
@@ -24,7 +23,7 @@ Name *find(Table_N *table_names, char *name)
 {
 	while (table_names != NULL)
 	{
-		for (int i = 0; i < table_names->names->len; ++i)
+		for (int i = 0; i < table_names->names->length; ++i)
 		{
 			Name *n = table_names->names->data[i];
 			if (!strcmp(name, n->name))

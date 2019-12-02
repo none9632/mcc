@@ -6,22 +6,24 @@
 #include "error.h"
 #include "lex.h"
 
-struct keyword
+typedef struct keyword
 {
 	char *data;
 	int type;
-};
-
-typedef struct keyword Keyword;
+	int length;
+} Keyword;
 
 int line;
 int column;
 Vector *table_keywords;
 Keyword symbols[] = {
-	{"+=", TK_PLUSA},  {"-=", TK_MINUSA}, {"*=", TK_MULTA},
-	{"/=", TK_DIVA},   {"%=", TK_MODA},   {"<=", TK_LESSEQ},
-	{">=", TK_MOREEQ}, {"==", TK_EQUAL},  {"!=", TK_NOTEQ},
-	{"||", TK_OR},     {"&&", TK_AND},    {NULL, 0}
+	{"+=", TK_PLUSA, 2},  {"-=", TK_MINUSA, 2},  {"*=", TK_MULTA, 2},   {"/=", TK_DIVA, 2},
+	{"%=", TK_MODA, 2},   {"<=", TK_LESSEQ, 2},  {">=", TK_MOREEQ, 2},  {"==", TK_EQUAL, 2},
+	{"!=", TK_NOTEQ, 2},  {"||", TK_OR, 2},      {"&&", TK_AND, 2},     {"+", '+', 1},
+	{"-", '-', 1},        {"*", '*', 1},         {"/", '/', 1},      {"%", '%', 1},
+	{"=", '=', 1},        {"<", '<', 1},         {">", '>', 1},      {"(", '(', 1},
+	{")", ')', 1},        {"{", '{', 1},         {"}", '}', 1},      {";", ';', 1},
+	{":", ':', 1},        {",", ',', 1},         {NULL, 0}
 };
 
 static void push_table(char *data, int type)
@@ -50,7 +52,7 @@ static void enter_TK()
 static int search_TK(char *name)
 {
 	Keyword *in_name;
-	for (int i = 0; i < table_keywords->len; i++)
+	for (int i = 0; i < table_keywords->length; i++)
 	{
 		in_name = table_keywords->data[i];
 
@@ -75,36 +77,47 @@ static char *read_file(FILE *file)
 {
 	char *str = NULL;
 	char buffer[4096];
-	unsigned int count_read, len = 1;
+	unsigned int count_read, length = 1;
 
 	do
 	{
 		count_read = fread(buffer, sizeof(char), 4096, file);
-		len += count_read;
-		str = realloc(str, len);
-		memcpy(str, buffer, count_read);
+		length += count_read;
+		str = realloc(str, length);
+		memcpy(str + length - count_read - 1, buffer, count_read);
 	} while (count_read != 0);
 
 	return str;
 }
 
+static Keyword read_symbols(char *p_str)
+{
+	int i = 0;
+	for (; symbols[i].data; i++)
+	{
+		if (!strncmp(symbols[i].data, p_str, symbols[i].length))
+			return symbols[i];
+	}
+	return symbols[i];
+}
+
 static char *read_ident(Token *t, char *p_str)
 {
 	char *buf_p = p_str;
-	int len = 1;
+	int length = 1;
 
 	while (isalnum(*p_str) || *p_str == '_')
 	{
 		++p_str;
-		++len;
+		++length;
 		++column;
 	}
 
-	t->name = malloc(sizeof(char) * len);
-	memcpy(t->name, buf_p, len - 1);
-	t->name[len] = '\0';
+	t->name = malloc(sizeof(char) * length);
+	memcpy(t->name, buf_p, length - 1);
+	t->name[length - 1] = '\0';
 	t->type = search_TK(t->name);
-	t->len = len;
+	t->length = length;
 
 	return p_str;
 }
@@ -125,9 +138,10 @@ static char *read_num(Token *t, char *p_str)
 	return p_str;
 }
 
-static char *remove_backslash(char *prev_str, int len)
+// Turns two characters into one: '/' + 'n' = '\n' etc.
+static char *remove_backslash(char *prev_str, int length)
 {
-	char *buf_str = malloc(sizeof(char) * len);
+	char *buf_str = malloc(sizeof(char) * length);
 	int count = 0;
 
 	while (*prev_str != '\0')
@@ -158,7 +172,7 @@ static char *remove_backslash(char *prev_str, int len)
 	}
 	buf_str[count] = '\0';
 
-	char *str = malloc(sizeof(char) * count);
+	char *str = malloc(sizeof(char) * (count + 1));
 	strcpy(str, buf_str);
 	free(buf_str);
 
@@ -168,7 +182,7 @@ static char *remove_backslash(char *prev_str, int len)
 static char *read_str(Token *t, char *p_str)
 {
 	char *buf_p = ++p_str;
-	int len = 1;
+	int length = 1;
 	++column;
 
 	while (*p_str != '\"' && *p_str != '\0')
@@ -179,7 +193,7 @@ static char *read_str(Token *t, char *p_str)
 			column = 0;
 		}
 		++p_str;
-		++len;
+		++length;
 		++column;
 	}
 
@@ -188,27 +202,15 @@ static char *read_str(Token *t, char *p_str)
 
 	++column;
 
-	t->name = malloc(sizeof(char) * len);
-	memcpy(t->name, buf_p, len - 1);
-	t->name[len] = '\0';
+	t->name = malloc(sizeof(char) * length);
+	memcpy(t->name, buf_p, length - 1);
+	t->name[length - 1] = '\0';
 	t->type = TK_STR;
-	t->name = remove_backslash(t->name, len);
+	t->name = remove_backslash(t->name, length);
 
 	return ++p_str;
 }
 
-static int read_symbol(Token *t, char *p_str)
-{
-	for (int i = 0; symbols[i].data; i++)
-	{
-		if (!strncmp(symbols[i].data, p_str, 2))
-		{
-			t->type = symbols[i].type;
-			return 0;
-		}
-	}
-	return -1;
-}
 
 static char *read_comment(char *p_str)
 {
@@ -253,6 +255,7 @@ static char *read_comment(char *p_str)
 static Vector *scan(char *p_str)
 {
 	Vector *tokens = new_vec();
+	Keyword buf_keyword;
 
 	while (*p_str != '\0')
 	{
@@ -270,20 +273,19 @@ static Vector *scan(char *p_str)
 			++column;
 		}
 
-		// Multi-letter symbol
-		if (read_symbol(t, p_str) == 0)
+		// Comment
+		if (!strncmp(p_str, "/*", 2) || !strncmp(p_str, "//", 2))
+			p_str = read_comment(p_str);
+
+		else if ((buf_keyword = read_symbols(p_str)).data != NULL)
 		{
+			t->type = buf_keyword.type;
 			t->line = line;
 			t->column = column;
+			column += buf_keyword.length;
+			p_str += buf_keyword.length;
 			vec_push(tokens, t);
-			p_str += 2;
-			column += 2;
-			continue;
 		}
-
-		// Comment
-		else if (!strncmp(p_str, "/*", 2) || !strncmp(p_str, "//", 2))
-			p_str = read_comment(p_str);
 
 		//Identifier
 		else if (isalpha(*p_str) || *p_str == '_')
@@ -303,18 +305,6 @@ static Vector *scan(char *p_str)
 			vec_push(tokens, t);
 		}
 
-		// Single-letter symbol
-		else if (strchr("():;{},*/+-%=<>", *p_str))
-		{
-			if (*p_str == '\0')
-				continue;
-
-			t->type = *p_str++;
-			t->line = line;
-			t->column = column++;
-			vec_push(tokens, t);
-		}
-
 		// String literal
 		else if (*p_str == '\"')
 		{
@@ -323,7 +313,7 @@ static Vector *scan(char *p_str)
 			p_str = read_str(t, p_str);
 			vec_push(tokens, t);
 		}
-		
+
 		// Unknown character
 		else
 			error("unknown character", line, column);
@@ -341,6 +331,11 @@ Vector *tokenize(char *file_name)
 	FILE *file = open_file(file_name);
 	char *str = read_file(file);
 	Vector *tokens = scan(str);
+//	for (int i = 0; i < tokens->length; i++)
+//	{
+//		Token *t = tokens->data[i];
+//		printf("%s - %i(%c) - %i\n", t->name, t->type, t->type, t->value);
+//	}
 
 	fclose(file);
 	free(str);
