@@ -33,8 +33,8 @@ enum
 
 struct token
 {
-	char *name; // for storage name variable or string
-	int length;    // for output error message
+	char *str;  // for storage name variable or string literal
+	int length; // for output error message
 	int type;
 	int value;
 	int line;

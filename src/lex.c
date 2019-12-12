@@ -2,7 +2,6 @@
 #include <malloc.h>
 #include <string.h>
 
-#include "vector.h"
 #include "error.h"
 #include "lex.h"
 
@@ -13,64 +12,42 @@ typedef struct keyword
 	int length;
 } Keyword;
 
-int line;
-int column;
-Vector *table_keywords;
-Keyword symbols[] = {
+int g_line = 1;
+int g_column = 1;
+
+const Keyword table_keywords[] = {
+	{"if",       TK_IF,       0},
+	{"else",     TK_ELSE,     0},
+	{"do",       TK_DO,       0},
+	{"while",    TK_WHILE,    0},
+	{"int",      TK_INT,      0},
+	{"const",    TK_CONST,    0},
+	{"input",    TK_INPUT,    0},
+	{"print",    TK_PRINT,    0},
+	{"break",    TK_BREAK,    0},
+	{"continue", TK_CONTINUE, 0},
+	{NULL,       0,           0}
+};
+
+const Keyword table_symbols[] = {
 	{"+=", TK_PLUSA, 2},  {"-=", TK_MINUSA, 2},  {"*=", TK_MULTA, 2},   {"/=", TK_DIVA, 2},
 	{"%=", TK_MODA, 2},   {"<=", TK_LESSEQ, 2},  {">=", TK_MOREEQ, 2},  {"==", TK_EQUAL, 2},
 	{"!=", TK_NOTEQ, 2},  {"||", TK_OR, 2},      {"&&", TK_AND, 2},     {"+", '+', 1},
-	{"-", '-', 1},        {"*", '*', 1},         {"/", '/', 1},      {"%", '%', 1},
-	{"=", '=', 1},        {"<", '<', 1},         {">", '>', 1},      {"(", '(', 1},
-	{")", ')', 1},        {"{", '{', 1},         {"}", '}', 1},      {";", ';', 1},
-	{":", ':', 1},        {",", ',', 1},         {NULL, 0}
+	{"-", '-', 1},        {"*", '*', 1},         {"/", '/', 1},         {"%", '%', 1},
+	{"=", '=', 1},        {"<", '<', 1},         {">", '>', 1},         {"(", '(', 1},
+	{")", ')', 1},        {"{", '{', 1},         {"}", '}', 1},         {";", ';', 1},
+	{":", ':', 1},        {",", ',', 1},         {NULL, 0, 0}
 };
-
-static void push_table(char *data, int type)
-{
-	Keyword *name = malloc(sizeof(Keyword));
-	name->data = data;
-	name->type = type;
-	vec_push(table_keywords, name);
-}
-
-static void enter_TK()
-{
-	table_keywords = new_vec();
-	push_table("if",       TK_IF);
-	push_table("else",     TK_ELSE);
-	push_table("do",       TK_DO);
-	push_table("while",    TK_WHILE);
-	push_table("int",      TK_INT);
-	push_table("const",    TK_CONST);
-	push_table("input",    TK_INPUT);
-	push_table("print",    TK_PRINT);
-	push_table("break",    TK_BREAK);
-	push_table("continue", TK_CONTINUE);
-}
 
 static int search_TK(char *name)
 {
-	Keyword *in_name;
-	for (int i = 0; i < table_keywords->length; i++)
+	for (int i = 0; table_keywords[i].data; i++)
 	{
-		in_name = table_keywords->data[i];
-
-		if (strcmp(name, in_name->data) == 0)
-			return in_name->type;
+		if (strcmp(name, table_keywords[i].data) == 0)
+			return table_keywords[i].type;
 	}
 
 	return TK_IDENT;
-}
-
-static FILE *open_file(char *file_name)
-{
-	FILE *file;
-
-	if ((file = fopen(file_name, "r")) == NULL)
-		error("file can't open", 0, 0);
-
-	return file;
 }
 
 static char *read_file(FILE *file)
@@ -90,15 +67,20 @@ static char *read_file(FILE *file)
 	return str;
 }
 
-static Keyword read_symbols(char *p_str)
+static int read_symbols(Token *t, char *p_str)
 {
 	int i = 0;
-	for (; symbols[i].data; i++)
+	for (; table_symbols[i].data; i++)
 	{
-		if (!strncmp(symbols[i].data, p_str, symbols[i].length))
-			return symbols[i];
+		if (!strncmp(table_symbols[i].data, p_str, table_symbols[i].length))
+		{
+			t->type = table_symbols[i].type;
+			t->line = g_line;
+			t->column = g_column;
+			return table_symbols[i].length;
+		}
 	}
-	return symbols[i];
+	return 0;
 }
 
 static char *read_ident(Token *t, char *p_str)
@@ -110,13 +92,13 @@ static char *read_ident(Token *t, char *p_str)
 	{
 		++p_str;
 		++length;
-		++column;
+		++g_column;
 	}
 
-	t->name = malloc(sizeof(char) * length);
-	memcpy(t->name, buf_p, length - 1);
-	t->name[length - 1] = '\0';
-	t->type = search_TK(t->name);
+	t->str = malloc(sizeof(char) * length);
+	memcpy(t->str, buf_p, length - 1);
+	t->str[length - 1] = '\0';
+	t->type = search_TK(t->str);
 	t->length = length;
 
 	return p_str;
@@ -130,7 +112,7 @@ static char *read_num(Token *t, char *p_str)
 	{
 		t->value = t->value * 10 + *p_str - '0';
 		++p_str;
-		++column;
+		++g_column;
 	}
 
 	t->type = TK_NUM;
@@ -183,30 +165,30 @@ static char *read_str(Token *t, char *p_str)
 {
 	char *buf_p = ++p_str;
 	int length = 1;
-	++column;
+	++g_column;
 
 	while (*p_str != '\"' && *p_str != '\0')
 	{
 		if (*p_str == '\n')
 		{
-			++line;
-			column = 0;
+			++g_line;
+			g_column = 0;
 		}
 		++p_str;
 		++length;
-		++column;
+		++g_column;
 	}
 
 	if (*p_str == '\0')
-		error("missing terminating \" character", line, --column);
+		error("missing terminating \" character", g_line, --g_column);
 
-	++column;
+	++g_column;
 
-	t->name = malloc(sizeof(char) * length);
-	memcpy(t->name, buf_p, length - 1);
-	t->name[length - 1] = '\0';
+	t->str = malloc(sizeof(char) * length);
+	memcpy(t->str, buf_p, length - 1);
+	t->str[length - 1] = '\0';
 	t->type = TK_STR;
-	t->name = remove_backslash(t->name, length);
+	t->str = remove_backslash(t->str, length);
 
 	return ++p_str;
 }
@@ -222,8 +204,8 @@ static char *read_comment(char *p_str)
 				break;
 		}
 		++p_str;
-		++line;
-		column = 1;
+		++g_line;
+		g_column = 1;
 	}
 	else if (!strncmp(p_str, "/*", 2))
 	{
@@ -231,23 +213,23 @@ static char *read_comment(char *p_str)
 		{
 			if (*p_str == '\n')
 			{
-				++line;
-				column = 1;
+				++g_line;
+				g_column = 1;
 			}
 			if (*++p_str == '*' && *(p_str + 1) == '/')
 			{
-				column += 2;
+				g_column += 2;
 				++p_str;
 				break;
 			}
-			++column;
+			++g_column;
 		}
 
 		if (*p_str == '\0')
-			error("expected */ characters", line, --column);
+			error("expected */ characters", g_line, --g_column);
 
 		++p_str;
-		++column;
+		++g_column;
 	}
 	return p_str;
 }
@@ -255,7 +237,7 @@ static char *read_comment(char *p_str)
 static Vector *scan(char *p_str)
 {
 	Vector *tokens = new_vec();
-	Keyword buf_keyword;
+	int offset;
 
 	while (*p_str != '\0')
 	{
@@ -266,32 +248,30 @@ static Vector *scan(char *p_str)
 		{
 			if (*p_str == '\n')
 			{
-				column = 0;
-				++line;
+				g_column = 0;
+				++g_line;
 			}
 			++p_str;
-			++column;
+			++g_column;
 		}
 
 		// Comment
 		if (!strncmp(p_str, "/*", 2) || !strncmp(p_str, "//", 2))
 			p_str = read_comment(p_str);
 
-		else if ((buf_keyword = read_symbols(p_str)).data != NULL)
+		// Symbols
+		else if ((offset = read_symbols(t, p_str)) != 0)
 		{
-			t->type = buf_keyword.type;
-			t->line = line;
-			t->column = column;
-			column += buf_keyword.length;
-			p_str += buf_keyword.length;
+			p_str += offset;
+			g_column += offset;
 			vec_push(tokens, t);
 		}
 
-		//Identifier
+		// Identifier
 		else if (isalpha(*p_str) || *p_str == '_')
 		{
-			t->line = line;
-			t->column = column;
+			t->line = g_line;
+			t->column = g_column;
 			p_str = read_ident(t, p_str);
 			vec_push(tokens, t);
 		}
@@ -299,8 +279,8 @@ static Vector *scan(char *p_str)
 		// Number literal
 		else if (isdigit(*p_str))
 		{
-			t->line = line;
-			t->column = column;
+			t->line = g_line;
+			t->column = g_column;
 			p_str = read_num(t, p_str);
 			vec_push(tokens, t);
 		}
@@ -308,33 +288,33 @@ static Vector *scan(char *p_str)
 		// String literal
 		else if (*p_str == '\"')
 		{
-			t->line = line;
-			t->column = column;
+			t->line = g_line;
+			t->column = g_column;
 			p_str = read_str(t, p_str);
 			vec_push(tokens, t);
 		}
 
 		// Unknown character
 		else
-			error("unknown character", line, column);
+			error("unknown character", g_line, g_column);
 	}
+
 	return tokens;
 }
 
 Vector *tokenize(char *file_name)
 {
-	enter_TK();
+	FILE *file = fopen(file_name, "r");
+	if (file == NULL)
+		error("file can't open", 0, 0);
 
-	line = 1;
-	column = 1;
-
-	FILE *file = open_file(file_name);
 	char *str = read_file(file);
 	Vector *tokens = scan(str);
+	// for test
 //	for (int i = 0; i < tokens->length; i++)
 //	{
 //		Token *t = tokens->data[i];
-//		printf("%s - %i(%c) - %i\n", t->name, t->type, t->type, t->value);
+//		printf("%s - %i(%c) - %i\n", t->str, t->type, t->type, t->value);
 //	}
 
 	fclose(file);
