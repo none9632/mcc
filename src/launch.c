@@ -1,9 +1,6 @@
 #include <stdio.h>
-#include <malloc.h>
-#include <string.h>
 
 #include "vector.h"
-#include "pars.h"
 #include "launch.h"
 
 Vector *commands;
@@ -17,8 +14,8 @@ struct double_value
 
 typedef struct double_value Double_value;
 
-static int expr_processing();
-static void VM();
+static int expr_processing(Command *c);
+static void VM(int stop);
 
 static Double_value get_val()
 {

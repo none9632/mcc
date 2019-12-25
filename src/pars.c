@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <string.h>
 #include <malloc.h>
 
 #include "vector.h"
@@ -25,13 +24,13 @@ static Token *check_tok(int type)
 {
 	Token *t = tokens->data[count_tk];
 
-	if (count_tk >= tokens->len || t->type != type)
+	if (count_tk >= tokens->length || t->type != type)
 	{
 		// Take last token
-		if (count_tk >= tokens->len)
-			t = tokens->data[--tokens->len];
+		if (count_tk >= tokens->length)
+			t = tokens->data[--tokens->length];
 
-		char message[t->len + 50];
+		char message[t->length + 50];
 		snprintf(message, sizeof(message), "%s%c%s",
 				 "expected '", type, "' character");
 		error(message, t->line, t->column);
@@ -49,9 +48,9 @@ static void term()
 	Token *t = tokens->data[count_tk];
 
 	// Take last token
-	if (count_tk >= tokens->len)
+	if (count_tk >= tokens->length)
 	{
-		t = tokens->data[--tokens->len];
+		t = tokens->data[--tokens->length];
 		error("expected declaration or statement at end of input",
 			  t->line, t->column);
 	}
@@ -63,13 +62,13 @@ static void term()
 	}
 	else if (t->type == TK_IDENT)
 	{
-		Name *n = find(table_names, t->name);
+		Name *n = find(table_names, t->str);
 
 		if (n == NULL)
 		{
-			char message[t->len + 50];
+			char message[t->length + 50];
 			snprintf(message, sizeof(message), "%c%s%s",
-					 '\'', t->name, "' undeclared");
+					 '\'', t->str, "' undeclared");
 			error(message, t->line, t->column);
 		}
 
@@ -90,7 +89,7 @@ static void unary()
 {
 	Token *t = tokens->data[count_tk];
 
-	if (count_tk < tokens->len && (t->type == '-' || t->type == '+'))
+	if (count_tk < tokens->length && (t->type == '-' || t->type == '+'))
 	{
 		int buffer_count = ++count_tk;
 		unary();
@@ -112,7 +111,7 @@ static void factor()
 	unary();
 	Token *t = tokens->data[count_tk];
 
-	while (count_tk < tokens->len && (t->type == '*' || t->type == '/' || t->type == '%'))
+	while (count_tk < tokens->length && (t->type == '*' || t->type == '/' || t->type == '%'))
 	{
 		int buffer_count = ++count_tk;
 		unary();
@@ -140,7 +139,7 @@ static void add_and_sub()
 	factor();
 	Token *t = tokens->data[count_tk];
 
-	while (count_tk < tokens->len && (t->type == '+' || t->type == '-'))
+	while (count_tk < tokens->length && (t->type == '+' || t->type == '-'))
 	{
 		int buffer_count = ++count_tk;
 		factor();
@@ -168,7 +167,7 @@ static void comp_op()
 	add_and_sub();
 	Token *t = tokens->data[count_tk];
 
-	while (count_tk < tokens->len &&
+	while (count_tk < tokens->length &&
 			(t->type == '>' || t->type == '<' || t->type == TK_MOREEQ ||
 			 t->type == TK_LESSEQ))
 	{
@@ -199,7 +198,7 @@ static void equality_op()
 	comp_op();
 	Token *t = tokens->data[count_tk];
 
-	while (count_tk < tokens->len && (t->type == TK_EQUAL || t->type == TK_NOTEQ))
+	while (count_tk < tokens->length && (t->type == TK_EQUAL || t->type == TK_NOTEQ))
 	{
 		int buffer_count = ++count_tk;
 		comp_op();
@@ -226,7 +225,7 @@ static void and()
 	equality_op();
 	Token *t = tokens->data[count_tk];
 
-	while (count_tk < tokens->len && t->type == TK_AND)
+	while (count_tk < tokens->length && t->type == TK_AND)
 	{
 		int buffer_count = ++count_tk;
 		equality_op();
@@ -249,7 +248,7 @@ static void or()
 	and();
 	Token *t = tokens->data[count_tk];
 
-	while (count_tk < tokens->len && t->type == TK_OR)
+	while (count_tk < tokens->length && t->type == TK_OR)
 	{
 		int buffer_count = ++count_tk;
 		and();
@@ -308,21 +307,20 @@ static void assign()
 		if (t->type != TK_IDENT)
 			error("expected identifier", t->line, t->column);
 
-		Name *n = find(table_names, t->name);
+		Name *n = find(table_names, t->str);
 
 		if (n == NULL)
 		{
-			char message[t->len + 50];
+			char message[t->length + 50];
 			snprintf(message, sizeof(message), "%c%s%s",
-					 '\'', t->name, "' undeclared");
+					 '\'', t->str, "' undeclared");
 			error(message, t->line, t->column);
 		}
-
-		if (n->is_const == 1)
+		else if (n->is_const == 1)
 		{
-			char message[t->len + 50];
+			char message[t->length + 50];
 			snprintf(message, sizeof(message), "%s%s%c",
-					 "assignment of read-only variable '", t->name, '\'');
+					 "assignment of read-only variable '", t->str, '\'');
 			error(message, t->line, t->column);
 		}
 
@@ -365,10 +363,10 @@ static void init_var()
 			if (t->type != TK_IDENT)
 				error("expected identifier", t->line, t->column);
 
-			if (find(table_names, t->name) != NULL)
+			if (find(table_names, t->str) != NULL)
 				error("redefinition", t->line, t->column);
 
-			n->name = t->name;
+			n->name = t->str;
 			t = tokens->data[++count_tk];
 
 			if (t->type == '=')
@@ -387,7 +385,7 @@ static void init_var()
 			vec_push(table_names->names, n);
 
 			t = tokens->data[count_tk];
-		} while (count_tk < tokens->len && t->type == ',');
+		} while (count_tk < tokens->length && t->type == ',');
 
 		check_tok(';');
 	}
@@ -410,7 +408,7 @@ static void init_while()
 	statement(1);
 	vec_push(commands, new_command(CM_STOP_WHILE, 0));
 
-	c->value = commands->len - 1;
+	c->value = commands->length - 1;
 }
 
 // initialization do while
@@ -434,7 +432,7 @@ static void init_do_while()
 
 	vec_push(commands, new_command(CM_WHILE, 0));
 
-	c->value = commands->len - 1;
+	c->value = commands->length - 1;
 
 	check_tok(';');
 }
@@ -500,7 +498,7 @@ static void init_print()
 		else if (t->type == TK_STR)
 		{
 			Command *c = new_command(CM_PRINTS, 0);
-			c->data = t->name;
+			c->data = t->str;
 			vec_push(commands, c);
 			++count_tk;
 		}
@@ -508,7 +506,7 @@ static void init_print()
 			error("expected \"string\" or identifier", t->line, t->column);
 
 		t = tokens->data[count_tk];
-	} while (count_tk < tokens->len && t->type == ',');
+	} while (count_tk < tokens->length && t->type == ',');
 
 	check_tok(')');
 	check_tok(';');
@@ -523,13 +521,13 @@ static void init_input()
 		error("expected identifier", t->line, t->column);
 	++count_tk;
 
-	Name *n = find(table_names, t->name);
+	Name *n = find(table_names, t->str);
 
 	if (n == NULL)
 	{
-		char message[t->len + 50];
+		char message[t->length + 50];
 		snprintf(message, sizeof(message), "%c%s%s",
-				 '\'', t->name, "' undeclared");
+				 '\'', t->str, "' undeclared");
 		error(message, t->line, t->column);
 	}
 
@@ -548,7 +546,7 @@ static void statement(int is_loop)
 	table_names = new_table_n(table_names);
 	Token *t = check_tok('{');
 
-	while (count_tk < tokens->len && t->type != '}')
+	while (count_tk < tokens->length && t->type != '}')
 	{
 		switch (t->type)
 		{

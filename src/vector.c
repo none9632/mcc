@@ -1,4 +1,5 @@
 #include "vector.h"
+
 #include <malloc.h>
 
 Vector *new_vec()

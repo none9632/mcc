@@ -12,10 +12,10 @@ typedef struct keyword
 	int length;
 } Keyword;
 
-int g_line = 1;
-int g_column = 1;
+static int g_line = 1;
+static int g_column = 1;
 
-const Keyword table_keywords[] = {
+static const Keyword table_keywords[] = {
 	{"if",       TK_IF,       0},
 	{"else",     TK_ELSE,     0},
 	{"do",       TK_DO,       0},
@@ -29,7 +29,7 @@ const Keyword table_keywords[] = {
 	{NULL,       0,           0}
 };
 
-const Keyword table_symbols[] = {
+static const Keyword table_symbols[] = {
 	{"+=", TK_PLUSA, 2},  {"-=", TK_MINUSA, 2},  {"*=", TK_MULTA, 2},   {"/=", TK_DIVA, 2},
 	{"%=", TK_MODA, 2},   {"<=", TK_LESSEQ, 2},  {">=", TK_MOREEQ, 2},  {"==", TK_EQUAL, 2},
 	{"!=", TK_NOTEQ, 2},  {"||", TK_OR, 2},      {"&&", TK_AND, 2},     {"+", '+', 1},
@@ -120,7 +120,7 @@ static char *read_num(Token *t, char *p_str)
 	return p_str;
 }
 
-// Turns two characters into one: '/' + 'n' = '\n' etc.
+// Turns two characters into one: '\' + 'n' = '\n' etc.
 static char *remove_backslash(char *prev_str, int length)
 {
 	char *buf_str = malloc(sizeof(char) * length);
