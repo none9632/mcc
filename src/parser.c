@@ -3,7 +3,7 @@
 
 #include "vector.h"
 #include "table_names.h"
-#include "lex.h"
+#include "lexer.h"
 #include "error.h"
 #include "launch.h"
 

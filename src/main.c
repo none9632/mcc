@@ -2,8 +2,8 @@
 #include <stdio.h>
 
 #include "vector.h"
-#include "lex.h"
-#include "pars.h"
+#include "lexer.h"
+#include "parser.h"
 #include "launch.h"
 
 void usage()
@@ -17,12 +17,9 @@ int main(int argc, char **argv)
 	if (argc != 2)
 		usage();
 
-	Vector *tokens = tokenize(argv[1]);
+	Vector *tokens = lexer(argv[1]);
 	Vector *commands = parsing(tokens);
 	launching_VM(commands);
-
-	free(tokens);
-	free(commands);
 
 	exit(EXIT_SUCCESS);
 }

@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "error.h"
-#include "lex.h"
+#include "lexer.h"
 
 typedef struct keyword
 {
@@ -69,8 +69,7 @@ static char *read_file(FILE *file)
 
 static int read_symbols(Token *t, char *p_str)
 {
-	int i = 0;
-	for (; table_symbols[i].data; i++)
+	for (int i = 0; table_symbols[i].data; i++)
 	{
 		if (!strncmp(table_symbols[i].data, p_str, table_symbols[i].length))
 		{
@@ -302,7 +301,7 @@ static Vector *scan(char *p_str)
 	return tokens;
 }
 
-Vector *tokenize(char *file_name)
+Vector *lexer(char *file_name)
 {
 	FILE *file = fopen(file_name, "r");
 	if (file == NULL)
