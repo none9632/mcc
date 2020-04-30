@@ -1,4 +1,4 @@
-#include "vector.h"
+#include "../include/vector.h"
 
 #include <malloc.h>
 

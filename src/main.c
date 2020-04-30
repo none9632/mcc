@@ -1,10 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "vector.h"
-#include "lexer.h"
-#include "parser.h"
-#include "launch.h"
+#include "../include/vector.h"
+#include "../include/lexer.h"
+#include "../include/parser.h"
+#include "../include/launch.h"
 
 void usage()
 {

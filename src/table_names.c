@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "table_names.h"
+#include "../include/table_names.h"
 
 Table_N *new_table_n(Table_N *prev)
 {

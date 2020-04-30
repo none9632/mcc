@@ -1,16 +1,16 @@
 #include <stdio.h>
 #include <malloc.h>
 
-#include "vector.h"
-#include "table_names.h"
-#include "lexer.h"
-#include "error.h"
-#include "launch.h"
+#include "../include/vector.h"
+#include "../include/table_names.h"
+#include "../include/lexer.h"
+#include "../include/error.h"
+#include "../include/launch.h"
 
-Vector *commands;
-Vector *tokens;
-Table_N *table_names;
-int count_tk;
+static Vector *commands;
+static Vector *tokens;
+static Table_N *table_names;
+static int count_tk;
 
 static Command *new_command(int command, int value)
 {

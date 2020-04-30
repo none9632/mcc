@@ -1,7 +1,8 @@
 #include <stdio.h>
 
-#include "vector.h"
-#include "launch.h"
+#include "../include/vector.h"
+#include "../include/launch.h"
+#include "../include/error.h"
 
 Vector *commands;
 int count_com;
@@ -66,7 +67,7 @@ static int expr_processing(Command *c)
 	return value;
 }
 
-static int CDriver(Command *c)
+static void CDriver(Command *c)
 {
 	int buffer_count = count_com;
 	int value;
@@ -114,7 +115,7 @@ static int CDriver(Command *c)
 				if (c->command == CM_BREAK || c->command == CM_CONTINUE)
 				{
 					--count_com;
-					return 0;
+					return;
 				}
 
 				while (c->command != CM_END_IF)

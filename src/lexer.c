@@ -2,8 +2,8 @@
 #include <malloc.h>
 #include <string.h>
 
-#include "error.h"
-#include "lexer.h"
+#include "../include/error.h"
+#include "../include/lexer.h"
 
 typedef struct keyword
 {
