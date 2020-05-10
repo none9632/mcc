@@ -1,11 +1,4 @@
-#include <stdio.h>
-#include <malloc.h>
-
-#include "../include/vector.h"
-#include "../include/table_names.h"
-#include "../include/lexer.h"
-#include "../include/error.h"
-#include "../include/launch.h"
+#include "../include/parser.h"
 
 static Vector *commands;
 static Vector *tokens;
@@ -43,7 +36,7 @@ static Token *check_tok(int type)
 static void expr();
 static void statement(int is_loop);
 
-static void term()
+static void factor()
 {
 	Token *t = tokens->data[count_tk];
 
@@ -103,10 +96,10 @@ static void unary()
 			vec_push(commands, new_command(CM_NEG, 0));
 	}
 
-	term();
+	factor();
 }
 
-static void factor()
+static void term()
 {
 	unary();
 	Token *t = tokens->data[count_tk];
@@ -136,13 +129,13 @@ static void factor()
 
 static void add_and_sub()
 {
-	factor();
+	term();
 	Token *t = tokens->data[count_tk];
 
 	while (count_tk < tokens->length && (t->type == '+' || t->type == '-'))
 	{
 		int buffer_count = ++count_tk;
-		factor();
+		term();
 		if (buffer_count == count_tk)
 		{
 			t = tokens->data[count_tk];

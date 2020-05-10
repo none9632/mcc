@@ -1,7 +1,14 @@
 #ifndef LEX_H
 #define LEX_H
 
+#include <stdio.h>
+#include <ctype.h>
+#include <malloc.h>
+#include <string.h>
+
 #include "vector.h"
+#include "error.h"
+#include "lexer.h"
 
 enum
 {
@@ -31,7 +38,7 @@ enum
 	TK_CONTINUE,     // "continue"
 };
 
-struct token
+typedef struct token
 {
 	char *str;  // for storage name variable or string literal
 	int length; // for output error message
@@ -39,9 +46,8 @@ struct token
 	int value;
 	int line;
 	int column;
-};
-
-typedef struct token Token;
+}
+Token;
 
 Vector *lexer(char *fileName);
 

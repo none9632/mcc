@@ -1,6 +1,8 @@
 #ifndef LAUNCH_H
 #define LAUNCH_H
 
+#include <stdio.h>
+
 #include "table_names.h"
 
 // command list
@@ -39,22 +41,20 @@ enum
 	CM_OR,                // ||
 	CM_STOP,              // point for stop program
 	CM_STOP_IF,           // point for stop "if" and "else if"
-	CM_STOP_ELSE,         // point for stop "else"
 	CM_END_IF,            // point for stop all "if" statement
 	CM_STOP_WHILE,        // point for stop "while" and "do while"
 	CM_BREAK,             // "break"
 	CM_CONTINUE,          // "continue"
 };
 
-struct command
+typedef struct command
 {
 	char *data;
 	Name *table_TN;
 	int command;
 	int value;
-};
-
-typedef struct command Command;
+}
+Command;
 
 void launching_VM(Vector *_commands);
 

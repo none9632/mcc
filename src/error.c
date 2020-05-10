@@ -1,5 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
+#include "../include/error.h"
 
 void error(char *message, int line, int column)
 {

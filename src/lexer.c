@@ -1,21 +1,21 @@
-#include <ctype.h>
-#include <malloc.h>
-#include <string.h>
-
-#include "../include/error.h"
 #include "../include/lexer.h"
+
+#define TABLE_KEYWORDS_SIZE 10
+#define TABLE_SYMBOLS_SIZE 26
 
 typedef struct keyword
 {
 	char *data;
 	int type;
 	int length;
-} Keyword;
+}
+Keyword;
 
 static int g_line = 1;
 static int g_column = 1;
 
-static const Keyword table_keywords[] = {
+static const Keyword table_keywords[TABLE_KEYWORDS_SIZE] =
+{
 	{"if",       TK_IF,       0},
 	{"else",     TK_ELSE,     0},
 	{"do",       TK_DO,       0},
@@ -26,22 +26,22 @@ static const Keyword table_keywords[] = {
 	{"print",    TK_PRINT,    0},
 	{"break",    TK_BREAK,    0},
 	{"continue", TK_CONTINUE, 0},
-	{NULL,       0,           0}
 };
 
-static const Keyword table_symbols[] = {
+static const Keyword table_symbols[TABLE_SYMBOLS_SIZE] =
+{
 	{"+=", TK_PLUSA, 2},  {"-=", TK_MINUSA, 2},  {"*=", TK_MULTA, 2},   {"/=", TK_DIVA, 2},
 	{"%=", TK_MODA, 2},   {"<=", TK_LESSEQ, 2},  {">=", TK_MOREEQ, 2},  {"==", TK_EQUAL, 2},
 	{"!=", TK_NOTEQ, 2},  {"||", TK_OR, 2},      {"&&", TK_AND, 2},     {"+", '+', 1},
 	{"-", '-', 1},        {"*", '*', 1},         {"/", '/', 1},         {"%", '%', 1},
 	{"=", '=', 1},        {"<", '<', 1},         {">", '>', 1},         {"(", '(', 1},
 	{")", ')', 1},        {"{", '{', 1},         {"}", '}', 1},         {";", ';', 1},
-	{":", ':', 1},        {",", ',', 1},         {NULL, 0, 0}
+	{":", ':', 1},        {",", ',', 1}
 };
 
 static int search_TK(char *name)
 {
-	for (int i = 0; table_keywords[i].data; i++)
+	for (int i = 0; i < TABLE_KEYWORDS_SIZE; i++)
 	{
 		if (strcmp(name, table_keywords[i].data) == 0)
 			return table_keywords[i].type;
@@ -69,7 +69,7 @@ static char *read_file(FILE *file)
 
 static int read_symbols(Token *t, char *p_str)
 {
-	for (int i = 0; table_symbols[i].data; i++)
+	for (int i = 0; i < TABLE_SYMBOLS_SIZE; i++)
 	{
 		if (!strncmp(table_symbols[i].data, p_str, table_symbols[i].length))
 		{
@@ -309,12 +309,6 @@ Vector *lexer(char *file_name)
 
 	char *str = read_file(file);
 	Vector *tokens = scan(str);
-	// for test
-//	for (int i = 0; i < tokens->length; i++)
-//	{
-//		Token *t = tokens->data[i];
-//		printf("%s - %i(%c) - %i\n", t->str, t->type, t->type, t->value);
-//	}
 
 	fclose(file);
 	free(str);

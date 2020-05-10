@@ -1,19 +1,14 @@
-#include <stdio.h>
-
-#include "../include/vector.h"
 #include "../include/launch.h"
-#include "../include/error.h"
 
 Vector *commands;
 int count_com;
 
-struct double_value
+typedef struct double_value
 {
 	int value1;
 	int value2;
-};
-
-typedef struct double_value Double_value;
+}
+Double_value;
 
 static int expr_processing(Command *c);
 static void VM(int stop);

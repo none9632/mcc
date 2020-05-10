@@ -18,8 +18,9 @@ $(TARGET): $(notdir $(OBJ_FILES))
 %.o: %.c
 	$(CC) $(CCFLAG) -c $< -o $(OBJ_PATH)/$@
 
-#test: $(TARGET)
-#	@./test.sh
+test: $(TARGET)
+	@cd test && \
+	./test.sh
 
 rebuild: clean $(TARGET)
 

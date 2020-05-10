@@ -2,15 +2,15 @@
 #define LIB_H
 
 #include <stddef.h>
+#include <malloc.h>
 
-struct vector
+typedef struct vector
 {
 	void **data;
 	size_t length;
 	size_t capacity;
-};
-
-typedef struct vector Vector;
+}
+Vector;
 
 Vector *new_vec(void);
 void vec_push(Vector *v, void *elem);
