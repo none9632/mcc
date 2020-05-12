@@ -1,0 +1,39 @@
+
+<program>          ::= <statement>
+
+<statement>        ::= "{" { <statement_list> } "}"
+
+<statement_list>   ::= "if" <paren_expr> <statement>
+                     | "if" <paren_expr> <statement> "else" <statement>
+				     | "print" "(" <output_list> {"+" <output_list> } ")" ";"
+				     | "input" "(" <id> ")" ";"
+                     | "while" <paren_expr> <statement>
+                     | "do" <statement> "while" <paren_expr> ";"
+                     | <type> <id> "=" <expr> ";"
+                     | <assign> ";"
+                     | ";"
+
+<output_list>      ::= <id> | <string> | <int>
+<paren_expr>       ::= "(" <expr> ")"
+<type>             ::= "int"
+<assign>           ::= <id> <assign_character> <expr> | <expr>
+
+<expr>             ::= <op_or>
+<op_or>            ::= <op_and>     { "||" <op_and> }
+<op_and>           ::= <op_equate>  { "&&" <op_equate> }
+<op_equate>        ::= <op_compare> { ( "==" | "!=" ) <op_compare> }
+<op_compare>       ::= <op_add>     { ( "<" | ">" | "<=" | ">=" ) <op_add> }
+<op_add>           ::= <op_mult>    { ( "+" | "-" ) <op_mult> }
+<op_mult>          ::= <op_unary>   { ( "*" | "/" ) <op_unary> }
+<op_unary>         ::= ( "+" | "-" ) <op_unary> | <factor>
+<factor>           ::= <int> | <id> | <paren_expr>
+
+<string>           ::= "\"" { <all_characters> } "\""
+<id>               ::= ( <letter> | "_" ) { <letter> | "_" | <digit> }
+<int>              ::= <positive_digit> { <digit> }
+
+<all_characters>   ::= all characters according to ascii table
+<assign_character> ::= "=" | "+=" | "-=" | "*=" | "/=" | "%="
+<letter>           ::= "a" | "b" | "c" | "d" | ... | "z" |
+			 		   "A" | "B" | "C" | "D" | ... | "Z"
+<digit> 		   ::= <positive_digit> | 0

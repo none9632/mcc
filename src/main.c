@@ -4,7 +4,7 @@
 #include "../include/vector.h"
 #include "../include/lexer.h"
 #include "../include/parser.h"
-#include "../include/launch.h"
+#include "../include/vm.h"
 
 void usage()
 {
