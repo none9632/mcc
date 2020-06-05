@@ -5,6 +5,7 @@
 	// test comment
 	input(a);
 	print("test:\n", a, 23 + 23, "\n");
+
 	while (a > 0) {
 		print(a, "\n");
 		a -= 1;
@@ -12,8 +13,11 @@
 			print("a <= 23\n");
 		}
 	}
+
 	print("test2\n");
+
 	/* test block comment */
+
 	if (a == 0) {
 		print("success\n");
 		int i = 12;

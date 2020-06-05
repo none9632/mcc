@@ -1,14 +1,14 @@
 
-<program>          ::= <statement>
+<program>          ::= <statements>
 
-<statement>        ::= "{" { <statement_list> } "}"
+<statements>       ::= "{" { <statement> } "}"
 
-<statement_list>   ::= "if" <paren_expr> <statement>
-                     | "if" <paren_expr> <statement> "else" <statement>
-				     | "print" "(" <output_list> {"+" <output_list> } ")" ";"
-				     | "input" "(" <id> ")" ";"
-                     | "while" <paren_expr> <statement>
-                     | "do" <statement> "while" <paren_expr> ";"
+<statement>        ::= "if" <paren_expr> <statements>
+                     | "if" <paren_expr> <statements> "else" <statements>
+                     | "print" "(" <output_list> {"+" <output_list> } ")" ";"
+                     | "input" "(" <id> ")" ";"
+                     | "while" <paren_expr> <statements>
+                     | "do" <statements> "while" <paren_expr> ";"
                      | <type> <id> "=" <expr> ";"
                      | <assign> ";"
                      | ";"
@@ -30,10 +30,10 @@
 
 <string>           ::= "\"" { <all_characters> } "\""
 <id>               ::= ( <letter> | "_" ) { <letter> | "_" | <digit> }
-<int>              ::= <positive_digit> { <digit> }
+<int>              ::= <digit> { <digit> }
 
 <all_characters>   ::= all characters according to ascii table
 <assign_character> ::= "=" | "+=" | "-=" | "*=" | "/=" | "%="
 <letter>           ::= "a" | "b" | "c" | "d" | ... | "z" |
-			 		   "A" | "B" | "C" | "D" | ... | "Z"
-<digit> 		   ::= <positive_digit> | 0
+                       "A" | "B" | "C" | "D" | ... | "Z"
+<digit>            ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "0"

@@ -434,34 +434,19 @@ static void init_do_while()
 static void init_if(int is_loop)
 {
 	Token *t;
-	int is_else = 0;
 
-	do 
-	{
-		++count_tk;
+	++count_tk;
 
-		check_tok('(');
-		expr();
-		check_tok(')');
+	check_tok('(');
+	expr();
+	check_tok(')');
 
-		if (is_else == 0)
-			vec_push(commands, new_command(CM_IF, 0));
-		else
-			vec_push(commands, new_command(CM_ELSE_IF, 0));
+	vec_push(commands, new_command(CM_IF, 0));
+	statement(is_loop);
+	vec_push(commands, new_command(CM_STOP_IF, 0));
 
-		statement(is_loop);
-		vec_push(commands, new_command(CM_STOP_IF, 0));
-
-		t = tokens->data[count_tk];
-		is_else = 0;
-		if (t->type == TK_ELSE)
-		{
-			t = tokens->data[++count_tk];
-			is_else = 1;
-		}
-	} while (is_else == 1 && t->type == TK_IF);
-
-	if (is_else)
+	t = tokens->data[count_tk];
+	if (t->type == TK_ELSE)
 	{
 		vec_push(commands, new_command(CM_ELSE, 0));
 		statement(is_loop);
@@ -557,18 +542,6 @@ static void statement(int is_loop)
 			break;
 		case TK_INPUT:
 			init_input();
-			break;
-		case TK_BREAK:
-			if (!is_loop)
-				error("break statement not within loop", t->line, t->column);
-			vec_push(commands, new_command(CM_BREAK, 0));
-			++count_tk;
-			break;
-		case TK_CONTINUE:
-			if (!is_loop)
-				error("continue statement not within loop", t->line, t->column);
-			vec_push(commands, new_command(CM_CONTINUE, 0));
-			++count_tk;
 			break;
 		case TK_CONST: case TK_INT:
 			init_var();

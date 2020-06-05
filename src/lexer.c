@@ -1,6 +1,6 @@
 #include "../include/lexer.h"
 
-#define TABLE_KEYWORDS_SIZE 10
+#define TABLE_KEYWORDS_SIZE 8
 #define TABLE_SYMBOLS_SIZE 26
 
 typedef struct keyword
@@ -24,8 +24,6 @@ static const Keyword table_keywords[TABLE_KEYWORDS_SIZE] =
 	{"const",    TK_CONST,    0},
 	{"input",    TK_INPUT,    0},
 	{"print",    TK_PRINT,    0},
-	{"break",    TK_BREAK,    0},
-	{"continue", TK_CONTINUE, 0},
 };
 
 static const Keyword table_symbols[TABLE_SYMBOLS_SIZE] =

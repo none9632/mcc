@@ -107,11 +107,6 @@ static void CDriver(Command *c)
 				VM(CM_STOP_IF);
 
 				c = commands->data[count_com];
-				if (c->command == CM_BREAK || c->command == CM_CONTINUE)
-				{
-					--count_com;
-					return;
-				}
 
 				while (c->command != CM_END_IF)
 					c = commands->data[++count_com];
@@ -141,8 +136,6 @@ static void CDriver(Command *c)
 			VM(CM_STOP_WHILE);
 
 			c = commands->data[count_com];
-			if (c->command == CM_BREAK)
-				break;
 		}
 
 		c = commands->data[buffer_count];
@@ -158,10 +151,6 @@ static void CDriver(Command *c)
 			VM(CM_STOP_WHILE);
 
 			c = commands->data[count_com];
-			if (c->command == CM_BREAK)
-				break;
-			else if (c->command == CM_CONTINUE)
-				continue;
 
 			c = commands->data[buffer_count];
 			count_com = c->value;
@@ -189,8 +178,6 @@ static void VM(int stop)
 
 	while (c->command != stop)
 	{
-		if (c->command == CM_BREAK || c->command == CM_CONTINUE)
-			break;
 		CDriver(c);
 		c = commands->data[++count_com];
 	}

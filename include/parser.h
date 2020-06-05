@@ -7,6 +7,7 @@
 #include "table_names.h"
 #include "lexer.h"
 #include "error.h"
+#include "node.h"
 #include "vm.h"
 
 Vector *parsing(Vector *_tokens);

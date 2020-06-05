@@ -43,8 +43,6 @@ enum
 	CM_STOP_IF,           // point for stop "if" and "else if"
 	CM_END_IF,            // point for stop all "if" statement
 	CM_STOP_WHILE,        // point for stop "while" and "do while"
-	CM_BREAK,             // "break"
-	CM_CONTINUE,          // "continue"
 };
 
 typedef struct command
