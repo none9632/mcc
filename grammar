@@ -5,11 +5,11 @@
 
 <statement>        ::= "if" <paren_expr> <statements>
                      | "if" <paren_expr> <statements> "else" <statements>
-                     | "print" "(" <output_list> {"+" <output_list> } ")" ";"
+                     | "print" "(" <output_list> { "+" <output_list> } ")" ";"
                      | "input" "(" <id> ")" ";"
                      | "while" <paren_expr> <statements>
                      | "do" <statements> "while" <paren_expr> ";"
-                     | <type> <id> "=" <expr> ";"
+                     | <type> <id> [ "=" <expr> ] { "," <id> "=" <expr> } ";"
                      | <assign> ";"
                      | ";"
 

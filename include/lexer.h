@@ -32,7 +32,6 @@ enum
 	TK_PRINT,        // "print"
 	TK_INPUT,        // "input"
 	TK_INT,          // "int"
-	TK_CONST,        // "const"
 	TK_DO,           // "do"
 	TK_BREAK,        // "break"
 	TK_CONTINUE,     // "continue"

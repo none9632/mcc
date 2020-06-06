@@ -11,7 +11,6 @@ Table_N *new_table_n(Table_N *prev)
 Name *new_name()
 {
 	Name *n = malloc(sizeof(Name));
-	n->is_const = 0;
 	n->value = 0;
 	return n;
 }
