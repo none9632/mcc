@@ -1,5 +1,5 @@
-#ifndef LEX_H
-#define LEX_H
+#ifndef LEXER_H
+#define LEXER_H
 
 #include <stdio.h>
 #include <ctype.h>
@@ -33,8 +33,6 @@ enum
 	TK_INPUT,        // "input"
 	TK_INT,          // "int"
 	TK_DO,           // "do"
-	TK_BREAK,        // "break"
-	TK_CONTINUE,     // "continue"
 };
 
 typedef struct token

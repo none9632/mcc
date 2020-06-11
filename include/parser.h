@@ -1,5 +1,5 @@
-#ifndef PARS_H
-#define PARS_H
+#ifndef PARSER_H
+#define PARSER_H
 
 #include <stdio.h>
 
@@ -8,8 +8,7 @@
 #include "lexer.h"
 #include "error.h"
 #include "node.h"
-#include "vm.h"
 
-Vector *parsing(Vector *_tokens);
+Node *parsing(Vector *_tokens);
 
 #endif

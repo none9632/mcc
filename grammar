@@ -13,7 +13,7 @@
                      | <assign> ";"
                      | ";"
 
-<output_list>      ::= <id> | <string> | <int>
+<output_list>      ::= <id> | <string> | <expr>
 <paren_expr>       ::= "(" <expr> ")"
 <type>             ::= "int"
 <assign>           ::= <id> <assign_character> <expr> | <expr>

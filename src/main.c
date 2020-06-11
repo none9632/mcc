@@ -5,7 +5,6 @@
 #include "../include/lexer.h"
 #include "../include/parser.h"
 #include "../include/node.h"
-#include "../include/vm.h"
 
 static int   help      = 0;
 static int   print_ast = 0;
@@ -65,9 +64,11 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	Vector *tokens = lexer(argv[1]);
-	Vector *commands = parsing(tokens);
-	launching_VM(commands);
+	Vector *tokens = lexer(file_name);
+	Node   *tree   = parsing(tokens);
+
+	if (print_ast == 1)
+		start_print_node(tree);
 
 	exit(EXIT_SUCCESS);
 }

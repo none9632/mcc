@@ -59,7 +59,8 @@ static char *read_file(FILE *file)
 		length += count_read;
 		str = realloc(str, length);
 		memcpy(str + length - count_read - 1, buffer, count_read);
-	} while (count_read != 0);
+	}
+	while (count_read != 0);
 
 	return str;
 }
@@ -128,21 +129,21 @@ static char *remove_backslash(char *prev_str, int length)
 		{
 			switch (*++prev_str)
 			{
-			case 'n':
-				buf_str[count++] = '\n';
-				++prev_str;
-				break;
-			case 't':
-				buf_str[count++] = '\t';
-				++prev_str;
-				break;
-			case 'r':
-				buf_str[count++] = '\r';
-				++prev_str;
-				break;
-			default:
-				buf_str[count++] = '\\';
-				break;
+				case 'n':
+					buf_str[count++] = '\n';
+					++prev_str;
+					break;
+				case 't':
+					buf_str[count++] = '\t';
+					++prev_str;
+					break;
+				case 'r':
+					buf_str[count++] = '\r';
+					++prev_str;
+					break;
+				default:
+					buf_str[count++] = '\\';
+					break;
 			}
 		}
 		else
@@ -302,7 +303,10 @@ Vector *lexer(char *file_name)
 {
 	FILE *file = fopen(file_name, "r");
 	if (file == NULL)
+	{
+		printf("name: %s\n", file_name);
 		error("file can't open", 0, 0);
+	}
 
 	char *str = read_file(file);
 	Vector *tokens = scan(str);
