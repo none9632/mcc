@@ -5,9 +5,9 @@ Node *new_node()
 	Node *n = malloc(sizeof(Node));
 	n->kind = K_NONE;
 	n->value = 0;
-	//n->name = NULL;
 	n->n1 = NULL;
 	n->n2 = NULL;
+	n->node_list = NULL;
 	return n;
 }
 
@@ -85,17 +85,22 @@ void print_node(Node *n, char *prefix, int prefix_len, int is_left)
 		prefix_len += 4;
 
 		print_node(n->n1, prefix, prefix_len, !is_unary_op(n->kind));
-		//print_node(n->n1, prefix, prefix_len, 1);
 		print_node(n->n2, prefix, prefix_len, 0);
 	}
 }
 
 void start_print_node(Node *n)
 {
+	Node *buffer_node;
+
 	print_kind(n->kind, n->value);
 
-	print_node(n->n1, NULL, 0, !is_unary_op(n->kind));
-	//print_node(n->n1, NULL, 0, 1);
-	print_node(n->n2, NULL, 0, 0);
+	for (int i = 0; i < n->node_list->length - 1; ++i)
+	{
+		buffer_node = n->node_list->data[i];
+		print_node(buffer_node, NULL, 0, 1);
+	}
+	buffer_node = n->node_list->data[n->node_list->length - 1];
+	print_node(buffer_node, NULL, 0, 0);
 }
 

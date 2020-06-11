@@ -41,11 +41,10 @@ typedef struct node
 {
 	int kind;
 	int value;
-	//char *name;
 	struct node *n1;
 	struct node *n2;
 
-	//Vector *node_list;
+	Vector *node_list;
 }
 Node;
 

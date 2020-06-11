@@ -13,15 +13,7 @@ typedef struct name
 }
 Name;
 
-typedef struct table_names
-{
-	Vector *names;
-	struct table_names *prev;
-}
-Table_N;
-
-Table_N *new_table_n (Table_N *prev);
-Name    *new_name    ();
-Name    *find        (Table_N *table_names, char *name);
+Name *new_name ();
+Name *find     (Vector *table_names, char *name);
 
 #endif

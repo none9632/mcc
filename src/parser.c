@@ -2,8 +2,8 @@
 
 #define MAX_STRING_SIZE 50
 
-static Vector  *tokens;
-static int      count_tk;
+static Vector *tokens;
+static int     count_tk;
 
 static Node *expr();
 static Node *statements();
@@ -257,28 +257,9 @@ static Node *expr()
 // assignment function
 static Node *assign()
 {
-	Token *t = tokens->data[count_tk];
 	Node  *node;
 
-	if (t->type == TK_IDENT)
-	{
-		t = tokens->data[++count_tk];
-
-		switch (t->type)
-		{
-			case TK_PLUSA:    break;
-			case TK_MINUSA:   break;
-			case TK_MULTA:    break;
-			case TK_DIVA:     break;
-			case TK_MODA:     break;
-			case '=':         break;
-		}
-
-		++count_tk;
-		expr();
-	}
-	else
-		node = expr();
+	node = expr();
 
 	check_tok(';');
 
@@ -360,14 +341,15 @@ static Node *statement()
 
 static Node *statements()
 {
-	Token   *t       = check_tok('{');
-	Node    *node    = new_node();
+	Token *t    = check_tok('{');
+	Node  *node = new_node();
 
-	node->kind  = K_PROGRAM;
+	node->kind      = K_PROGRAM;
+	node->node_list = new_vec();
 
 	while (count_tk < tokens->length && t->type != '}')
 	{
-		node->n1 = statement();
+		vec_push(node->node_list, statement());
 		t = tokens->data[count_tk];
 	}
 
@@ -378,8 +360,8 @@ static Node *statements()
 
 Node *parsing(Vector *_tokens)
 {
-	tokens = _tokens;
-	count_tk = 0;
+	tokens      = _tokens;
+	count_tk    = 0;
 
 	Node *node = statements();
 
