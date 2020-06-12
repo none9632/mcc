@@ -1,6 +1,6 @@
 #include "../include/parser.h"
 
-#define MAX_STRING_SIZE 50
+#define MAX_STRING_SIZE 25
 
 static Vector *tokens;
 static int     count_tk;
@@ -71,7 +71,7 @@ static Node *unary()
 		++count_tk;
 
 		node = new_node();
-		node->n1 = unary();
+		node->rhs = unary();
 
 		switch (t->type)
 		{
@@ -96,8 +96,8 @@ static Node *term()
 		++count_tk;
 
 		Node *buf_node = new_node();
-		buf_node->n1 = node;
-		buf_node->n2 = unary();
+		buf_node->lhs = node;
+		buf_node->rhs = unary();
 
 		node = buf_node;
 
@@ -124,8 +124,8 @@ static Node *add_and_sub()
 		++count_tk;
 
 		Node *buf_node = new_node();
-		buf_node->n1 = node;
-		buf_node->n2 = term();
+		buf_node->lhs = node;
+		buf_node->rhs = term();
 
 		node = buf_node;
 
@@ -155,8 +155,8 @@ static Node *comp_op()
 
 
 		Node *buf_node = new_node();
-		buf_node->n1 = node;
-		buf_node->n2 = add_and_sub();
+		buf_node->lhs = node;
+		buf_node->rhs = add_and_sub();
 
 		node = buf_node;
 
@@ -184,8 +184,8 @@ static Node *equality_op()
 		++count_tk;
 
 		Node *buf_node = new_node();
-		buf_node->n1 = node;
-		buf_node->n2 = comp_op();
+		buf_node->lhs = node;
+		buf_node->rhs = comp_op();
 
 		node = buf_node;
 
@@ -211,8 +211,8 @@ static Node *and()
 		++count_tk;
 
 		Node *buf_node = new_node();
-		buf_node->n1 = node;
-		buf_node->n2 = equality_op();
+		buf_node->lhs = node;
+		buf_node->rhs = equality_op();
 
 		node = buf_node;
 
@@ -234,8 +234,8 @@ static Node *or()
 		++count_tk;
 
 		Node *buf_node = new_node();
-		buf_node->n1 = node;
-		buf_node->n2 = and();
+		buf_node->lhs = node;
+		buf_node->rhs = and();
 
 		node = buf_node;
 
@@ -257,9 +257,10 @@ static Node *expr()
 // assignment function
 static Node *assign()
 {
-	Node  *node;
+	Node *node = new_node();
 
-	node = expr();
+	node->kind = K_ASSIGN;
+	node->rhs = expr();
 
 	check_tok(';');
 
@@ -267,59 +268,102 @@ static Node *assign()
 }
 
 // initialization variable
-static void init_var()
+static Node *init_var()
 {
+	Node *node = new_node();
+
+	return node;
 }
 
 // initialization while
-static void init_while()
+static Node *init_while()
 {
+	Node *node = new_node();
+
+	return node;
 }
 
 // initialization do while
-static void init_do_while()
+static Node *init_do_while()
 {
+	Node *node = new_node();
+
+	return node;
 }
 
 // initialization if
-static void init_if()
+static Node *init_if()
 {
+	Token *t;
+	Node  *node = new_node();
+
+	node->kind = K_IF;
+	node->lhs = new_node();
+	node->lhs->kind = K_PAREN_EXPR;
+
+	++count_tk;
+
+	check_tok('(');
+	node->lhs->rhs = expr();
+	check_tok(')');
+
+	node->rhs = statements();
+
+	t = tokens->data[count_tk];
+	if (t->type == TK_ELSE)
+	{
+		++count_tk;
+		Node *buffer_node = node;
+		node = new_node();
+		node->kind = K_IF_ELSE;
+		node->lhs = buffer_node;
+		node->rhs = new_node();
+		node->rhs->kind = K_ELSE;
+		node->rhs->rhs = statements();
+	}
+
+	return node;
 }
 
-static void init_print()
+static Node *init_print()
 {
+	Node *node = new_node();
 
+	return node;
 }
 
-static void init_input()
+static Node *init_input()
 {
+	Node *node = new_node();
+
+	return node;
 }
 
 // is_loop need for check break or continue within loop or not
 static Node *statement()
 {
-	Token *t = tokens->data[count_tk];
-	Node  *node;
+	Token *t    = tokens->data[count_tk];
+	Node  *node = NULL;
 
 	switch (t->type)
 	{
 		case TK_IF:
-			init_if();
+			node = init_if();
 			break;
 		case TK_WHILE:
-			init_while();
+			node = init_while();
 			break;
 		case TK_DO:
-			init_do_while();
+			node = init_do_while();
 			break;
 		case TK_PRINT:
-			init_print();
+			node = init_print();
 			break;
 		case TK_INPUT:
-			init_input();
+			node = init_input();
 			break;
 		case TK_INT:
-			init_var();
+			node = init_var();
 			break;
 		case TK_IDENT:
 		case TK_NUM:
@@ -344,12 +388,16 @@ static Node *statements()
 	Token *t    = check_tok('{');
 	Node  *node = new_node();
 
-	node->kind      = K_PROGRAM;
+	node->kind      = K_STATEMENTS;
 	node->node_list = new_vec();
 
 	while (count_tk < tokens->length && t->type != '}')
 	{
-		vec_push(node->node_list, statement());
+		Node *returned_node = statement();
+
+		if (returned_node != NULL)
+			vec_push(node->node_list, returned_node);
+
 		t = tokens->data[count_tk];
 	}
 
@@ -363,7 +411,9 @@ Node *parsing(Vector *_tokens)
 	tokens      = _tokens;
 	count_tk    = 0;
 
-	Node *node = statements();
+	Node *node = new_node();
+	node->kind = K_PROGRAM;
+	node->rhs = statements();
 
 	return node;
 }
