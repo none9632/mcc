@@ -280,6 +280,18 @@ static Node *init_while()
 {
 	Node *node = new_node();
 
+	node->kind = K_WHILE;
+	node->lhs = new_node();
+	node->lhs->kind = K_PAREN_EXPR;
+
+	++count_tk;
+
+	check_tok('(');
+	node->lhs->rhs = expr();
+	check_tok(')');
+
+	node->rhs = statements();
+
 	return node;
 }
 

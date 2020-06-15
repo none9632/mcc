@@ -41,6 +41,7 @@ static void print_kind(int kind, int value)
 		case K_PAREN_EXPR: printf("<paren_expr>\n"); break;
 		case K_ELSE:       printf("<expr>\n");       break;
 		case K_IF_ELSE:    printf("<if-else>\n");    break;
+		case K_WHILE:      printf("<while>\n");      break;
 	}
 }
 
