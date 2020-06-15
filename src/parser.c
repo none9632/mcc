@@ -300,6 +300,20 @@ static Node *init_do_while()
 {
 	Node *node = new_node();
 
+	++count_tk;
+
+	node->kind = K_DO_WHILE;
+	node->lhs = statements();
+
+	check_tok(TK_WHILE);
+	check_tok('(');
+	node->rhs = new_node();
+	node->rhs->kind = K_PAREN_EXPR;
+	node->rhs->rhs = expr();
+	check_tok(')');
+
+	check_tok(';');
+
 	return node;
 }
 
@@ -326,6 +340,7 @@ static Node *init_if()
 	{
 		++count_tk;
 		Node *buffer_node = node;
+
 		node = new_node();
 		node->kind = K_IF_ELSE;
 		node->lhs = buffer_node;
