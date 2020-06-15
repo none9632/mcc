@@ -354,7 +354,44 @@ static Node *init_if()
 
 static Node *init_print()
 {
-	Node *node = new_node();
+	Node  *node = new_node();
+	Token *t;
+
+	node->kind = K_PRINT;
+	node->node_list = new_vec();
+
+	++count_tk;
+	check_tok('(');
+	--count_tk;
+
+	do
+	{
+		t = tokens->data[++count_tk];
+
+		if (t->type == TK_IDENT || t->type == TK_NUM || t->type == '(' ||
+			t->type == '-'      || t->type == '+')
+		{
+			vec_push(node->node_list, expr());
+		}
+		else if (t->type == TK_STR)
+		{
+			Node *buffer_node = new_node();
+
+			buffer_node->kind = K_STRING;
+			buffer_node->str = t->str;
+
+			vec_push(node->node_list, buffer_node);
+			count_tk++;
+		}
+		else
+			error("expected \"string\" or expression", t->line, t->column);
+
+		t = tokens->data[count_tk];
+	}
+	while (count_tk < tokens->length && t->type == ',');
+
+	check_tok(')');
+	check_tok(';');
 
 	return node;
 }

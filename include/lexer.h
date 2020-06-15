@@ -41,6 +41,7 @@ typedef struct token
 	int length; // for output error message
 	int type;
 	int value;
+
 	int line;
 	int column;
 }

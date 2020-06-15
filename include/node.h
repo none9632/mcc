@@ -37,13 +37,15 @@ enum
 	K_NUM,        // 25
 	K_NONE,       // 26
 	K_ASSIGN,     // 27
-	K_PAREN_EXPR  // 28
+	K_PAREN_EXPR, // 28
+	K_STRING      // 29
 };
 
 typedef struct node
 {
 	int kind;
 	int value;
+	char *str;
 	struct node *lhs; // left-hand side
 	struct node *rhs; // right-hand side
 

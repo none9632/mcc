@@ -117,47 +117,6 @@ static char *read_num(Token *t, char *p_str)
 	return p_str;
 }
 
-// Turns two characters into one: '\' + 'n' = '\n' etc.
-static char *remove_backslash(char *prev_str, int length)
-{
-	char *buf_str = malloc(sizeof(char) * length);
-	int count = 0;
-
-	while (*prev_str != '\0')
-	{
-		if (*prev_str == '\\')
-		{
-			switch (*++prev_str)
-			{
-				case 'n':
-					buf_str[count++] = '\n';
-					++prev_str;
-					break;
-				case 't':
-					buf_str[count++] = '\t';
-					++prev_str;
-					break;
-				case 'r':
-					buf_str[count++] = '\r';
-					++prev_str;
-					break;
-				default:
-					buf_str[count++] = '\\';
-					break;
-			}
-		}
-		else
-			buf_str[count++] = *prev_str++;
-	}
-	buf_str[count] = '\0';
-
-	char *str = malloc(sizeof(char) * (count + 1));
-	strcpy(str, buf_str);
-	free(buf_str);
-
-	return str;
-}
-
 static char *read_str(Token *t, char *p_str)
 {
 	char *buf_p = ++p_str;
@@ -185,7 +144,6 @@ static char *read_str(Token *t, char *p_str)
 	memcpy(t->str, buf_p, length - 1);
 	t->str[length - 1] = '\0';
 	t->type = TK_STR;
-	t->str = remove_backslash(t->str, length);
 
 	return ++p_str;
 }
