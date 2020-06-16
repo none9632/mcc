@@ -2,15 +2,17 @@
 
 static char *prefix;
 
-Node *new_node()
+Node *new_node(int kind)
 {
 	Node *n = malloc(sizeof(Node));
-	n->kind = K_NONE;
-	n->value = 0;
-	n->str = NULL;
-	n->lhs = NULL;
-	n->rhs = NULL;
+
+	n->kind      = kind;
+	n->value     = 0;
+	n->str       = NULL;
+	n->lhs       = NULL;
+	n->rhs       = NULL;
 	n->node_list = NULL;
+
 	return n;
 }
 

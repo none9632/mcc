@@ -46,6 +46,7 @@ typedef struct node
 	int kind;
 	int value;
 	char *str;
+
 	struct node *lhs; // left-hand side
 	struct node *rhs; // right-hand side
 
@@ -54,6 +55,6 @@ typedef struct node
 Node;
 
 void  start_print_node (Node *n);
-Node *new_node         ();
+Node *new_node         (int kind);
 
 #endif
