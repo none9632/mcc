@@ -8,7 +8,7 @@ static int     count_tk;
 static Node *expr();
 static Node *statements();
 
-static Token *check_tok(int type)
+static Token *expect_tok(int type)
 {
 	Token *t = tokens->data[count_tk];
 
@@ -25,8 +25,20 @@ static Token *check_tok(int type)
 		error(message, t->line, t->column);
 	}
 
-	t = tokens->data[++count_tk];
-	return t;
+	return tokens->data[++count_tk];
+}
+
+static int check_tok(int type)
+{
+	Token *t = tokens->data[count_tk];
+
+	if (count_tk < tokens->length && t->type == type)
+	{
+		++count_tk;
+		return 1;
+	}
+
+	return 0;
 }
 
 static Node *factor()
@@ -41,20 +53,18 @@ static Node *factor()
 			  t->line, t->column);
 	}
 
-	if (t->type == TK_NUM)
+	if (check_tok(TK_NUM))
 	{
 		node->kind  = K_NUM;
 		node->value = t->value;
-		++count_tk;
 	}
-	else if (t->type == TK_IDENT)
+	else if (check_tok(TK_IDENT))
 	{
 	}
-	else if (t->type == '(')
+	else if (check_tok('('))
 	{
-		++count_tk;
 		node = expr();
-		check_tok(')');
+		expect_tok(')');
 	}
 	else
 		error("expected expression", t->line, t->column);
@@ -67,12 +77,9 @@ static Node *unary()
 	Token *t    = tokens->data[count_tk];
 	Node  *node = NULL;
 
-	if (count_tk < tokens->length &&
-	   (t->type == '-' ||
-	    t->type == '+' ))
+	if (check_tok('-') ||
+	    check_tok('+') )
 	{
-		++count_tk;
-
 		node      = new_node(K_NONE);
 		node->rhs = unary();
 
@@ -94,13 +101,10 @@ static Node *term()
 	Node  *node = unary();
 	Token *t    = tokens->data[count_tk];
 
-	while (count_tk < tokens->length &&
-		  (t->type == '*' ||
-		   t->type == '/' ||
-		   t->type == '%' ))
+	while (check_tok('*') ||
+		   check_tok('/') ||
+		   check_tok('%') )
 	{
-		++count_tk;
-
 		Node *buf_node = new_node(K_NONE);
 
 		buf_node->lhs = node;
@@ -126,12 +130,9 @@ static Node *add_and_sub()
 	Node  *node = term();
 	Token *t    = tokens->data[count_tk];
 
-	while (count_tk < tokens->length &&
-		  (t->type == '+' ||
-		   t->type == '-' ))
+	while (check_tok('+') ||
+		   check_tok('-') )
 	{
-		++count_tk;
-
 		Node *buf_node = new_node(K_NONE);
 
 		buf_node->lhs = node;
@@ -157,14 +158,11 @@ static Node *comp_op()
 	Node  *node = add_and_sub();
 	Token *t    = tokens->data[count_tk];
 
-	while (count_tk < tokens->length &&
-		   (t->type == '>'       ||
-		    t->type == '<'       ||
-		    t->type == TK_MOREEQ ||
-			t->type == TK_LESSEQ ))
+	while (check_tok('>')       ||
+		   check_tok('<')       ||
+		   check_tok(TK_MOREEQ) ||
+		   check_tok(TK_LESSEQ) )
 	{
-		++count_tk;
-
 		Node *buf_node = new_node(K_NONE);
 
 		buf_node->lhs = node;
@@ -191,12 +189,9 @@ static Node *equality_op()
 	Node  *node = comp_op();
 	Token *t    = tokens->data[count_tk];
 
-	while (count_tk < tokens->length &&
-		  (t->type == TK_EQUAL ||
-		   t->type == TK_NOTEQ ))
+	while (check_tok(TK_EQUAL) ||
+		   check_tok(TK_NOTEQ) )
 	{
-		++count_tk;
-
 		Node *buf_node = new_node(K_NONE);
 
 		buf_node->lhs = node;
@@ -218,22 +213,16 @@ static Node *equality_op()
 
 static Node *and()
 {
-	Node  *node = equality_op();
-	Token *t    = tokens->data[count_tk];
+	Node *node = equality_op();
 
-	while (count_tk < tokens->length &&
-		   t->type == TK_AND)
+	while (check_tok(TK_AND))
 	{
-		++count_tk;
-
 		Node *buf_node = new_node(K_AND);
 
 		buf_node->lhs = node;
 		buf_node->rhs = equality_op();
 
 		node = buf_node;
-
-		t = tokens->data[count_tk];
 	}
 
 	return node;
@@ -241,22 +230,16 @@ static Node *and()
 
 static Node *or()
 {
-	Node  *node = and();
-	Token *t    = tokens->data[count_tk];
+	Node *node = and();
 
-	while (count_tk < tokens->length &&
-		   t->type == TK_OR)
+	while (check_tok(TK_OR))
 	{
-		++count_tk;
-
 		Node *buf_node = new_node(K_OR);
 
 		buf_node->lhs = node;
 		buf_node->rhs = and();
 
 		node = buf_node;
-
-		t = tokens->data[count_tk];
 	}
 
 	return node;
@@ -276,7 +259,7 @@ static Node *assign()
 
 	node->rhs = expr();
 
-	check_tok(';');
+	expect_tok(';');
 
 	return node;
 }
@@ -292,16 +275,17 @@ static Node *init_var()
 // initialization while
 static Node *init_while()
 {
+	++count_tk;
+
 	Node *node = new_node(K_WHILE);
 
-	node->lhs = new_node(K_PAREN_EXPR);
+	node->lhs  = new_node(K_PAREN_EXPR);
 
-	++count_tk;
-	check_tok('(');
+	expect_tok('(');
 
 	node->lhs->rhs = expr();
 
-	check_tok(')');
+	expect_tok(')');
 
 	node->rhs = statements();
 
@@ -315,16 +299,16 @@ static Node *init_do_while()
 
 	Node *node = new_node(K_DO_WHILE);
 
-	node->lhs = statements();
+	node->lhs  = statements();
 
-	check_tok(TK_WHILE);
-	check_tok('(');
+	expect_tok(TK_WHILE);
+	expect_tok('(');
 
 	node->rhs      = new_node(K_PAREN_EXPR);
 	node->rhs->rhs = expr();
 
-	check_tok(')');
-	check_tok(';');
+	expect_tok(')');
+	expect_tok(';');
 
 	return node;
 }
@@ -332,25 +316,22 @@ static Node *init_do_while()
 // initialization if
 static Node *init_if()
 {
-	Token *t;
-	Node  *node = new_node(K_IF);
-
-	node->lhs = new_node(K_PAREN_EXPR);
-
 	++count_tk;
-	check_tok('(');
+
+	Node *node = new_node(K_IF);
+
+	node->lhs   = new_node(K_PAREN_EXPR);
+
+	expect_tok('(');
 
 	node->lhs->rhs = expr();
 
-	check_tok(')');
+	expect_tok(')');
 
 	node->rhs = statements();
 
-	t = tokens->data[count_tk];
-
-	if (t->type == TK_ELSE)
+	if (check_tok(TK_ELSE))
 	{
-		++count_tk;
 		Node *buffer_node = node;
 
 		node           = new_node(K_IF_ELSE);
@@ -364,45 +345,48 @@ static Node *init_if()
 
 static Node *init_print()
 {
-	Token *t;
+	++count_tk;
+
 	Node  *node = new_node(K_PRINT);
 
 	node->node_list = new_vec();
 
-	++count_tk;
-	check_tok('(');
-	--count_tk;
+	expect_tok('(');
 
 	do
 	{
-		t = tokens->data[++count_tk];
-
-		if (t->type == TK_IDENT ||
-			t->type == TK_NUM   ||
-			t->type == '('      ||
-			t->type == '-'      ||
-			t->type == '+')
+		if (check_tok(TK_IDENT) ||
+			check_tok(TK_NUM)   ||
+			check_tok('(')      ||
+			check_tok('-')      ||
+			check_tok('+'))
 		{
+			--count_tk;
 			vec_push(node->node_list, expr());
 		}
-		else if (t->type == TK_STR)
+		else if (check_tok(TK_STR))
 		{
-			Node *buffer_node = new_node(K_STRING);
+			Token *t           = tokens->data[count_tk - 1];
+			Node  *buffer_node = new_node(K_STRING);
 
 			buffer_node->str = t->str;
 
 			vec_push(node->node_list, buffer_node);
-			count_tk++;
 		}
 		else
+		{
+			if (count_tk >= tokens->length)
+				count_tk = tokens->length - 1;
+
+			Token *t = tokens->data[count_tk];
+
 			error("expected \"string\" or expression", t->line, t->column);
-
-		t = tokens->data[count_tk];
+		}
 	}
-	while (count_tk < tokens->length && t->type == ',');
+	while (check_tok(','));
 
-	check_tok(')');
-	check_tok(';');
+	expect_tok(')');
+	expect_tok(';');
 
 	return node;
 }
@@ -460,7 +444,7 @@ static Node *statement()
 
 static Node *statements()
 {
-	Token *t    = check_tok('{');
+	Token *t    = expect_tok('{');
 	Node  *node = new_node(K_STATEMENTS);
 
 	node->node_list = new_vec();
@@ -475,7 +459,7 @@ static Node *statements()
 		t = tokens->data[count_tk];
 	}
 
-	check_tok('}');
+	expect_tok('}');
 
 	return node;
 }

@@ -24,7 +24,7 @@
 <op_equate>        ::= <op_compare> { ( "==" | "!=" ) <op_compare> }
 <op_compare>       ::= <op_add>     { ( "<" | ">" | "<=" | ">=" ) <op_add> }
 <op_add>           ::= <op_mult>    { ( "+" | "-" ) <op_mult> }
-<op_mult>          ::= <op_unary>   { ( "*" | "/" ) <op_unary> }
+<op_mult>          ::= <op_unary>   { ( "*" | "/" | "%" ) <op_unary> }
 <op_unary>         ::= ( "+" | "-" ) <op_unary> | <factor>
 <factor>           ::= <int> | <id> | <paren_expr>
 

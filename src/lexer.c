@@ -199,19 +199,22 @@ static Vector *scan(char *p_str)
 		Token *t = malloc(sizeof(Token));
 
 		// Whitespace
-		while (isspace(*p_str))
+		if (isspace(*p_str))
 		{
-			if (*p_str == '\n')
+			while (isspace(*p_str))
 			{
-				g_column = 0;
-				++g_line;
+				if (*p_str == '\n')
+				{
+					g_column = 0;
+					++g_line;
+				}
+				++p_str;
+				++g_column;
 			}
-			++p_str;
-			++g_column;
 		}
 
 		// Comment
-		if (!strncmp(p_str, "/*", 2) || !strncmp(p_str, "//", 2))
+		else if (!strncmp(p_str, "/*", 2) || !strncmp(p_str, "//", 2))
 			p_str = read_comment(p_str);
 
 		// Symbols
