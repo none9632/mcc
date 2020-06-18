@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "vector.h"
+#include "table_names.h"
 
 // kind list
 enum
@@ -36,9 +37,15 @@ enum
 	K_VAR,        // 24
 	K_NUM,        // 25
 	K_NONE,       // 26
-	K_ASSIGN,     // 27
-	K_PAREN_EXPR, // 28
-	K_STRING      // 29
+	K_EXPR,       // 27
+	K_STRING,     // 28
+	K_PLUSA,      // 29
+	K_MINUSA,     // 30
+	K_MULTA,      // 31
+	K_DIVA,       // 32
+	K_MODA,       // 33
+	K_ASSIGN,     // 34
+	K_INIT_VARS,  // 34
 };
 
 typedef struct node
@@ -46,6 +53,7 @@ typedef struct node
 	int kind;
 	int value;
 	char *str;
+	Name *name;
 
 	struct node *lhs; // left-hand side
 	struct node *rhs; // right-hand side

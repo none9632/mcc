@@ -26,9 +26,9 @@ enum
 	TK_MODA,         // %=
 	TK_OR,           // ||
 	TK_AND,          // &&
+	TK_IF,           // "if"
 	TK_ELSE,         // "else"
 	TK_WHILE,        // "while"
-	TK_IF,           // "if"
 	TK_PRINT,        // "print"
 	TK_INPUT,        // "input"
 	TK_INT,          // "int"
@@ -37,10 +37,11 @@ enum
 
 typedef struct token
 {
-	char *str;  // for storage name variable or string literal
-	int length; // for output error message
 	int type;
 	int value;
+
+	char *str;  // for storage table_names variable or string literal
+	int length; // for output error message
 
 	int line;
 	int column;

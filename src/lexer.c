@@ -265,7 +265,7 @@ Vector *lexer(char *file_name)
 	FILE *file = fopen(file_name, "r");
 	if (file == NULL)
 	{
-		printf("name: %s\n", file_name);
+		printf("table_names: %s\n", file_name);
 		error("file can't open", 0, 0);
 	}
 

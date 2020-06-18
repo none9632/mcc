@@ -8,7 +8,7 @@ Node *new_node(int kind)
 
 	n->kind      = kind;
 	n->value     = 0;
-	n->str       = NULL;
+	n->name      = NULL;
 	n->lhs       = NULL;
 	n->rhs       = NULL;
 	n->node_list = NULL;
@@ -20,34 +20,42 @@ static void print_kind(Node *n)
 {
 	switch (n->kind)
 	{
-		case K_ADD:        printf("+\n");              break;
-		case K_SUB:        printf("-\n");              break;
-		case K_MULT:       printf("*\n");              break;
-		case K_DIV:        printf("/\n");              break;
-		case K_MOD:        printf("%%\n");             break;
-		case K_MORE:       printf(">\n");              break;
-		case K_LESS:       printf("<\n");              break;
-		case K_MOREEQ:     printf(">=\n");             break;
-		case K_LESSEQ:     printf("<=\n");             break;
-		case K_EQUAL:      printf("==\n");             break;
-		case K_NOT_EQUAL:  printf("!=\n");             break;
-		case K_AND:        printf("&&\n");             break;
-		case K_OR:         printf("||\n");             break;
-		case K_POSITIVE:   printf("+\n");              break;
-		case K_NEG:        printf("-\n");              break;
-		case K_NUM:        printf("%i\n", n->value);   break;
-		case K_PROGRAM:    printf("<program>\n");      break;
-		case K_NONE:       printf("none\n");           break;
-		case K_STATEMENTS: printf("<statements>\n");   break;
-		case K_IF:         printf("<if>\n");           break;
-		case K_ASSIGN:     printf("<assign>\n");       break;
-		case K_PAREN_EXPR: printf("<paren_expr>\n");   break;
-		case K_ELSE:       printf("<expr>\n");         break;
-		case K_IF_ELSE:    printf("<if-else>\n");      break;
-		case K_WHILE:      printf("<while>\n");        break;
-		case K_DO_WHILE:   printf("<do-while>\n");     break;
-		case K_PRINT:      printf("<print>\n");        break;
-		case K_STRING:     printf("\"%s\"\n", n->str); break;
+		case K_ADD:        printf("+\n");                 break;
+		case K_SUB:        printf("-\n");                 break;
+		case K_MULT:       printf("*\n");                 break;
+		case K_DIV:        printf("/\n");                 break;
+		case K_MOD:        printf("%%\n");                break;
+		case K_MORE:       printf(">\n");                 break;
+		case K_LESS:       printf("<\n");                 break;
+		case K_MOREEQ:     printf(">=\n");                break;
+		case K_LESSEQ:     printf("<=\n");                break;
+		case K_EQUAL:      printf("==\n");                break;
+		case K_NOT_EQUAL:  printf("!=\n");                break;
+		case K_AND:        printf("&&\n");                break;
+		case K_OR:         printf("||\n");                break;
+		case K_POSITIVE:   printf("+\n");                 break;
+		case K_NEG:        printf("-\n");                 break;
+		case K_NUM:        printf("%i\n", n->value);      break;
+		case K_PROGRAM:    printf("<program>\n");         break;
+		case K_NONE:       printf("none\n");              break;
+		case K_STATEMENTS: printf("<statements>\n");      break;
+		case K_EXPR:       printf("<expr>\n");            break;
+		case K_IF:         printf("<if>\n");              break;
+		case K_ELSE:       printf("<else>\n");            break;
+		case K_IF_ELSE:    printf("<if-else>\n");         break;
+		case K_WHILE:      printf("<while>\n");           break;
+		case K_DO_WHILE:   printf("<do-while>\n");        break;
+		case K_PRINT:      printf("<print>\n");           break;
+		case K_INPUT:      printf("<input>\n");           break;
+		case K_STRING:     printf("\"%s\"\n", n->str);    break;
+		case K_ASSIGN:     printf("=\n");                 break;
+		case K_PLUSA:      printf("+=\n");                break;
+		case K_MINUSA:     printf("-=\n");                break;
+		case K_MULTA:      printf("*=\n");                break;
+		case K_DIVA:       printf("/=\n");                break;
+		case K_MODA:       printf("%%=\n");               break;
+		case K_INIT_VARS:  printf("<init-vars>\n");       break;
+		case K_VAR:        printf("%s\n", n->name->name); break;
 	}
 }
 
@@ -92,7 +100,7 @@ void print_node(Node *n, int prefix_len, int is_left)
 		new_prefix(prefix_len, is_left);
 		prefix_len += 4;
 
-		if (n->kind == K_STATEMENTS || n->kind == K_PRINT)
+		if (n->kind == K_STATEMENTS || n->kind == K_PRINT || n->kind == K_INIT_VARS)
 		{
 			Node *buffer_node;
 			for (int i = 0; i < n->node_list->length; ++i)
