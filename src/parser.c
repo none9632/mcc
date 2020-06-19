@@ -2,28 +2,28 @@
 
 #define MAX_STRING_SIZE 25
 
-static Vector      *tokens;
-static Table_names *table_names;
-static int          count_tk;
+static Vector *tokens;
+static Table  *symbol_table;
+static int     count_tk;
 
 static Node *expr();
 static Node *statements();
 
 static Token *expect_tok(int type)
 {
-	Token *t = tokens->data[count_tk];
+	Token *token = tokens->data[count_tk];
 
-	if (count_tk >= tokens->length || t->type != type)
+	if (count_tk >= tokens->length || token->type != type)
 	{
 		// If the counter is larger than the number of tokens
 		// then we take the last token.
 		if (count_tk >= tokens->length)
-			t = tokens->data[--tokens->length];
+			token = tokens->data[--tokens->length];
 
-		char message[t->length + MAX_STRING_SIZE];
+		char message[token->length + MAX_STRING_SIZE];
 		snprintf(message, sizeof(message), "%s%c%s",
 				 "expected '", type, "' character");
-		error(message, t->line, t->column);
+		error(message, token->line, token->column);
 	}
 
 	return tokens->data[++count_tk];
@@ -31,9 +31,9 @@ static Token *expect_tok(int type)
 
 static int check_tok(int type)
 {
-	Token *t = tokens->data[count_tk];
+	Token *token = tokens->data[count_tk];
 
-	if (count_tk < tokens->length && t->type == type)
+	if (count_tk < tokens->length && token->type == type)
 	{
 		++count_tk;
 		return 1;
@@ -42,37 +42,37 @@ static int check_tok(int type)
 	return 0;
 }
 
-static Name *find_name(Token *t)
+static Symbol *find_symbol(Token *token)
 {
-	Name *n = find(table_names, t->str);
+	Symbol *symbol = find(symbol_table, token->str);
 
-	if (n == NULL)
+	if (symbol == NULL)
 	{
-		char message[t->length + MAX_STRING_SIZE];
+		char message[token->length + MAX_STRING_SIZE];
 		snprintf(message, sizeof(message), "%c%s%s",
-				 '\'', t->str, "' is undeclared");
-		error(message, t->line, t->column);
+				 '\'', token->str, "' is undeclared");
+		error(message, token->line, token->column);
 	}
 
-	return n;
+	return symbol;
 }
 
 static Node *factor()
 {
-	Token *t = tokens->data[count_tk];
+	Token *token = tokens->data[count_tk];
 	Node  *node;
 
 	if (check_tok(TK_NUM))
 	{
 		node        = new_node(K_NUM);
-		node->value = t->value;
+		node->value = token->value;
 	}
 	else if (check_tok(TK_IDENT))
 	{
-		Name *name = find_name(t);
+		Symbol *symbol = find_symbol(token);
 
-		node       = new_node(K_VAR);
-		node->name = name;
+		node         = new_node(K_VAR);
+		node->symbol = symbol;
 	}
 	else if (check_tok('('))
 	{
@@ -80,15 +80,15 @@ static Node *factor()
 		expect_tok(')');
 	}
 	else
-		error("expected expression", t->line, t->column);
+		error("expected expression", token->line, token->column);
 
 	return node;
 }
 
 static Node *unary()
 {
-	Token *t    = tokens->data[count_tk];
-	Node  *node = NULL;
+	Token *token = tokens->data[count_tk];
+	Node  *node  = NULL;
 
 	if (check_tok('-') ||
 	    check_tok('+') )
@@ -96,7 +96,7 @@ static Node *unary()
 		node      = new_node(K_NONE);
 		node->rhs = unary();
 
-		switch (t->type)
+		switch (token->type)
 		{
 			case '-': node->kind = K_NEG;      break;
 			case '+': node->kind = K_POSITIVE; break;
@@ -111,8 +111,8 @@ static Node *unary()
 
 static Node *term()
 {
-	Node  *node = unary();
-	Token *t    = tokens->data[count_tk];
+	Node  *node  = unary();
+	Token *token = tokens->data[count_tk];
 
 	while (check_tok('*') ||
 		   check_tok('/') ||
@@ -122,17 +122,16 @@ static Node *term()
 
 		buf_node->lhs = node;
 		buf_node->rhs = unary();
+		node          = buf_node;
 
-		node = buf_node;
-
-		switch (t->type)
+		switch (token->type)
 		{
 			case '*': node->kind = K_MULT; break;
 			case '/': node->kind = K_DIV;  break;
 			case '%': node->kind = K_MOD;  break;
 		}
 
-		t = tokens->data[count_tk];
+		token = tokens->data[count_tk];
 	}
 
 	return node;
@@ -140,8 +139,8 @@ static Node *term()
 
 static Node *add_and_sub()
 {
-	Node  *node = term();
-	Token *t    = tokens->data[count_tk];
+	Node  *node  = term();
+	Token *token = tokens->data[count_tk];
 
 	while (check_tok('+') ||
 		   check_tok('-') )
@@ -150,16 +149,15 @@ static Node *add_and_sub()
 
 		buf_node->lhs = node;
 		buf_node->rhs = term();
+		node          = buf_node;
 
-		node = buf_node;
-
-		switch (t->type)
+		switch (token->type)
 		{
 			case '+': node->kind = K_ADD; break;
 			case '-': node->kind = K_SUB; break;
 		}
 
-		t = tokens->data[count_tk];
+		token = tokens->data[count_tk];
 	}
 
 	return node;
@@ -168,8 +166,8 @@ static Node *add_and_sub()
 // comparison operators
 static Node *comp_op()
 {
-	Node  *node = add_and_sub();
-	Token *t    = tokens->data[count_tk];
+	Node  *node  = add_and_sub();
+	Token *token = tokens->data[count_tk];
 
 	while (check_tok('>')       ||
 		   check_tok('<')       ||
@@ -180,10 +178,9 @@ static Node *comp_op()
 
 		buf_node->lhs = node;
 		buf_node->rhs = add_and_sub();
+		node          = buf_node;
 
-		node = buf_node;
-
-		switch (t->type)
+		switch (token->type)
 		{
 			case '>':       node->kind = K_MORE;   break;
 			case '<':       node->kind = K_LESS;   break;
@@ -191,7 +188,7 @@ static Node *comp_op()
 			case TK_LESSEQ: node->kind = K_LESSEQ; break;
 		}
 
-		t = tokens->data[count_tk];
+		token = tokens->data[count_tk];
 	}
 
 	return node;
@@ -199,8 +196,8 @@ static Node *comp_op()
 
 static Node *equality_op()
 {
-	Node  *node = comp_op();
-	Token *t    = tokens->data[count_tk];
+	Node  *node  = comp_op();
+	Token *token = tokens->data[count_tk];
 
 	while (check_tok(TK_EQUAL) ||
 		   check_tok(TK_NOTEQ) )
@@ -209,16 +206,15 @@ static Node *equality_op()
 
 		buf_node->lhs = node;
 		buf_node->rhs = comp_op();
+		node          = buf_node;
 
-		node = buf_node;
-
-		switch (t->type)
+		switch (token->type)
 		{
 			case TK_EQUAL: node->kind = K_EQUAL;     break;
 			case TK_NOTEQ: node->kind = K_NOT_EQUAL; break;
 		}
 
-		t = tokens->data[count_tk];
+		token = tokens->data[count_tk];
 	}
 
 	return node;
@@ -234,8 +230,7 @@ static Node *and()
 
 		buf_node->lhs = node;
 		buf_node->rhs = equality_op();
-
-		node = buf_node;
+		node          = buf_node;
 	}
 
 	return node;
@@ -251,8 +246,7 @@ static Node *or()
 
 		buf_node->lhs = node;
 		buf_node->rhs = and();
-
-		node = buf_node;
+		node          = buf_node;
 	}
 
 	return node;
@@ -277,7 +271,9 @@ static Node *primary_expr()
 // assignment function
 static Node *assign()
 {
-	Token *t = tokens->data[count_tk++];
+	++count_tk;
+
+	Token *token;
 	Node  *node;
 
 	if (check_tok(TK_PLUSA)  ||
@@ -287,12 +283,12 @@ static Node *assign()
 		check_tok(TK_MODA)   ||
 		check_tok('=')       )
 	{
-		t = tokens->data[count_tk - 2];
-		Name *name = find_name(t);
+		token = tokens->data[count_tk - 2];
+		Symbol *symbol = find_symbol(token);
 
-		t = tokens->data[count_tk - 1];
+		token = tokens->data[count_tk - 1];
 
-		switch (t->type)
+		switch (token->type)
 		{
 			case TK_PLUSA:  node = new_node(K_PLUSA);  break;
 			case TK_MINUSA: node = new_node(K_MINUSA); break;
@@ -302,9 +298,9 @@ static Node *assign()
 			case '=':       node = new_node(K_ASSIGN); break;
 		}
 
-		node->lhs       = new_node(K_VAR);
-		node->lhs->name = name;
-		node->rhs       = expr();
+		node->lhs         = new_node(K_VAR);
+		node->lhs->symbol = symbol;
+		node->rhs         = expr();
 	}
 	else
 	{
@@ -322,30 +318,30 @@ static Node *init_var()
 {
 	++count_tk;
 
-	Token *t;
+	Token *token;
 	Node  *node = new_node(K_INIT_VARS);
 	Node  *buf_node;
 
-	node->node_list = new_vec();
+	node->node_list = new_vector();
 
 	do
 	{
-		Name *name = new_name(TK_INT);
+		Symbol *symbol = new_symbol(TK_INT);
 
-		t = tokens->data[count_tk];
+		token = tokens->data[count_tk];
 
 		if (!check_tok(TK_IDENT))
-			error("expected identifier", t->line, t->column);
-		if (find(table_names, t->str) != NULL)
-			error("redefinition", t->line, t->column);
+			error("expected identifier", token->line, token->column);
+		if (find(symbol_table, token->str) != NULL)
+			error("redefinition", token->line, token->column);
 
-		name->name = t->str;
+		symbol->name = token->str;
 
-		vec_push(table_names->names, name);
+		vec_push(symbol_table->symbols, symbol);
 
-		buf_node       = new_node(K_VAR);
-		buf_node->name = name;
-		t              = tokens->data[count_tk];
+		buf_node         = new_node(K_VAR);
+		buf_node->symbol = symbol;
+		token            = tokens->data[count_tk];
 
 		if (check_tok('='))
 		{
@@ -355,8 +351,8 @@ static Node *init_var()
 			assign->rhs = expr();
 			buf_node    = assign;
 		}
-		else if (t->type != ';' && t->type != ',')
-			error("expected ‘=’, ‘,’, ‘;’", t->line, t->column);
+		else if (token->type != ';' && token->type != ',')
+			error("expected ‘=’, ‘,’, ‘;’", token->line, token->column);
 
 		vec_push(node->node_list, buf_node);
 	}
@@ -391,8 +387,7 @@ static Node *init_do_while()
 	++count_tk;
 
 	Node *node = new_node(K_DO_WHILE);
-
-	node->lhs = statements();
+	node->lhs  = statements();
 
 	expect_tok(TK_WHILE);
 	expect_tok('(');
@@ -439,7 +434,7 @@ static Node *init_print()
 
 	Node *node = new_node(K_PRINT);
 
-	node->node_list = new_vec();
+	node->node_list = new_vector();
 
 	expect_tok('(');
 
@@ -456,10 +451,10 @@ static Node *init_print()
 		}
 		else if (check_tok(TK_STR))
 		{
-			Token *t           = tokens->data[count_tk - 1];
+			Token *token       = tokens->data[count_tk - 1];
 			Node  *buffer_node = new_node(K_STRING);
 
-			buffer_node->str = t->str;
+			buffer_node->str = token->str;
 
 			vec_push(node->node_list, buffer_node);
 		}
@@ -468,9 +463,9 @@ static Node *init_print()
 			if (count_tk >= tokens->length)
 				count_tk = tokens->length - 1;
 
-			Token *t = tokens->data[count_tk];
+			Token *token = tokens->data[count_tk];
 
-			error("expected \"string\" or expression", t->line, t->column);
+			error("expected \"string\" or expression", token->line, token->column);
 		}
 	}
 	while (check_tok(','));
@@ -485,15 +480,15 @@ static Node *init_input()
 {
 	++count_tk;
 
-	Token *t    = expect_tok('(');
-	Node  *node = new_node(K_INPUT);
-	Name  *name;
+	Token  *token  = expect_tok('(');
+	Node   *node   = new_node(K_INPUT);
+	Symbol *symbol;
 
 	expect_tok(TK_IDENT);
 
-	name            = find_name(t);
-	node->rhs       = new_node(K_VAR);
-	node->rhs->name = name;
+	symbol            = find_symbol(token);
+	node->rhs         = new_node(K_VAR);
+	node->rhs->symbol = symbol;
 
 	check_tok(')');
 	check_tok(';');
@@ -504,10 +499,10 @@ static Node *init_input()
 // is_loop need for check break or continue within loop or not
 static Node *statement()
 {
-	Token *t    = tokens->data[count_tk];
-	Node  *node = NULL;
+	Token *token = tokens->data[count_tk];
+	Node  *node  = NULL;
 
-	switch (t->type)
+	switch (token->type)
 	{
 		case TK_IF:
 			node = init_if();
@@ -538,7 +533,7 @@ static Node *statement()
 			++count_tk;
 			break;
 		default:
-			error("syntax error", t->line, t->column);
+			error("syntax error", token->line, token->column);
 			break;
 	}
 
@@ -547,25 +542,25 @@ static Node *statement()
 
 static Node *statements()
 {
-	Token *t    = expect_tok('{');
-	Node  *node = new_node(K_STATEMENTS);
+	Token *token = expect_tok('{');
+	Node  *node  = new_node(K_STATEMENTS);
 
-	table_names     = new_tn(table_names);
-	node->node_list = new_vec();
+	symbol_table    = new_table(symbol_table);
+	node->node_list = new_vector();
 
-	while (count_tk < tokens->length && t->type != '}')
+	while (count_tk < tokens->length && token->type != '}')
 	{
 		Node *returned_node = statement();
 
 		if (returned_node != NULL)
 			vec_push(node->node_list, returned_node);
 
-		t = tokens->data[count_tk];
+		token = tokens->data[count_tk];
 	}
 
 	expect_tok('}');
 
-	table_names = table_names->prev;
+	symbol_table = symbol_table->prev;
 
 	return node;
 }

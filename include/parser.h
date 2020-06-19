@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #include "vector.h"
-#include "table_names.h"
+#include "table.h"
 #include "lexer.h"
 #include "error.h"
 #include "node.h"

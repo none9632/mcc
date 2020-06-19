@@ -4,16 +4,16 @@ static char *prefix;
 
 Node *new_node(int kind)
 {
-	Node *n = malloc(sizeof(Node));
+	Node *node = malloc(sizeof(Node));
 
-	n->kind      = kind;
-	n->value     = 0;
-	n->name      = NULL;
-	n->lhs       = NULL;
-	n->rhs       = NULL;
-	n->node_list = NULL;
+	node->kind      = kind;
+	node->value     = 0;
+	node->symbol    = NULL;
+	node->lhs       = NULL;
+	node->rhs       = NULL;
+	node->node_list = NULL;
 
-	return n;
+	return node;
 }
 
 static void print_kind(Node *n)
@@ -55,7 +55,7 @@ static void print_kind(Node *n)
 		case K_DIVA:       printf("/=\n");                break;
 		case K_MODA:       printf("%%=\n");               break;
 		case K_INIT_VARS:  printf("<init-vars>\n");       break;
-		case K_VAR:        printf("%s\n", n->name->name); break;
+		case K_VAR:        printf("%s\n", n->symbol->name); break;
 	}
 }
 
@@ -87,47 +87,44 @@ static void new_prefix(int prefix_len, int is_left)
 		prefix[prefix_len] = '|';
 }
 
-void print_node(Node *n, int prefix_len, int is_left)
+void print_node(Node *node, int prefix_len, int is_left)
 {
-	if (n != NULL)
+	if (node != NULL)
 	{
 		print_prefix(prefix_len);
-
 		printf("%s", (is_left ? "├── " : "└── "));
-
-		print_kind(n);
+		print_kind(node);
 
 		new_prefix(prefix_len, is_left);
 		prefix_len += 4;
 
-		if (n->kind == K_STATEMENTS || n->kind == K_PRINT || n->kind == K_INIT_VARS)
+		if (node->kind == K_STATEMENTS || node->kind == K_PRINT || node->kind == K_INIT_VARS)
 		{
-			Node *buffer_node;
-			for (int i = 0; i < n->node_list->length; ++i)
+			for (int i = 0; i < node->node_list->length; ++i)
 			{
-				buffer_node = n->node_list->data[i];
+				Node *buffer_node = node->node_list->data[i];
 				/*
 				 * if node in node_list is last that
 				 * is_left (n->node_list_length - (i + 1))
 				 * is zero
 				 */
-				print_node(buffer_node, prefix_len, n->node_list->length - (i + 1));
+				print_node(buffer_node, prefix_len, node->node_list->length - (i + 1));
 			}
 		}
 		else
 		{
-			print_node(n->lhs, prefix_len, 1);
-			print_node(n->rhs, prefix_len, 0);
+			print_node(node->lhs, prefix_len, 1);
+			print_node(node->rhs, prefix_len, 0);
 		}
 	}
 }
 
-void start_print_node(Node *n)
+void start_print_node(Node *node)
 {
 	prefix = NULL;
 
-	print_kind(n);
+	print_kind(node);
 
-	print_node(n->rhs, 0, 0);
+	print_node(node->rhs, 0, 0);
 }
 

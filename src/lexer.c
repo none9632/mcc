@@ -49,15 +49,19 @@ static int search_TK(char *name)
 
 static char *read_file(FILE *file)
 {
-	char *str = NULL;
-	char buffer[4096];
-	unsigned int count_read, length = 1;
+	char        *str;
+	char         buffer[4096];
+	unsigned int count_read, length;
+
+	str    = NULL;
+	length = 1;
 
 	do
 	{
 		count_read = fread(buffer, sizeof(char), 4096, file);
-		length += count_read;
-		str = realloc(str, length);
+		length    += count_read;
+		str        = realloc(str, length);
+
 		memcpy(str + length - count_read - 1, buffer, count_read);
 	}
 	while (count_read != 0);
@@ -65,25 +69,27 @@ static char *read_file(FILE *file)
 	return str;
 }
 
-static int read_symbols(Token *t, char *p_str)
+static int read_symbols(Token *token, char *p_str)
 {
 	for (int i = 0; i < TABLE_SYMBOLS_SIZE; i++)
 	{
 		if (!strncmp(table_symbols[i].data, p_str, table_symbols[i].length))
 		{
-			t->type = table_symbols[i].type;
-			t->line = g_line;
-			t->column = g_column;
+			token->type   = table_symbols[i].type;
+			token->line   = g_line;
+			token->column = g_column;
+
 			return table_symbols[i].length;
 		}
 	}
+
 	return 0;
 }
 
-static char *read_ident(Token *t, char *p_str)
+static char *read_ident(Token *token, char *p_str)
 {
 	char *buf_p = p_str;
-	int length = 1;
+	int length  = 1;
 
 	while (isalnum(*p_str) || *p_str == '_')
 	{
@@ -92,35 +98,38 @@ static char *read_ident(Token *t, char *p_str)
 		++g_column;
 	}
 
-	t->str = malloc(sizeof(char) * length);
-	memcpy(t->str, buf_p, length - 1);
-	t->str[length - 1] = '\0';
-	t->type = search_TK(t->str);
-	t->length = length;
+	token->str = malloc(sizeof(char) * length);
+
+	memcpy(token->str, buf_p, length - 1);
+
+	token->str[length - 1] = '\0';
+	token->type            = search_TK(token->str);
+	token->length          = length;
 
 	return p_str;
 }
 
-static char *read_num(Token *t, char *p_str)
+static char *read_num(Token *token, char *p_str)
 {
-	t->value = 0;
+	token->value = 0;
 
 	while (isdigit(*p_str))
 	{
-		t->value = t->value * 10 + *p_str - '0';
+		token->value = token->value * 10 + *p_str - '0';
 		++p_str;
 		++g_column;
 	}
 
-	t->type = TK_NUM;
+	token->type = TK_NUM;
 
 	return p_str;
 }
 
-static char *read_str(Token *t, char *p_str)
+static char *read_str(Token *token, char *p_str)
 {
-	char *buf_p = ++p_str;
-	int length = 1;
+	char *buf_p  = ++p_str;
+	int   length = 1;
+
 	++g_column;
 
 	while (*p_str != '\"' && *p_str != '\0')
@@ -139,11 +148,12 @@ static char *read_str(Token *t, char *p_str)
 		error("missing terminating \" character", g_line, --g_column);
 
 	++g_column;
+	token->str = malloc(sizeof(char) * length);
 
-	t->str = malloc(sizeof(char) * length);
-	memcpy(t->str, buf_p, length - 1);
-	t->str[length - 1] = '\0';
-	t->type = TK_STR;
+	memcpy(token->str, buf_p, length - 1);
+
+	token->str[length - 1] = '\0';
+	token->type            = TK_STR;
 
 	return ++p_str;
 }
@@ -191,12 +201,12 @@ static char *read_comment(char *p_str)
 
 static Vector *scan(char *p_str)
 {
-	Vector *tokens = new_vec();
-	int offset;
+	Vector *tokens = new_vector();
+	int     offset;
 
 	while (*p_str != '\0')
 	{
-		Token *t = malloc(sizeof(Token));
+		Token *token = malloc(sizeof(Token));
 
 		// Whitespace
 		if (isspace(*p_str))
@@ -218,38 +228,42 @@ static Vector *scan(char *p_str)
 			p_str = read_comment(p_str);
 
 		// Symbols
-		else if ((offset = read_symbols(t, p_str)) != 0)
+		else if ((offset = read_symbols(token, p_str)) != 0)
 		{
-			p_str += offset;
+			p_str    += offset;
 			g_column += offset;
-			vec_push(tokens, t);
+
+			vec_push(tokens, token);
 		}
 
 		// Identifier
 		else if (isalpha(*p_str) || *p_str == '_')
 		{
-			t->line = g_line;
-			t->column = g_column;
-			p_str = read_ident(t, p_str);
-			vec_push(tokens, t);
+			token->line   = g_line;
+			token->column = g_column;
+			p_str         = read_ident(token, p_str);
+
+			vec_push(tokens, token);
 		}
 
 		// Number literal
 		else if (isdigit(*p_str))
 		{
-			t->line = g_line;
-			t->column = g_column;
-			p_str = read_num(t, p_str);
-			vec_push(tokens, t);
+			token->line   = g_line;
+			token->column = g_column;
+			p_str         = read_num(token, p_str);
+
+			vec_push(tokens, token);
 		}
 
 		// String literal
 		else if (*p_str == '\"')
 		{
-			t->line = g_line;
-			t->column = g_column;
-			p_str = read_str(t, p_str);
-			vec_push(tokens, t);
+			token->line   = g_line;
+			token->column = g_column;
+			p_str         = read_str(token, p_str);
+
+			vec_push(tokens, token);
 		}
 
 		// Unknown character
@@ -263,16 +277,18 @@ static Vector *scan(char *p_str)
 Vector *lexer(char *file_name)
 {
 	FILE *file = fopen(file_name, "r");
+
 	if (file == NULL)
 	{
-		printf("table_names: %s\n", file_name);
+		printf("table: %s\n", file_name);
 		error("file can't open", 0, 0);
 	}
 
-	char *str = read_file(file);
+	char   *str    = read_file(file);
 	Vector *tokens = scan(str);
 
 	fclose(file);
 	free(str);
+
 	return tokens;
 }

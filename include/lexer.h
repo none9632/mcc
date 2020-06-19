@@ -10,6 +10,7 @@
 #include "error.h"
 #include "lexer.h"
 
+// list of token types
 enum
 {
 	TK_IDENT = 128,  // Identifier
@@ -40,7 +41,7 @@ typedef struct token
 	int type;
 	int value;
 
-	char *str;  // for storage table_names variable or string literal
+	char *str;  // for storage table variable or string literal
 	int length; // for output error message
 
 	int line;
@@ -48,6 +49,6 @@ typedef struct token
 }
 Token;
 
-Vector *lexer(char *fileName);
+Vector *lexer(char *file_name);
 
 #endif

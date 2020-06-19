@@ -1,22 +1,22 @@
 #include "../include/vector.h"
 
-Vector *new_vec()
+Vector *new_vector()
 {
-	Vector *v = malloc(sizeof(Vector));
+	Vector *vector = malloc(sizeof(Vector));
 
-	v->length   = 0;
-	v->capacity = 16;
-	v->data     = malloc(sizeof(void *) * v->capacity);
+	vector->length   = 0;
+	vector->capacity = 16;
+	vector->data     = malloc(sizeof(void *) * vector->capacity);
 
-	return v;
+	return vector;
 }
 
-void vec_push(Vector *v, void *elem)
+void vec_push(Vector *vector, void *elem)
 {
-	if (v->length + 1 >= v->capacity)
+	if (vector->length + 1 >= vector->capacity)
 	{
-		v->capacity *= 2;
-		v->data      = realloc(v->data, sizeof(void *) * v->capacity);
+		vector->capacity *= 2;
+		vector->data      = realloc(vector->data, sizeof(void *) * vector->capacity);
 	}
-	v->data[v->length++] = elem;
+	vector->data[vector->length++] = elem;
 }

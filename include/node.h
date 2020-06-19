@@ -5,9 +5,9 @@
 #include <stdlib.h>
 
 #include "vector.h"
-#include "table_names.h"
+#include "table.h"
 
-// kind list
+// list of node types
 enum
 {
 	K_PROGRAM,    // 0
@@ -53,7 +53,7 @@ typedef struct node
 	int kind;
 	int value;
 	char *str;
-	Name *name;
+	Symbol *symbol;
 
 	struct node *lhs; // left-hand side
 	struct node *rhs; // right-hand side
@@ -62,7 +62,7 @@ typedef struct node
 }
 Node;
 
-void  start_print_node (Node *n);
+void  start_print_node (Node *node);
 Node *new_node         (int kind);
 
 #endif

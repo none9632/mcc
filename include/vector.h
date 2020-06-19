@@ -12,7 +12,7 @@ typedef struct vector
 }
 Vector;
 
-Vector *new_vec  ();
-void    vec_push (Vector *v, void *elem);
+Vector *new_vector ();
+void    vec_push   (Vector *vector, void *elem);
 
 #endif
