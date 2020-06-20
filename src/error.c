@@ -1,11 +1,25 @@
 #include "../include/error.h"
 
-void error(char *message, int line, int column)
+void error(int line, int column, char *format, ...)
 {
+	va_list arg;
+	va_start(arg, format);
+
 	if (line == 0)
-		printf("[ERROR]: %s\n", message);
+	{
+		printf("[\033[38;2;255;0;0m");  // for red color
+		printf("ERROR");
+		printf("\e[0m]: ");
+	}
 	else
-		printf("[ERROR]:%i:%i: %s\n", line, column, message);
+	{
+		printf("[\033[38;2;255;0;0m");  // for red color
+		printf("ERROR");
+		printf("\e[0m]:%i:%i: ", line, column);
+	}
+
+	vprintf(format, arg);
+	printf("\n");
 
 	exit(EXIT_FAILURE);
 }

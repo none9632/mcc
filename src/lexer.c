@@ -16,13 +16,13 @@ static int g_column = 1;
 
 static const Keyword table_keywords[TABLE_KEYWORDS_SIZE] =
 {
-	{"if",       TK_IF,       0},
-	{"else",     TK_ELSE,     0},
-	{"do",       TK_DO,       0},
-	{"while",    TK_WHILE,    0},
-	{"int",      TK_INT,      0},
-	{"input",    TK_INPUT,    0},
-	{"print",    TK_PRINT,    0},
+	{"if",    TK_IF,    0},
+	{"else",  TK_ELSE,  0},
+	{"do",    TK_DO,    0},
+	{"while", TK_WHILE, 0},
+	{"int",   TK_INT,   0},
+	{"input", TK_INPUT, 0},
+	{"print", TK_PRINT, 0},
 };
 
 static const Keyword table_symbols[TABLE_SYMBOLS_SIZE] =
@@ -76,6 +76,7 @@ static int read_symbols(Token *token, char *p_str)
 		if (!strncmp(table_symbols[i].data, p_str, table_symbols[i].length))
 		{
 			token->type   = table_symbols[i].type;
+			token->length = table_symbols[i].length;
 			token->line   = g_line;
 			token->column = g_column;
 
@@ -88,8 +89,8 @@ static int read_symbols(Token *token, char *p_str)
 
 static char *read_ident(Token *token, char *p_str)
 {
-	char *buf_p = p_str;
-	int length  = 1;
+	char *buf_p  = p_str;
+	int   length = 1;
 
 	while (isalnum(*p_str) || *p_str == '_')
 	{
@@ -145,7 +146,7 @@ static char *read_str(Token *token, char *p_str)
 	}
 
 	if (*p_str == '\0')
-		error("missing terminating \" character", g_line, --g_column);
+		error(g_line, --g_column, "missing terminating \" character");
 
 	++g_column;
 	token->str = malloc(sizeof(char) * length);
@@ -191,7 +192,7 @@ static char *read_comment(char *p_str)
 		}
 
 		if (*p_str == '\0')
-			error("expected */ characters", g_line, --g_column);
+			error( g_line, --g_column, "expected '*/' characters");
 
 		++p_str;
 		++g_column;
@@ -268,7 +269,7 @@ static Vector *scan(char *p_str)
 
 		// Unknown character
 		else
-			error("unknown character", g_line, g_column);
+			error(g_line, g_column, "unknown character");
 	}
 
 	return tokens;
@@ -279,10 +280,7 @@ Vector *lexer(char *file_name)
 	FILE *file = fopen(file_name, "r");
 
 	if (file == NULL)
-	{
-		printf("table: %s\n", file_name);
-		error("file can't open", 0, 0);
-	}
+		error(0, 0, "file can't open");
 
 	char   *str    = read_file(file);
 	Vector *tokens = scan(str);

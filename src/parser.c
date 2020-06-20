@@ -20,10 +20,18 @@ static Token *expect_tok(int type)
 		if (count_tk >= tokens->length)
 			token = tokens->data[--tokens->length];
 
-		char message[token->length + MAX_STRING_SIZE];
-		snprintf(message, sizeof(message), "%s%c%s",
-				 "expected '", type, "' character");
-		error(message, token->line, token->column);
+		switch (type)
+		{
+			case TK_IDENT:
+				error(token->line, token->column, "expected identifier");
+				break;
+			case TK_WHILE:
+				error(token->line, token->column, "expected 'while'");
+				break;
+			default:
+				error(token->line, token->column, "expected '%c' character", type);
+				break;
+		}
 	}
 
 	return tokens->data[++count_tk];
@@ -47,12 +55,7 @@ static Symbol *find_symbol(Token *token)
 	Symbol *symbol = find(symbol_table, token->str);
 
 	if (symbol == NULL)
-	{
-		char message[token->length + MAX_STRING_SIZE];
-		snprintf(message, sizeof(message), "%c%s%s",
-				 '\'', token->str, "' is undeclared");
-		error(message, token->line, token->column);
-	}
+		error(token->line, token->column, "'%s' is undeclared", token->str);
 
 	return symbol;
 }
@@ -80,7 +83,7 @@ static Node *factor()
 		expect_tok(')');
 	}
 	else
-		error("expected expression", token->line, token->column);
+		error(token->line, token->column, "expected expression");
 
 	return node;
 }
@@ -330,10 +333,10 @@ static Node *init_var()
 
 		token = tokens->data[count_tk];
 
-		if (!check_tok(TK_IDENT))
-			error("expected identifier", token->line, token->column);
+		expect_tok(TK_IDENT);
+
 		if (find(symbol_table, token->str) != NULL)
-			error("redefinition", token->line, token->column);
+			error(token->line, token->column, "redefinition of '%s'", token->str);
 
 		symbol->name = token->str;
 
@@ -351,8 +354,6 @@ static Node *init_var()
 			assign->rhs = expr();
 			buf_node    = assign;
 		}
-		else if (token->type != ';' && token->type != ',')
-			error("expected ‘=’, ‘,’, ‘;’", token->line, token->column);
 
 		vec_push(node->node_list, buf_node);
 	}
@@ -458,15 +459,6 @@ static Node *init_print()
 
 			vec_push(node->node_list, buffer_node);
 		}
-		else
-		{
-			if (count_tk >= tokens->length)
-				count_tk = tokens->length - 1;
-
-			Token *token = tokens->data[count_tk];
-
-			error("expected \"string\" or expression", token->line, token->column);
-		}
 	}
 	while (check_tok(','));
 
@@ -533,7 +525,7 @@ static Node *statement()
 			++count_tk;
 			break;
 		default:
-			error("syntax error", token->line, token->column);
+			error(token->line, token->column, "syntax error");
 			break;
 	}
 

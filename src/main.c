@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "../include/vector.h"
+#include "../include/error.h"
 #include "../include/lexer.h"
 #include "../include/parser.h"
 #include "../include/node.h"
@@ -33,20 +34,14 @@ static void parse_options(int argc, char **argv)
 			else if (!strcmp(opt, "--print-ast"))
 				print_ast = 1;
 			else
-			{
-				printf("error: invalid option\n");
-				exit(EXIT_FAILURE);
-			}
+				error(0, 0, "invalid option");
 		}
 		else
 		{
 			if (file_name == NULL)
 				file_name = opt;
 			else
-			{
-				printf("error: invalid input\n");
-				exit(EXIT_FAILURE);
-			}
+				error(0, 0, "invalid input");
 		}
 	}
 }
@@ -59,10 +54,7 @@ int main(int argc, char **argv)
 		usage();
 
 	if (file_name == NULL)
-	{
-		printf("error: No input file\n");
-		exit(EXIT_FAILURE);
-	}
+		error(0, 0, "no input file");
 
 	Vector *tokens = lexer(file_name);
 	Node   *tree   = parsing(tokens);

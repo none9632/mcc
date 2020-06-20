@@ -3,7 +3,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 
-void error(char *message, int line, int column);
+void error (int line, int column, char *format, ...);
 
 #endif
