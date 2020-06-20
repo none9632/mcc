@@ -1,40 +1,39 @@
+<program>           ::= <statements>
 
-<program>          ::= <statements>
+<statements>        ::= "{" { <statement> } "}"
 
-<statements>       ::= "{" { <statement> } "}"
+<statement>         ::= "if" <paren_expr> <statements>
+                      | "if" <paren_expr> <statements> "else" <statements>
+                      | "print" "(" <output_list> { "," <output_list> } ")" ";"
+                      | "input" "(" <id> ")" ";"
+                      | "while" <paren_expr> <statements>
+                      | "do" <statements> "while" <paren_expr> ";"
+                      | <init_vars> ";"
+                      | <assign-expression> ";"
+                      | ";"
 
-<statement>        ::= "if" <paren_expr> <statements>
-                     | "if" <paren_expr> <statements> "else" <statements>
-                     | "print" "(" <output_list> { "," <output_list> } ")" ";"
-                     | "input" "(" <id> ")" ";"
-                     | "while" <paren_expr> <statements>
-                     | "do" <statements> "while" <paren_expr> ";"
-                     | <init_vars> ";"
-                     | <assign> ";"
-                     | ";"
+<output_list>       ::= <id> | <string> | <expr>
+<paren_expr>        ::= "(" <expr> ")"
+<init_vars>         ::= <type> <id> [ "=" <expr> ] { "," <id> [ "=" <expr> ] }
+<type>              ::= "int"
+<assign-expression> ::= <id> <assign_character> <expr> | <expr>
 
-<output_list>      ::= <id> | <string> | <expr>
-<paren_expr>       ::= "(" <expr> ")"
-<init_vars>        ::= <type> <id> [ "=" <expr> ] { "," <id> [ "=" <expr> ] }
-<type>             ::= "int"
-<assign>           ::= <id> <assign_character> <expr> | <expr>
+<expr>              ::= <op_or>
+<op_or>             ::= <op_and>     { "||" <op_and> }
+<op_and>            ::= <op_equate>  { "&&" <op_equate> }
+<op_equate>         ::= <op_compare> { ( "==" | "!=" ) <op_compare> }
+<op_compare>        ::= <op_add>     { ( "<" | ">" | "<=" | ">=" ) <op_add> }
+<op_add>            ::= <op_mult>    { ( "+" | "-" ) <op_mult> }
+<op_mult>           ::= <op_unary>   { ( "*" | "/" | "%" ) <op_unary> }
+<op_unary>          ::= ( "+" | "-" ) <op_unary> | <factor>
+<factor>            ::= <int> | <id> | <paren_expr>
 
-<expr>             ::= <op_or>
-<op_or>            ::= <op_and>     { "||" <op_and> }
-<op_and>           ::= <op_equate>  { "&&" <op_equate> }
-<op_equate>        ::= <op_compare> { ( "==" | "!=" ) <op_compare> }
-<op_compare>       ::= <op_add>     { ( "<" | ">" | "<=" | ">=" ) <op_add> }
-<op_add>           ::= <op_mult>    { ( "+" | "-" ) <op_mult> }
-<op_mult>          ::= <op_unary>   { ( "*" | "/" | "%" ) <op_unary> }
-<op_unary>         ::= ( "+" | "-" ) <op_unary> | <factor>
-<factor>           ::= <int> | <id> | <paren_expr>
+<string>            ::= "\"" { <all_characters> } "\""
+<id>                ::= ( <letter> | "_" ) { <letter> | "_" | <digit> }
+<int>               ::= <digit> { <digit> }
 
-<string>           ::= "\"" { <all_characters> } "\""
-<id>               ::= ( <letter> | "_" ) { <letter> | "_" | <digit> }
-<int>              ::= <digit> { <digit> }
-
-<all_characters>   ::= all characters according to ascii table
-<assign_character> ::= "=" | "+=" | "-=" | "*=" | "/=" | "%="
-<letter>           ::= "a" | "b" | "c" | "d" | ... | "z" |
-                       "A" | "B" | "C" | "D" | ... | "Z"
-<digit>            ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "0"
+<all_characters>    ::= all characters according to ascii table
+<assign_character>  ::= "=" | "+=" | "-=" | "*=" | "/=" | "%="
+<letter>            ::= "a" | "b" | "c" | "d" | ... | "z" |
+                        "A" | "B" | "C" | "D" | ... | "Z"
+<digit>             ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "0"

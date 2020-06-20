@@ -10,42 +10,42 @@
 // list of node types
 enum
 {
-	K_PROGRAM,    // 0
-	K_STATEMENTS, // 1
-	K_PRINT,      // 2
-	K_INPUT,      // 3
-	K_WHILE,      // 4
-	K_DO_WHILE,   // 5
-	K_IF,         // 6
-	K_IF_ELSE,    // 7
-	K_ELSE,       // 8
-	K_ADD,        // 9
-	K_SUB,        // 10
-	K_MULT,       // 11
-	K_DIV,        // 12
-	K_MOD,        // 13
-	K_NEG,        // 14
-	K_POSITIVE,   // 15
-	K_MORE,       // 16
-	K_LESS,       // 17
-	K_MOREEQ,     // 18
-	K_LESSEQ,     // 19
-	K_EQUAL,      // 20
-	K_NOT_EQUAL,  // 21
-	K_AND,        // 22
-	K_OR,         // 23
-	K_VAR,        // 24
-	K_NUM,        // 25
-	K_NONE,       // 26
-	K_EXPR,       // 27
-	K_STRING,     // 28
-	K_PLUSA,      // 29
-	K_MINUSA,     // 30
-	K_MULTA,      // 31
-	K_DIVA,       // 32
-	K_MODA,       // 33
-	K_ASSIGN,     // 34
-	K_INIT_VARS,  // 34
+	K_PROGRAM,
+	K_STATEMENTS,
+	K_IF,
+	K_IF_ELSE,
+	K_ELSE,
+	K_PRINT,
+	K_INPUT,
+	K_WHILE,
+	K_DO_WHILE,
+	K_INIT_VARS,
+	K_EXPR,
+	K_OR,
+	K_AND,
+	K_EQUAL,
+	K_NOT_EQUAL,
+	K_MORE,
+	K_LESS,
+	K_MOREEQ,
+	K_LESSEQ,
+	K_ADD,
+	K_SUB,
+	K_MULT,
+	K_DIV,
+	K_MOD,
+	K_NEG,
+	K_POSITIVE,
+	K_VAR,
+	K_NUM,
+	K_PLUSA,
+	K_MINUSA,
+	K_MULTA,
+	K_DIVA,
+	K_MODA,
+	K_ASSIGN,
+	K_STRING,
+	K_NONE,
 };
 
 typedef struct node

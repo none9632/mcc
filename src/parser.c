@@ -1,7 +1,5 @@
 #include "../include/parser.h"
 
-#define MAX_STRING_SIZE 25
-
 static Vector *tokens;
 static Table  *symbol_table;
 static int     count_tk;
@@ -272,11 +270,9 @@ static Node *primary_expr()
 }
 
 // assignment function
-static Node *assign()
+static Node *assign_expression()
 {
-	++count_tk;
-
-	Token *token;
+	Token *token = tokens->data[count_tk++];
 	Node  *node;
 
 	if (check_tok(TK_PLUSA)  ||
@@ -286,7 +282,6 @@ static Node *assign()
 		check_tok(TK_MODA)   ||
 		check_tok('=')       )
 	{
-		token = tokens->data[count_tk - 2];
 		Symbol *symbol = find_symbol(token);
 
 		token = tokens->data[count_tk - 1];
@@ -311,7 +306,7 @@ static Node *assign()
 		node = primary_expr();
 	}
 
-	check_tok(';');
+	expect_tok(';');
 
 	return node;
 }
@@ -323,7 +318,7 @@ static Node *init_var()
 
 	Token *token;
 	Node  *node = new_node(K_INIT_VARS);
-	Node  *buf_node;
+	Node  *var;
 
 	node->node_list = new_vector();
 
@@ -342,20 +337,19 @@ static Node *init_var()
 
 		vec_push(symbol_table->symbols, symbol);
 
-		buf_node         = new_node(K_VAR);
-		buf_node->symbol = symbol;
-		token            = tokens->data[count_tk];
+		var         = new_node(K_VAR);
+		var->symbol = symbol;
 
 		if (check_tok('='))
 		{
 			Node *assign = new_node(K_ASSIGN);
 
-			assign->lhs = buf_node;
+			assign->lhs = var;
 			assign->rhs = expr();
-			buf_node    = assign;
+			var         = assign;
 		}
 
-		vec_push(node->node_list, buf_node);
+		vec_push(node->node_list, var);
 	}
 	while (check_tok(','));
 
@@ -452,12 +446,12 @@ static Node *init_print()
 		}
 		else if (check_tok(TK_STR))
 		{
-			Token *token       = tokens->data[count_tk - 1];
-			Node  *buffer_node = new_node(K_STRING);
+			Token *token  = tokens->data[count_tk - 1];
+			Node  *string = new_node(K_STRING);
 
-			buffer_node->str = token->str;
+			string->str = token->str;
 
-			vec_push(node->node_list, buffer_node);
+			vec_push(node->node_list, string);
 		}
 	}
 	while (check_tok(','));
@@ -482,8 +476,8 @@ static Node *init_input()
 	node->rhs         = new_node(K_VAR);
 	node->rhs->symbol = symbol;
 
-	check_tok(')');
-	check_tok(';');
+	expect_tok(')');
+	expect_tok(';');
 
 	return node;
 }
@@ -519,7 +513,7 @@ static Node *statement()
 		case '(':
 		case '-':
 		case '+':
-			node = assign();
+			node = assign_expression();
 			break;
 		case ';':
 			++count_tk;

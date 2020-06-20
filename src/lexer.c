@@ -11,7 +11,7 @@ typedef struct keyword
 }
 Keyword;
 
-static int g_line = 1;
+static int g_line   = 1;
 static int g_column = 1;
 
 static const Keyword table_keywords[TABLE_KEYWORDS_SIZE] =
@@ -133,19 +133,14 @@ static char *read_str(Token *token, char *p_str)
 
 	++g_column;
 
-	while (*p_str != '\"' && *p_str != '\0')
+	while (*p_str != '\"' && *p_str != '\0' && *p_str != '\n')
 	{
-		if (*p_str == '\n')
-		{
-			++g_line;
-			g_column = 0;
-		}
 		++p_str;
 		++length;
 		++g_column;
 	}
 
-	if (*p_str == '\0')
+	if (*p_str != '\"')
 		error(g_line, --g_column, "missing terminating \" character");
 
 	++g_column;
