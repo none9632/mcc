@@ -100,9 +100,9 @@ void print_node(Node *node, int prefix_len, int is_left)
 
 		if (node->node_list != NULL)
 		{
-			int i;
+			int i = 0;
 
-			for (i = 0; i < node->node_list->length - 1; ++i)
+			for (; i < node->node_list->length - 1; ++i)
 				print_node(node->node_list->data[i], prefix_len, 1);
 			print_node(node->node_list->data[i], prefix_len, 0);
 		}

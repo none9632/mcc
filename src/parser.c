@@ -317,7 +317,7 @@ static Node *init_var()
 	++count_tk;
 
 	Token *token;
-	Node  *node = new_node(K_INIT_VARS);
+	Node  *node  = new_node(K_INIT_VARS);
 	Node  *var;
 
 	node->node_list = new_vector();

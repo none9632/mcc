@@ -1,7 +1,7 @@
 #include "../include/lexer.h"
 
 #define TABLE_KEYWORDS_SIZE 7
-#define TABLE_SYMBOLS_SIZE 26
+#define TABLE_SYMBOLS_SIZE 25
 
 typedef struct keyword
 {
@@ -11,8 +11,8 @@ typedef struct keyword
 }
 Keyword;
 
-static int g_line   = 1;
-static int g_column = 1;
+static int line   = 1;
+static int column = 1;
 
 static const Keyword table_keywords[TABLE_KEYWORDS_SIZE] =
 {
@@ -22,18 +22,18 @@ static const Keyword table_keywords[TABLE_KEYWORDS_SIZE] =
 	{"while", TK_WHILE, 0},
 	{"int",   TK_INT,   0},
 	{"input", TK_INPUT, 0},
-	{"print", TK_PRINT, 0},
+	{"print", TK_PRINT, 0}
 };
 
 static const Keyword table_symbols[TABLE_SYMBOLS_SIZE] =
 {
-	{"+=", TK_PLUSA, 2},  {"-=", TK_MINUSA, 2},  {"*=", TK_MULTA, 2},   {"/=", TK_DIVA, 2},
-	{"%=", TK_MODA, 2},   {"<=", TK_LESSEQ, 2},  {">=", TK_MOREEQ, 2},  {"==", TK_EQUAL, 2},
-	{"!=", TK_NOTEQ, 2},  {"||", TK_OR, 2},      {"&&", TK_AND, 2},     {"+", '+', 1},
-	{"-", '-', 1},        {"*", '*', 1},         {"/", '/', 1},         {"%", '%', 1},
-	{"=", '=', 1},        {"<", '<', 1},         {">", '>', 1},         {"(", '(', 1},
-	{")", ')', 1},        {"{", '{', 1},         {"}", '}', 1},         {";", ';', 1},
-	{":", ':', 1},        {",", ',', 1}
+	{"+=", TK_PLUSA, 2},  {"-=", TK_MINUSA, 2},  {"*=", TK_MULTA,  2},  {"/=", TK_DIVA,  2},
+	{"%=", TK_MODA,  2},  {"<=", TK_LESSEQ, 2},  {">=", TK_MOREEQ, 2},  {"==", TK_EQUAL, 2},
+	{"!=", TK_NOTEQ, 2},  {"||", TK_OR,     2},  {"&&", TK_AND,    2},  {"+",  '+',      1},
+	{"-",  '-',      1},  {"*",  '*',       1},  {"/",  '/',       1},  {"%",  '%',      1},
+	{"=",  '=',      1},  {"<",  '<',       1},  {">",  '>',       1},  {"(",  '(',      1},
+	{")",  ')',      1},  {"{",  '{',       1},  {"}",  '}',       1},  {";",  ';',      1},
+	{",",  ',',      1}
 };
 
 static int search_TK(char *name)
@@ -49,9 +49,9 @@ static int search_TK(char *name)
 
 static char *read_file(FILE *file)
 {
-	char        *str;
-	char         buffer[4096];
-	unsigned int count_read, length;
+	char  *str;
+	char   buffer[4096];
+	size_t count_read, length;
 
 	str    = NULL;
 	length = 1;
@@ -77,8 +77,8 @@ static int read_symbols(Token *token, char *p_str)
 		{
 			token->type   = table_symbols[i].type;
 			token->length = table_symbols[i].length;
-			token->line   = g_line;
-			token->column = g_column;
+			token->line   = line;
+			token->column = column;
 
 			return table_symbols[i].length;
 		}
@@ -96,7 +96,7 @@ static char *read_ident(Token *token, char *p_str)
 	{
 		++p_str;
 		++length;
-		++g_column;
+		++column;
 	}
 
 	token->str = malloc(sizeof(char) * length);
@@ -118,7 +118,7 @@ static char *read_num(Token *token, char *p_str)
 	{
 		token->value = token->value * 10 + *p_str - '0';
 		++p_str;
-		++g_column;
+		++column;
 	}
 
 	token->type = TK_NUM;
@@ -131,19 +131,19 @@ static char *read_str(Token *token, char *p_str)
 	char *buf_p  = ++p_str;
 	int   length = 1;
 
-	++g_column;
+	++column;
 
 	while (*p_str != '\"' && *p_str != '\0' && *p_str != '\n')
 	{
 		++p_str;
 		++length;
-		++g_column;
+		++column;
 	}
 
 	if (*p_str != '\"')
-		error(g_line, --g_column, "missing terminating \" character");
+		error(line, --column, "missing terminating \" character");
 
-	++g_column;
+	++column;
 	token->str = malloc(sizeof(char) * length);
 
 	memcpy(token->str, buf_p, length - 1);
@@ -165,8 +165,8 @@ static char *read_comment(char *p_str)
 				break;
 		}
 		++p_str;
-		++g_line;
-		g_column = 1;
+		++line;
+		column = 1;
 	}
 	else if (!strncmp(p_str, "/*", 2))
 	{
@@ -174,24 +174,25 @@ static char *read_comment(char *p_str)
 		{
 			if (*p_str == '\n')
 			{
-				++g_line;
-				g_column = 1;
+				++line;
+				column = 1;
 			}
 			if (*++p_str == '*' && *(p_str + 1) == '/')
 			{
-				g_column += 2;
+				column += 2;
 				++p_str;
 				break;
 			}
-			++g_column;
+			++column;
 		}
 
 		if (*p_str == '\0')
-			error( g_line, --g_column, "expected '*/' characters");
+			error(line, --column, "expected '*/' characters");
 
 		++p_str;
-		++g_column;
+		++column;
 	}
+
 	return p_str;
 }
 
@@ -211,11 +212,11 @@ static Vector *scan(char *p_str)
 			{
 				if (*p_str == '\n')
 				{
-					g_column = 0;
-					++g_line;
+					column = 0;
+					++line;
 				}
 				++p_str;
-				++g_column;
+				++column;
 			}
 		}
 
@@ -226,8 +227,8 @@ static Vector *scan(char *p_str)
 		// Symbols
 		else if ((offset = read_symbols(token, p_str)) != 0)
 		{
-			p_str    += offset;
-			g_column += offset;
+			p_str  += offset;
+			column += offset;
 
 			vec_push(tokens, token);
 		}
@@ -235,8 +236,8 @@ static Vector *scan(char *p_str)
 		// Identifier
 		else if (isalpha(*p_str) || *p_str == '_')
 		{
-			token->line   = g_line;
-			token->column = g_column;
+			token->line   = line;
+			token->column = column;
 			p_str         = read_ident(token, p_str);
 
 			vec_push(tokens, token);
@@ -245,8 +246,8 @@ static Vector *scan(char *p_str)
 		// Number literal
 		else if (isdigit(*p_str))
 		{
-			token->line   = g_line;
-			token->column = g_column;
+			token->line   = line;
+			token->column = column;
 			p_str         = read_num(token, p_str);
 
 			vec_push(tokens, token);
@@ -255,8 +256,8 @@ static Vector *scan(char *p_str)
 		// String literal
 		else if (*p_str == '\"')
 		{
-			token->line   = g_line;
-			token->column = g_column;
+			token->line   = line;
+			token->column = column;
 			p_str         = read_str(token, p_str);
 
 			vec_push(tokens, token);
@@ -264,7 +265,7 @@ static Vector *scan(char *p_str)
 
 		// Unknown character
 		else
-			error(g_line, g_column, "unknown character");
+			error(line, column, "unknown character");
 	}
 
 	return tokens;
