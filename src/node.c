@@ -6,6 +6,9 @@ Node *new_node(int kind)
 {
 	Node *node = malloc(sizeof(Node));
 
+	if (node == NULL)
+		error(0, 0, "memory allocation error in new_node()");
+
 	node->kind      = kind;
 	node->value     = 0;
 	node->symbol    = NULL;
@@ -80,6 +83,9 @@ static void new_prefix(int prefix_len, int is_left)
 {
 	prefix = realloc(prefix, prefix_len + 4);
 
+	if (prefix == NULL)
+		error(0, 0, "memory allocation error in new_prefix()");
+
 	for (int i = prefix_len; i < prefix_len + 4; ++i)
 		prefix[i] = ' ';
 
@@ -101,7 +107,6 @@ void print_node(Node *node, int prefix_len, int is_left)
 		if (node->node_list != NULL)
 		{
 			int i = 0;
-
 			for (; i < node->node_list->length - 1; ++i)
 				print_node(node->node_list->data[i], prefix_len, 1);
 			print_node(node->node_list->data[i], prefix_len, 0);

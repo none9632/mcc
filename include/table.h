@@ -3,6 +3,7 @@
 
 #include <string.h>
 
+#include "error.h"
 #include "vector.h"
 
 typedef struct symbol

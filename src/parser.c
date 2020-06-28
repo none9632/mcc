@@ -269,7 +269,6 @@ static Node *primary_expr()
 	return node;
 }
 
-// assignment function
 static Node *assign_expression()
 {
 	Token *token = tokens->data[count_tk++];
@@ -311,7 +310,6 @@ static Node *assign_expression()
 	return node;
 }
 
-// initialization variable
 static Node *init_var()
 {
 	++count_tk;
@@ -358,7 +356,6 @@ static Node *init_var()
 	return node;
 }
 
-// initialization while
 static Node *init_while()
 {
 	++count_tk;
@@ -366,9 +363,7 @@ static Node *init_while()
 	Node *node = new_node(K_WHILE);
 
 	expect_tok('(');
-
 	node->lhs = primary_expr();
-
 	expect_tok(')');
 
 	node->rhs = statements();
@@ -376,26 +371,25 @@ static Node *init_while()
 	return node;
 }
 
-// initialization do while
 static Node *init_do_while()
 {
 	++count_tk;
 
 	Node *node = new_node(K_DO_WHILE);
-	node->lhs  = statements();
+
+	node->lhs = statements();
 
 	expect_tok(TK_WHILE);
+
 	expect_tok('(');
-
 	node->rhs = primary_expr();
-
 	expect_tok(')');
+
 	expect_tok(';');
 
 	return node;
 }
 
-// initialization if
 static Node *init_if()
 {
 	++count_tk;
@@ -403,9 +397,7 @@ static Node *init_if()
 	Node *node = new_node(K_IF);
 
 	expect_tok('(');
-
 	node->lhs = primary_expr();
-
 	expect_tok(')');
 
 	node->rhs = statements();
@@ -482,7 +474,6 @@ static Node *init_input()
 	return node;
 }
 
-// is_loop need for check break or continue within loop or not
 static Node *statement()
 {
 	Token *token = tokens->data[count_tk];

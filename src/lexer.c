@@ -36,17 +36,6 @@ static const Keyword table_symbols[TABLE_SYMBOLS_SIZE] =
 	{",",  ',',      1}
 };
 
-static int search_TK(char *name)
-{
-	for (int i = 0; i < TABLE_KEYWORDS_SIZE; i++)
-	{
-		if (strcmp(name, table_keywords[i].data) == 0)
-			return table_keywords[i].type;
-	}
-
-	return TK_IDENT;
-}
-
 static char *read_file(FILE *file)
 {
 	char  *str;
@@ -62,11 +51,25 @@ static char *read_file(FILE *file)
 		length    += count_read;
 		str        = realloc(str, length);
 
+		if (str == NULL)
+			error(0, 0, "memory allocation error in read_file()");
+
 		memcpy(str + length - count_read - 1, buffer, count_read);
 	}
 	while (count_read != 0);
 
 	return str;
+}
+
+static int search_TK(char *name)
+{
+	for (int i = 0; i < TABLE_KEYWORDS_SIZE; i++)
+	{
+		if (strcmp(name, table_keywords[i].data) == 0)
+			return table_keywords[i].type;
+	}
+
+	return TK_IDENT;
 }
 
 static int read_symbols(Token *token, char *p_str)
@@ -100,6 +103,9 @@ static char *read_ident(Token *token, char *p_str)
 	}
 
 	token->str = malloc(sizeof(char) * length);
+
+	if (token->str == NULL)
+		error(0, 0, "memory allocation error in read_ident()");
 
 	memcpy(token->str, buf_p, length - 1);
 
@@ -145,6 +151,9 @@ static char *read_str(Token *token, char *p_str)
 
 	++column;
 	token->str = malloc(sizeof(char) * length);
+
+	if (token->str == NULL)
+		error(0, 0, "memory allocation error in read_str()");
 
 	memcpy(token->str, buf_p, length - 1);
 
@@ -204,6 +213,9 @@ static Vector *scan(char *p_str)
 	while (*p_str != '\0')
 	{
 		Token *token = malloc(sizeof(Token));
+
+		if (token == NULL)
+			error(0, 0, "memory allocation error in scan()");
 
 		// Whitespace
 		if (isspace(*p_str))

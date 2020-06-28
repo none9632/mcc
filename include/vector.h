@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <malloc.h>
 
+#include "error.h"
+
 typedef struct vector
 {
 	void **data;

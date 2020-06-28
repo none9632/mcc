@@ -4,6 +4,9 @@ Table *new_table(Table *prev)
 {
 	Table *table = malloc(sizeof(Table));
 
+	if (table == NULL)
+		error(0, 0, "memory allocation error in new_table()");
+
 	table->symbols = new_vector();
 	table->prev    = prev;
 
@@ -13,6 +16,9 @@ Table *new_table(Table *prev)
 Symbol *new_symbol(int type)
 {
 	Symbol *symbol = malloc(sizeof(Symbol));
+
+	if (symbol == NULL)
+		error(0, 0, "memory allocation error in new_symbol()");
 
 	symbol->name  = NULL;
 	symbol->value = 0;

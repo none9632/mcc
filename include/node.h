@@ -6,6 +6,7 @@
 
 #include "vector.h"
 #include "table.h"
+#include "error.h"
 
 // list of node types
 enum

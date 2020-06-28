@@ -27,7 +27,7 @@ enum
 	TK_MODA,         // %=
 	TK_OR,           // ||
 	TK_AND,          // &&
-	TK_IF,           // "if"
+	TK_IF,           // "ir"
 	TK_ELSE,         // "else"
 	TK_WHILE,        // "while"
 	TK_PRINT,        // "print"

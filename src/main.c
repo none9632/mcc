@@ -9,6 +9,7 @@
 
 static int   help      = 0;
 static int   print_ast = 0;
+static int   print_ir  = 0;
 static char *file_name = NULL;
 
 static void usage()
@@ -17,6 +18,7 @@ static void usage()
 	printf("\nOptions:\n");
 	printf("    --help          display this information\n");
 	printf("    --print-ast     display AST\n");
+	printf("    --print-ir      display intermediate representation of the code\n");
 	printf("\n");
 	exit(EXIT_SUCCESS);
 }
@@ -33,6 +35,8 @@ static void parse_options(int argc, char **argv)
 				help = 1;
 			else if (!strcmp(opt, "--print-ast"))
 				print_ast = 1;
+			else if (!strcmp(opt, "--print-ir"))
+				print_ir = 1;
 			else
 				error(0, 0, "invalid option");
 		}
