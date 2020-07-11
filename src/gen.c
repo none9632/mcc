@@ -11,8 +11,6 @@ static int gen_expr(Node *node)
 
 		switch (node->kind)
 		{
-			case K_NUM:
-				return cg_load(node->value);
 			case K_ADD:
 				return cg_add(reg1, reg2);
 			case K_SUB:
@@ -21,6 +19,14 @@ static int gen_expr(Node *node)
 				return cg_mult(reg1, reg2);
 			case K_DIV:
 				return cg_div(reg1, reg2);
+			case K_MOD:
+				return cg_mod(reg1, reg2);
+			case K_POSITIVE:
+				return cg_positive(reg2);
+			case K_NEG:
+				return cg_neg(reg2);
+			case K_NUM:
+				return cg_load(node->value);
 			default:
 				error(0, 0, "unknown ast kind");
 		}

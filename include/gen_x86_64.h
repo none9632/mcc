@@ -16,6 +16,9 @@ int cg_add  (int r1, int r2);
 int cg_sub  (int r1, int r2);
 int cg_mult (int r1, int r2);
 int cg_div  (int r1, int r2);
+int cg_mod  (int r1, int r2);
+int cg_positive (int r1);
+int cg_neg (int r1);
 int cg_load (int r1);
 
 #endif

@@ -12,7 +12,7 @@
                       | <assign-expression> ";"
                       | ";"
 
-<output_list>       ::= <id> | <string> | <expr>
+<output_list>       ::= <string> | <expr>
 <paren_expr>        ::= "(" <expr> ")"
 <init_vars>         ::= <type> <id> [ "=" <expr> ] { "," <id> [ "=" <expr> ] }
 <type>              ::= "int"

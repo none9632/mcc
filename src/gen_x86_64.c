@@ -171,6 +171,28 @@ int cg_div(int r1, int r2)
 	return r1;
 }
 
+int cg_mod(int r1, int r2)
+{
+	fprintf(output_file, "\tmov rax, %s\n", reg_list[r1].name);
+	fprintf(output_file, "\tcqo\n");
+	fprintf(output_file, "\tidiv %s\n", reg_list[r2].name);
+	fprintf(output_file, "\tmov %s, rdx\n", reg_list[r1].name);
+	fprintf(output_file, "\n");
+	free_reg(r2);
+	return r1;
+}
+
+int cg_positive(int r1)
+{
+	return r1;
+}
+
+int cg_neg(int r1)
+{
+	fprintf(output_file, "\tneg %s\n", reg_list[r1].name);
+	return r1;
+}
+
 int cg_load(int value)
 {
 	int reg_index = alloc_reg();

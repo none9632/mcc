@@ -95,13 +95,16 @@ static Node *unary()
 	if (check_tok('-') ||
 	    check_tok('+') )
 	{
-		node      = new_node(K_NONE);
-		node->rhs = unary();
-
 		switch (token->type)
 		{
-			case '-': node->kind = K_NEG;      break;
-			case '+': node->kind = K_POSITIVE; break;
+			case '+':
+				node = unary();
+				break;
+			case '-':
+				node      = new_node(K_NEG);
+				node->rhs = unary();
+				break;
+
 		}
 	}
 
