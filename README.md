@@ -10,6 +10,7 @@ Resources that I used to create this project.
 * [Parser-examples](https://github.com/none9632/Parser-examples)
 * [Examples of grammars](http://goldparser.org/grammars/)
 * [9cc](https://github.com/rui314/9cc)
+* [A Compiler Writing Journey](https://github.com/DoctorWkt/acwj)
 
 ## Author
 

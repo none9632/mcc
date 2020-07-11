@@ -39,21 +39,20 @@ enum
 	K_POSITIVE,
 	K_VAR,
 	K_NUM,
-	K_PLUSA,
-	K_MINUSA,
+	K_ADDA,
+	K_SUBA,
 	K_MULTA,
 	K_DIVA,
 	K_MODA,
 	K_ASSIGN,
 	K_STRING,
-	K_NONE,
+	K_NONE
 };
 
 typedef struct node
 {
 	int kind;
 	int value;
-	char *str;
 	Symbol *symbol;
 
 	struct node *lhs; // left-hand side

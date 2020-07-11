@@ -1,6 +1,7 @@
 #include "../include/parser.h"
 
 static Vector *tokens;
+Vector        *string_list;
 static Table  *symbol_table;
 static int     count_tk;
 
@@ -287,8 +288,8 @@ static Node *assign_expression()
 
 		switch (token->type)
 		{
-			case TK_PLUSA:  node = new_node(K_PLUSA);  break;
-			case TK_MINUSA: node = new_node(K_MINUSA); break;
+			case TK_PLUSA:  node = new_node(K_ADDA);   break;
+			case TK_MINUSA: node = new_node(K_SUBA);   break;
 			case TK_MULTA:  node = new_node(K_MULTA);  break;
 			case TK_DIVA:   node = new_node(K_DIVA);   break;
 			case TK_MODA:   node = new_node(K_MODA);   break;
@@ -441,7 +442,8 @@ static Node *init_print()
 			Token *token  = tokens->data[count_tk - 1];
 			Node  *string = new_node(K_STRING);
 
-			string->str = token->str;
+			vec_push(string_list, token->str);
+			string->value = string_list->length - 1;
 
 			vec_push(node->node_list, string);
 		}
@@ -544,8 +546,9 @@ static Node *statements()
 
 Node *parsing(Vector *_tokens)
 {
-	tokens   = _tokens;
-	count_tk = 0;
+	tokens      = _tokens;
+	count_tk    = 0;
+	string_list = new_vector();
 
 	Node *node = new_node(K_PROGRAM);
 

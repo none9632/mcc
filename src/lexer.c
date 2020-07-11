@@ -92,8 +92,8 @@ static int read_symbols(Token *token, char *p_str)
 
 static char *read_ident(Token *token, char *p_str)
 {
-	char *buf_p  = p_str;
-	int   length = 1;
+	char  *buf_p  = p_str;
+	size_t length = 1;                 // 1 need for '\0' symbol in the end of string
 
 	while (isalnum(*p_str) || *p_str == '_')
 	{
@@ -134,8 +134,8 @@ static char *read_num(Token *token, char *p_str)
 
 static char *read_str(Token *token, char *p_str)
 {
-	char *buf_p  = ++p_str;
-	int   length = 1;
+	char  *buf_p  = ++p_str;
+	size_t length = 1;               // 1 need for '\0' symbol in the end of string
 
 	++column;
 

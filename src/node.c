@@ -1,6 +1,7 @@
 #include "../include/node.h"
 
 static char *prefix;
+extern Vector *string_list;
 
 Node *new_node(int kind)
 {
@@ -51,14 +52,16 @@ static void print_kind(Node *n)
 		case K_NEG:        printf("-\n");                   break;
 		case K_VAR:        printf("%s\n", n->symbol->name); break;
 		case K_NUM:        printf("%i\n", n->value);        break;
-		case K_PLUSA:      printf("+=\n");                  break;
-		case K_MINUSA:     printf("-=\n");                  break;
+		case K_ADDA:       printf("+=\n");                  break;
+		case K_SUBA:       printf("-=\n");                  break;
 		case K_MULTA:      printf("*=\n");                  break;
 		case K_DIVA:       printf("/=\n");                  break;
 		case K_MODA:       printf("%%=\n");                 break;
 		case K_ASSIGN:     printf("=\n");                   break;
-		case K_STRING:     printf("\"%s\"\n", n->str);      break;
 		case K_NONE:       printf("none\n");                break;
+		case K_STRING:
+			printf("\"%s\"\n", (char *)string_list->data[n->value]);
+			break;
 	}
 }
 

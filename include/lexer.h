@@ -8,7 +8,6 @@
 
 #include "vector.h"
 #include "error.h"
-#include "lexer.h"
 
 // list of token types
 enum
@@ -27,7 +26,7 @@ enum
 	TK_MODA,         // %=
 	TK_OR,           // ||
 	TK_AND,          // &&
-	TK_IF,           // "ir"
+	TK_IF,           // "if"
 	TK_ELSE,         // "else"
 	TK_WHILE,        // "while"
 	TK_PRINT,        // "print"
