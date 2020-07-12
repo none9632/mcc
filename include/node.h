@@ -36,7 +36,6 @@ enum
 	K_DIV,
 	K_MOD,
 	K_NEG,
-	K_POSITIVE,
 	K_VAR,
 	K_NUM,
 	K_ADDA,

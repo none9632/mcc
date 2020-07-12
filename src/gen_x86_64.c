@@ -2,19 +2,12 @@
 
 #define REG_LIST_SIZE 8
 
-typedef struct reg
+static int free_reg_list[REG_LIST_SIZE] = { 1, 1, 1, 1, 1, 1, 1, 1 };
+static char *name_reg_list[REG_LIST_SIZE] =
 {
-	char *name;
-	int is_free;
-}
-Reg;
-
-static Reg reg_list[REG_LIST_SIZE] =
-{
-	{"r8", 1},  {"r9", 1},
-	{"r10", 1}, {"r11", 1},
-	{"r12", 1}, {"r13", 1},
-	{"r14", 1}, {"r15", 1}
+	"%r8",  "%r9",  "%r10",
+	"%r11", "%r12", "%r13",
+	"%r14", "%r15"
 };
 
 extern FILE   *output_file;
@@ -24,9 +17,9 @@ static int alloc_reg()
 {
 	for (int i = 0; i < REG_LIST_SIZE; ++i)
 	{
-		if (reg_list[i].is_free == 1)
+		if (free_reg_list[i] == 1)
 		{
-			reg_list[i].is_free = 0;
+			free_reg_list[i] = 0;
 			return i;
 		}
 	}
@@ -37,108 +30,65 @@ static int alloc_reg()
 
 static void free_reg(int reg)
 {
-	if (reg_list[reg].is_free != 0)
+	if (free_reg_list[reg] != 0)
 		error(0, 0, "Error trying to free register");
-	reg_list[reg].is_free = 1;
+	free_reg_list[reg] = 1;
 }
 
 static void cg_str_data()
 {
 	for (int i = 0; i < string_list->length; ++i)
 	{
-		char *str     = string_list->data[i];
-		int   is_open = 0;
+		char *str = string_list->data[i];
 
-		fprintf(output_file,"\tstr%i db ", i);
-
-		while (*str != '\0')
-		{
-			if (*str == '\\')
-			{
-				switch (*++str)
-				{
-					case 'n':
-						if (is_open == 1)
-						{
-							fprintf(output_file, "\", ");
-							is_open = 0;
-						}
-						fprintf(output_file, "10, ");
-						break;
-					default:
-						if (is_open == 0)
-						{
-							fprintf(output_file, "\"");
-							is_open = 1;
-						}
-						fprintf(output_file, "%c", *(str - 1));
-						fprintf(output_file, "%c", *str);
-						break;
-				}
-			}
-			else
-			{
-				if (is_open == 0)
-				{
-					fprintf(output_file, "\"");
-					is_open = 1;
-				}
-				fprintf(output_file, "%c", *str);
-			}
-			++str;
-		}
-		if (is_open == 1)
-			fprintf(output_file, "\", ");
-		fprintf(output_file, "0\n");
+		fprintf(output_file, ".LC%i:\n", i);
+		fprintf(output_file,"\t.string \"%s\"\n", str);
 	}
 }
 
 void cg_start()
 {
-	// init data section
-	fprintf(output_file, "section .data\n");
-	fprintf(output_file, "\tprint_int db \"%%i\", 0\n");
+	fprintf(output_file, ".print_int:\n");
+	fprintf(output_file, "\t.string \"%%i\"\n");
 	cg_str_data();
 	fprintf(output_file, "\n");
 
-	// init text section
-	fprintf(output_file, "section .text\n");
-	fprintf(output_file, "global main\n");
-	fprintf(output_file, "extern printf\n");
+	fprintf(output_file, ".globl main\n");
 	fprintf(output_file, "\n");
 
 	fprintf(output_file, "main:\n");
-	fprintf(output_file, "\tsub rsp, 8\n");
+	fprintf(output_file, "\tpushq %%rbp\n");
+	fprintf(output_file, "\tmovq %%rsp, %%rbp\n");
 	fprintf(output_file, "\n");
 }
 
 void cg_end()
 {
-	fprintf(output_file, "\txor rax, rax\n");
-	fprintf(output_file, "\tadd rsp, 8\n");
+	fprintf(output_file, "\txor %%rax, %%rax\n");
+	fprintf(output_file, "\tpopq %%rbp\n");
 	fprintf(output_file, "\tret\n");
 }
 
 void cg_print_int(int reg)
 {
-	fprintf(output_file, "\tmov rsi, %s\n", reg_list[reg].name);
-	fprintf(output_file, "\tlea rdi, [rel print_int]\n");
-	fprintf(output_file, "\txor rax, rax\n");
+	fprintf(output_file, "\tmovq %s, %%rsi\n", name_reg_list[reg]);
+	fprintf(output_file, "\tmovq $.print_int, %%rdi\n");
+	fprintf(output_file, "\txor %%rax, %%rax\n");
 	fprintf(output_file, "\tcall printf\n");
 	fprintf(output_file, "\n");
 }
 
 void cg_print_str(int number)
 {
-	fprintf(output_file, "\tlea rdi, [rel str%i]\n", number);
-	fprintf(output_file, "\txor rax, rax\n");
+	fprintf(output_file, "\tmovq $.LC%i, %%rdi\n", number);
+	fprintf(output_file, "\txor %%rax, %%rax\n");
 	fprintf(output_file, "\tcall printf\n");
 	fprintf(output_file, "\n");
 }
 
 int cg_add(int r1, int r2)
 {
-	fprintf(output_file, "\tadd %s, %s\n", reg_list[r1].name, reg_list[r2].name);
+	fprintf(output_file, "\taddq %s, %s\n", name_reg_list[r2], name_reg_list[r1]);
 	fprintf(output_file, "\n");
 	free_reg(r2);
 	return r1;
@@ -146,7 +96,7 @@ int cg_add(int r1, int r2)
 
 int cg_sub(int r1, int r2)
 {
-	fprintf(output_file, "\tsub %s, %s\n", reg_list[r1].name, reg_list[r2].name);
+	fprintf(output_file, "\tsubq %s, %s\n", name_reg_list[r2], name_reg_list[r1]);
 	fprintf(output_file, "\n");
 	free_reg(r2);
 	return r1;
@@ -154,7 +104,7 @@ int cg_sub(int r1, int r2)
 
 int cg_mult(int r1, int r2)
 {
-	fprintf(output_file, "\timul %s, %s\n", reg_list[r1].name, reg_list[r2].name);
+	fprintf(output_file, "\timulq %s, %s\n", name_reg_list[r2], name_reg_list[r1]);
 	fprintf(output_file, "\n");
 	free_reg(r2);
 	return r1;
@@ -162,10 +112,10 @@ int cg_mult(int r1, int r2)
 
 int cg_div(int r1, int r2)
 {
-	fprintf(output_file, "\tmov rax, %s\n", reg_list[r1].name);
+	fprintf(output_file, "\tmovq %s, %%rax\n", name_reg_list[r1]);
 	fprintf(output_file, "\tcqo\n");
-	fprintf(output_file, "\tidiv %s\n", reg_list[r2].name);
-	fprintf(output_file, "\tmov %s, rax\n", reg_list[r1].name);
+	fprintf(output_file, "\tidivq %s\n", name_reg_list[r2]);
+	fprintf(output_file, "\tmovq %%rax, %s\n", name_reg_list[r1]);
 	fprintf(output_file, "\n");
 	free_reg(r2);
 	return r1;
@@ -173,30 +123,25 @@ int cg_div(int r1, int r2)
 
 int cg_mod(int r1, int r2)
 {
-	fprintf(output_file, "\tmov rax, %s\n", reg_list[r1].name);
+	fprintf(output_file, "\tmovq %s, %%rax\n", name_reg_list[r1]);
 	fprintf(output_file, "\tcqo\n");
-	fprintf(output_file, "\tidiv %s\n", reg_list[r2].name);
-	fprintf(output_file, "\tmov %s, rdx\n", reg_list[r1].name);
+	fprintf(output_file, "\tidivq %s\n", name_reg_list[r2]);
+	fprintf(output_file, "\tmovq %%rdx, %s\n", name_reg_list[r1]);
 	fprintf(output_file, "\n");
 	free_reg(r2);
 	return r1;
 }
 
-int cg_positive(int r1)
-{
-	return r1;
-}
-
 int cg_neg(int r1)
 {
-	fprintf(output_file, "\tneg %s\n", reg_list[r1].name);
+	fprintf(output_file, "\tnegq %s\n", name_reg_list[r1]);
 	return r1;
 }
 
 int cg_load(int value)
 {
-	int reg_index = alloc_reg();
-	fprintf(output_file, "\tmov %s, %i\n", reg_list[reg_index].name, value);
+	int reg_i = alloc_reg();
+	fprintf(output_file, "\tmovq $%i, %s\n", value, name_reg_list[reg_i]);
 	fprintf(output_file, "\n");
-	return reg_index;
+	return reg_i;
 }

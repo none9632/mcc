@@ -48,7 +48,6 @@ static void print_kind(Node *n)
 		case K_MULT:       printf("*\n");                   break;
 		case K_DIV:        printf("/\n");                   break;
 		case K_MOD:        printf("%%\n");                  break;
-		case K_POSITIVE:   printf("+\n");                   break;
 		case K_NEG:        printf("-\n");                   break;
 		case K_VAR:        printf("%s\n", n->symbol->name); break;
 		case K_NUM:        printf("%i\n", n->value);        break;

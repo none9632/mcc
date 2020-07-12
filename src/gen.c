@@ -21,8 +21,6 @@ static int gen_expr(Node *node)
 				return cg_div(reg1, reg2);
 			case K_MOD:
 				return cg_mod(reg1, reg2);
-			case K_POSITIVE:
-				return cg_positive(reg2);
 			case K_NEG:
 				return cg_neg(reg2);
 			case K_NUM:
@@ -70,7 +68,7 @@ static void gen_statements(Node *node)
 
 void gen(Node *tree)
 {
-	output_file = fopen("output.asm", "w+");
+	output_file = fopen("output.s", "w+");
 
 	if (output_file == NULL)
 		error(0, 0, "file output.asm can't be created");

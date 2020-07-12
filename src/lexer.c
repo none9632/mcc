@@ -141,6 +141,12 @@ static char *read_str(Token *token, char *p_str)
 
 	while (*p_str != '\"' && *p_str != '\0' && *p_str != '\n')
 	{
+		if (*p_str == '\\' && *(p_str + 1) == '\"')
+		{
+			++p_str;
+			++length;
+			++column;
+		}
 		++p_str;
 		++length;
 		++column;
