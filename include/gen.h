@@ -9,6 +9,6 @@
 #include "vector.h"
 #include "table.h"
 
-void gen(Node *tree);
+void gen (Node *tree);
 
 #endif

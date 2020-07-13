@@ -9,6 +9,6 @@
 #include "error.h"
 #include "node.h"
 
-Node *parsing(Vector *_tokens);
+Node *parsing (Vector *_tokens);
 
 #endif

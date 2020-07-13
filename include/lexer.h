@@ -48,6 +48,6 @@ typedef struct token
 }
 Token;
 
-Vector *lexer(char *file_name);
+Vector *lexer (char *file_name);
 
 #endif

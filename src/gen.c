@@ -11,6 +11,22 @@ static int gen_expr(Node *node)
 
 		switch (node->kind)
 		{
+			case K_OR:
+				return cg_or(reg1, reg2);
+			case K_AND:
+				return cg_and(reg1, reg2);
+			case K_EQUAL:
+				return cg_compare(reg1, reg2, "sete");
+			case K_NOT_EQUAL:
+				return cg_compare(reg1, reg2, "setne");
+			case K_MORE:
+				return cg_compare(reg1, reg2, "setg");
+			case K_LESS:
+				return cg_compare(reg1, reg2, "setl");
+			case K_MOREEQ:
+				return cg_compare(reg1, reg2, "setge");
+			case K_LESSEQ:
+				return cg_compare(reg1, reg2, "setle");
 			case K_ADD:
 				return cg_add(reg1, reg2);
 			case K_SUB:
@@ -29,6 +45,7 @@ static int gen_expr(Node *node)
 				error(0, 0, "unknown ast kind");
 		}
 	}
+
 	return -1;
 }
 
@@ -37,10 +54,14 @@ static void gen_print(Vector *node_list)
 	for (int i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
+		int   buffer;
+
 		switch (buf_node->kind)
 		{
 			case K_EXPR:
-				cg_print_int(gen_expr(buf_node->rhs));
+				buffer = gen_expr(buf_node->rhs);
+				cg_print_int(buffer);
+				free_reg(buffer);
 				break;
 			case K_STRING:
 				cg_print_str(buf_node->value);
