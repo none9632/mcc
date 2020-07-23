@@ -193,3 +193,21 @@ int cg_load(int value)
 	fprintf(output_file, "\tmovq $%i, %s\n", value, reg_list[reg]);
 	return reg;
 }
+
+void cg_gsym(char *name)
+{
+	fprintf(output_file, ".comm %s, 4, 8\n", name);
+}
+
+int cg_load_gsym(char *name)
+{
+	int reg = alloc_reg();
+	fprintf(output_file, "\tmovq %s, %s\n", name, reg_list[reg]);
+	return reg;
+}
+
+void cg_store_gsym(int reg, char *name)
+{
+	fprintf(output_file, "\tmovq %s, %s\n", reg_list[reg], name);
+	free_reg(reg);
+}

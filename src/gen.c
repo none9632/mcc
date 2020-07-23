@@ -43,6 +43,8 @@ static int gen_expr(Node *node)
 				return cg_neg(reg2);
 			case K_NUM:
 				return cg_load(node->value);
+			case K_VAR:
+				return cg_load_gsym(node->symbol->name);
 			default:
 				error(0, 0, "unknown ast kind");
 		}
@@ -95,6 +97,19 @@ static void gen_if_else(Node *node)
 	cg_label();
 }
 
+static void gen_init_vars(Node *node)
+{
+	for (int i = 0; i < node->node_list->length; ++i)
+	{
+		Node *buf_node = node->node_list->data[i];
+		char *name     = buf_node->lhs->symbol->name;
+		int reg        = gen_expr(buf_node->rhs);
+
+		cg_gsym(name);
+		cg_store_gsym(reg, name);
+	}
+}
+
 static void gen_statements(Node *node)
 {
 	for (int i = 0; i < node->node_list->length; ++i)
@@ -107,6 +122,9 @@ static void gen_statements(Node *node)
 				break;
 			case K_IF:
 				gen_if(buf_node);
+				break;
+			case K_INIT_VARS:
+				gen_init_vars(buf_node);
 				break;
 			case K_PRINT:
 				gen_print(buf_node->node_list);
