@@ -2,6 +2,8 @@
 
 FILE *output_file;
 
+static void gen_statements(Node *node);
+
 static int gen_expr(Node *node)
 {
 	if (node != NULL)
@@ -70,6 +72,29 @@ static void gen_print(Vector *node_list)
 	}
 }
 
+static void gen_if(Node *node)
+{
+	int reg = gen_expr(node->lhs->rhs);
+
+	cg_condit_jmp(reg);
+	gen_statements(node->rhs);
+	cg_label();
+}
+
+static void gen_if_else(Node *node)
+{
+	Node *n_if   = node->lhs,
+	     *n_else = node->rhs;
+	int   reg    = gen_expr(n_if->lhs->rhs);
+
+	cg_condit_jmp(reg);
+	gen_statements(n_if->rhs);
+	cg_jmp(1);
+	cg_label();
+	gen_statements(n_else->rhs);
+	cg_label();
+}
+
 static void gen_statements(Node *node)
 {
 	for (int i = 0; i < node->node_list->length; ++i)
@@ -77,8 +102,11 @@ static void gen_statements(Node *node)
 		Node *buf_node = node->node_list->data[i];
 		switch (buf_node->kind)
 		{
-			case K_EXPR:
-				gen_expr(buf_node->rhs);
+			case K_IF_ELSE:
+				gen_if_else(buf_node);
+				break;
+			case K_IF:
+				gen_if(buf_node);
 				break;
 			case K_PRINT:
 				gen_print(buf_node->node_list);

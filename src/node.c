@@ -26,8 +26,8 @@ static void print_kind(Node *n)
 	{
 		case K_PROGRAM:    printf("<program>\n");           break;
 		case K_STATEMENTS: printf("<statements>\n");        break;
-		case K_IF:         printf("<if>\n");                break;
 		case K_IF_ELSE:    printf("<if-else>\n");           break;
+		case K_IF:         printf("<if>\n");                break;
 		case K_ELSE:       printf("<else>\n");              break;
 		case K_PRINT:      printf("<print>\n");             break;
 		case K_INPUT:      printf("<input>\n");             break;

@@ -11,11 +11,14 @@ void free_reg (int reg);
 void cg_start ();
 void cg_end   ();
 
+int  cg_label      ();
+void cg_condit_jmp (int reg);
+void cg_jmp        (int offset);
+
 void cg_print_int (int reg);
 void cg_print_str (int number);
 
-
-int cg_or     (int r1, int r2);
+int cg_or      (int reg1, int r2);
 int cg_and     (int r1, int r2);
 int cg_compare (int r1, int r2, char *how);
 int cg_add     (int r1, int r2);

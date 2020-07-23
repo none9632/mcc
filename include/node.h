@@ -13,8 +13,8 @@ enum
 {
 	K_PROGRAM,
 	K_STATEMENTS,
-	K_IF,
 	K_IF_ELSE,
+	K_IF,
 	K_ELSE,
 	K_PRINT,
 	K_INPUT,

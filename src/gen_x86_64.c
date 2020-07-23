@@ -69,34 +69,51 @@ void cg_end()
 	fprintf(output_file, "\tret\n");
 }
 
-int cg_or(int r1, int r2)
+void cg_condit_jmp(int reg)
 {
-	fprintf(output_file, "\tcmpq $0, %s\n", reg_list[r1]);
-	fprintf(output_file, "\tjne .L%i\n", l_count);
-	fprintf(output_file, "\tcmpq $0, %s\n", reg_list[r2]);
-	fprintf(output_file, "\tjne .L%i\n", l_count);
-	fprintf(output_file, "\tmovq $0, %s\n", reg_list[r1]);
-	fprintf(output_file, "\tjmp .L%i\n", l_count + 1);
-	fprintf(output_file, ".L%i:\n", l_count++);
-	fprintf(output_file, "\tmovq $1, %s\n", reg_list[r1]);
-	fprintf(output_file, ".L%i:\n", l_count++);
-	free_reg(r2);
-	return r1;
+	fprintf(output_file, "\tcmpq $0, %s\n", reg_list[reg]);
+	fprintf(output_file, "\tje .L%i\n", l_count);
 }
 
-int cg_and(int r1, int r2)
+void cg_jmp(int offset)
 {
-	fprintf(output_file, "\tcmpq $0, %s\n", reg_list[r1]);
-	fprintf(output_file, "\tje .L%i\n", l_count);
-	fprintf(output_file, "\tcmpq $0, %s\n", reg_list[r2]);
-	fprintf(output_file, "\tje .L%i\n", l_count);
-	fprintf(output_file, "\tmovq $1, %s\n", reg_list[r1]);
+	fprintf(output_file, "\tjmp .L%i\n", l_count + offset);
+}
+
+int cg_label()
+{
+	fprintf(output_file, ".L%i:\n", l_count);
+	return l_count++;
+}
+
+int cg_or(int reg1, int reg2)
+{
+	fprintf(output_file, "\tcmpq $0, %s\n", reg_list[reg1]);
+	fprintf(output_file, "\tjne .L%i\n", l_count);
+	fprintf(output_file, "\tcmpq $0, %s\n", reg_list[reg2]);
+	fprintf(output_file, "\tjne .L%i\n", l_count);
+	fprintf(output_file, "\tmovq $0, %s\n", reg_list[reg1]);
 	fprintf(output_file, "\tjmp .L%i\n", l_count + 1);
 	fprintf(output_file, ".L%i:\n", l_count++);
-	fprintf(output_file, "\tmovq $0, %s\n", reg_list[r1]);
+	fprintf(output_file, "\tmovq $1, %s\n", reg_list[reg1]);
 	fprintf(output_file, ".L%i:\n", l_count++);
-	free_reg(r2);
-	return r1;
+	free_reg(reg2);
+	return reg1;
+}
+
+int cg_and(int reg1, int reg2)
+{
+	fprintf(output_file, "\tcmpq $0, %s\n", reg_list[reg1]);
+	fprintf(output_file, "\tje .L%i\n", l_count);
+	fprintf(output_file, "\tcmpq $0, %s\n", reg_list[reg2]);
+	fprintf(output_file, "\tje .L%i\n", l_count);
+	fprintf(output_file, "\tmovq $1, %s\n", reg_list[reg1]);
+	fprintf(output_file, "\tjmp .L%i\n", l_count + 1);
+	fprintf(output_file, ".L%i:\n", l_count++);
+	fprintf(output_file, "\tmovq $0, %s\n", reg_list[reg1]);
+	fprintf(output_file, ".L%i:\n", l_count++);
+	free_reg(reg2);
+	return reg1;
 }
 
 void cg_print_int(int reg)
@@ -114,65 +131,65 @@ void cg_print_str(int number)
 	fprintf(output_file, "\tcall printf\n");
 }
 
-int cg_compare(int r1, int r2, char *how)
+int cg_compare(int reg1, int reg2, char *how)
 {
-	fprintf(output_file, "\tcmpq %s, %s\n", reg_list[r2], reg_list[r1]);
-	fprintf(output_file, "\t%s %sb\n", how, reg_list[r1]);
-	fprintf(output_file, "\tandq $255,%s\n", reg_list[r1]);
-	free_reg(r2);
-	return r1;
+	fprintf(output_file, "\tcmpq %s, %s\n", reg_list[reg2], reg_list[reg1]);
+	fprintf(output_file, "\t%s %sb\n", how, reg_list[reg1]);
+	fprintf(output_file, "\tandq $255,%s\n", reg_list[reg1]);
+	free_reg(reg2);
+	return reg1;
 }
 
-int cg_add(int r1, int r2)
+int cg_add(int reg1, int reg2)
 {
-	fprintf(output_file, "\taddq %s, %s\n", reg_list[r2], reg_list[r1]);
-	free_reg(r2);
-	return r1;
+	fprintf(output_file, "\taddq %s, %s\n", reg_list[reg2], reg_list[reg1]);
+	free_reg(reg2);
+	return reg1;
 }
 
-int cg_sub(int r1, int r2)
+int cg_sub(int reg1, int reg2)
 {
-	fprintf(output_file, "\tsubq %s, %s\n", reg_list[r2], reg_list[r1]);
-	free_reg(r2);
-	return r1;
+	fprintf(output_file, "\tsubq %s, %s\n", reg_list[reg2], reg_list[reg1]);
+	free_reg(reg2);
+	return reg1;
 }
 
-int cg_mult(int r1, int r2)
+int cg_mult(int reg1, int reg2)
 {
-	fprintf(output_file, "\timulq %s, %s\n", reg_list[r2], reg_list[r1]);
-	free_reg(r2);
-	return r1;
+	fprintf(output_file, "\timulq %s, %s\n", reg_list[reg2], reg_list[reg1]);
+	free_reg(reg2);
+	return reg1;
 }
 
-int cg_div(int r1, int r2)
+int cg_div(int reg1, int reg2)
 {
-	fprintf(output_file, "\tmovq %s, %%rax\n", reg_list[r1]);
+	fprintf(output_file, "\tmovq %s, %%rax\n", reg_list[reg1]);
 	fprintf(output_file, "\tcqo\n");
-	fprintf(output_file, "\tidivq %s\n", reg_list[r2]);
-	fprintf(output_file, "\tmovq %%rax, %s\n", reg_list[r1]);
-	free_reg(r2);
-	return r1;
+	fprintf(output_file, "\tidivq %s\n", reg_list[reg2]);
+	fprintf(output_file, "\tmovq %%rax, %s\n", reg_list[reg1]);
+	free_reg(reg2);
+	return reg1;
 }
 
-int cg_mod(int r1, int r2)
+int cg_mod(int reg1, int reg2)
 {
-	fprintf(output_file, "\tmovq %s, %%rax\n", reg_list[r1]);
+	fprintf(output_file, "\tmovq %s, %%rax\n", reg_list[reg1]);
 	fprintf(output_file, "\tcqo\n");
-	fprintf(output_file, "\tidivq %s\n", reg_list[r2]);
-	fprintf(output_file, "\tmovq %%rdx, %s\n", reg_list[r1]);
-	free_reg(r2);
-	return r1;
+	fprintf(output_file, "\tidivq %s\n", reg_list[reg2]);
+	fprintf(output_file, "\tmovq %%rdx, %s\n", reg_list[reg1]);
+	free_reg(reg2);
+	return reg1;
 }
 
-int cg_neg(int r1)
+int cg_neg(int reg1)
 {
-	fprintf(output_file, "\tnegq %s\n", reg_list[r1]);
-	return r1;
+	fprintf(output_file, "\tnegq %s\n", reg_list[reg1]);
+	return reg1;
 }
 
 int cg_load(int value)
 {
-	int reg_i = alloc_reg();
-	fprintf(output_file, "\tmovq $%i, %s\n", value, reg_list[reg_i]);
-	return reg_i;
+	int reg = alloc_reg();
+	fprintf(output_file, "\tmovq $%i, %s\n", value, reg_list[reg]);
+	return reg;
 }
