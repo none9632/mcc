@@ -53,6 +53,48 @@ static int gen_expr(Node *node)
 	return -1;
 }
 
+static void gen_init_vars(Node *node)
+{
+	for (int i = 0; i < node->node_list->length; ++i)
+	{
+		Node *buf_node = node->node_list->data[i];
+
+		if (buf_node->kind == K_VAR)
+		{
+			char *name = buf_node->symbol->name;
+			cg_gsym(name);
+		}
+		else
+		{
+			char *name = buf_node->lhs->symbol->name;
+			int   reg  = gen_expr(buf_node->rhs);
+			cg_gsym(name);
+			cg_store_gsym(reg, name);
+		}
+	}
+}
+
+static void gen_assign(Node *node)
+{
+	char *name = node->lhs->symbol->name;
+	int   reg1 = gen_expr(node->rhs);
+	int   reg2;
+
+	if (node->kind != K_ASSIGN)
+		reg2 = cg_load_gsym(name);
+
+	switch (node->kind)
+	{
+		case K_ADDA:  reg1 = cg_add(reg1, reg2);  break;
+		case K_SUBA:  reg1 = cg_sub(reg2, reg1);  break;
+		case K_MULTA: reg1 = cg_mult(reg1, reg2); break;
+		case K_DIVA:  reg1 = cg_div(reg2, reg1);  break;
+		case K_MODA:  reg1 = cg_mod(reg2, reg1);  break;
+	}
+
+	cg_store_gsym(reg1, name);
+}
+
 static void gen_print(Vector *node_list)
 {
 	for (int i = 0; i < node_list->length; ++i)
@@ -97,46 +139,15 @@ static void gen_if_else(Node *node)
 	cg_label();
 }
 
-static void gen_init_vars(Node *node)
+static void gen_while(Node *node)
 {
-	for (int i = 0; i < node->node_list->length; ++i)
-	{
-		Node *buf_node = node->node_list->data[i];
+	cg_label();
+	int reg = gen_expr(node->lhs->rhs);
 
-		if (buf_node->kind == K_VAR)
-		{
-			char *name = buf_node->symbol->name;
-			cg_gsym(name);
-		}
-		else
-		{
-			char *name = buf_node->lhs->symbol->name;
-			int   reg  = gen_expr(buf_node->rhs);
-			cg_gsym(name);
-			cg_store_gsym(reg, name);
-		}
-	}
-}
-
-static void gen_assign(Node *node)
-{
-	char *name = node->lhs->symbol->name;
-	int   reg1 = gen_expr(node->rhs);
-	int   reg2;
-
-	if (node->kind != K_ASSIGN)
-		reg2 = cg_load_gsym(name);
-
-	switch (node->kind)
-	{
-		case K_ADDA:  reg1 = cg_add(reg1, reg2);  break;
-		case K_SUBA:  reg1 = cg_sub(reg2, reg1);  break;
-		case K_MULTA: reg1 = cg_mult(reg1, reg2); break;
-		case K_DIVA:  reg1 = cg_div(reg2, reg1);  break;
-		case K_MODA:  reg1 = cg_mod(reg2, reg1);  break;
-	}
-
-	cg_store_gsym(reg1, name);
+	cg_condit_jmp(reg);
+	gen_statements(node->rhs);
+	cg_jmp(-1);
+	cg_label();
 }
 
 static void gen_statements(Node *node)
@@ -146,12 +157,6 @@ static void gen_statements(Node *node)
 		Node *buf_node = node->node_list->data[i];
 		switch (buf_node->kind)
 		{
-			case K_IF_ELSE:
-				gen_if_else(buf_node);
-				break;
-			case K_IF:
-				gen_if(buf_node);
-				break;
 			case K_INIT_VARS:
 				gen_init_vars(buf_node);
 				break;
@@ -165,6 +170,15 @@ static void gen_statements(Node *node)
 				break;
 			case K_PRINT:
 				gen_print(buf_node->node_list);
+				break;
+			case K_IF_ELSE:
+				gen_if_else(buf_node);
+				break;
+			case K_IF:
+				gen_if(buf_node);
+				break;
+			case K_WHILE:
+				gen_while(buf_node);
 				break;
 		}
 	}
