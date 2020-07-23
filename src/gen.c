@@ -143,9 +143,18 @@ static void gen_while(Node *node)
 {
 	cg_label();
 	int reg = gen_expr(node->lhs->rhs);
-
 	cg_condit_jmp(reg);
 	gen_statements(node->rhs);
+	cg_jmp(-1);
+	cg_label();
+}
+
+static void gen_do_while(Node *node)
+{
+	cg_label();
+	gen_statements(node->lhs);
+	int reg = gen_expr(node->rhs->rhs);
+	cg_condit_jmp(reg);
 	cg_jmp(-1);
 	cg_label();
 }
@@ -179,6 +188,9 @@ static void gen_statements(Node *node)
 				break;
 			case K_WHILE:
 				gen_while(buf_node);
+				break;
+			case K_DO_WHILE:
+				gen_do_while(buf_node);
 				break;
 		}
 	}
