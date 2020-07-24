@@ -318,17 +318,13 @@ static Node *init_var()
 {
 	++count_tk;
 
-	Token *token;
-	Node  *node  = new_node(K_INIT_VARS);
-	Node  *var;
-
+	Node *node = new_node(K_INIT_VARS);
 	node->node_list = new_vector();
 
 	do
 	{
 		Symbol *symbol = new_symbol(TK_INT);
-
-		token = tokens->data[count_tk];
+		Token *token = tokens->data[count_tk];
 
 		expect_tok(TK_IDENT);
 
@@ -339,13 +335,12 @@ static Node *init_var()
 
 		vec_push(symbol_table->symbols, symbol);
 
-		var         = new_node(K_VAR);
+		Node *var = new_node(K_VAR);
 		var->symbol = symbol;
 
 		if (check_tok('='))
 		{
 			Node *assign = new_node(K_ASSIGN);
-
 			assign->lhs = var;
 			assign->rhs = expr();
 			var         = assign;
@@ -380,7 +375,6 @@ static Node *init_do_while()
 	++count_tk;
 
 	Node *node = new_node(K_DO_WHILE);
-
 	node->lhs = statements();
 
 	expect_tok(TK_WHILE);
@@ -463,15 +457,23 @@ static Node *init_input()
 {
 	++count_tk;
 
-	Token  *token  = expect_tok('(');
-	Node   *node   = new_node(K_INPUT);
-	Symbol *symbol;
+	Node *node = new_node(K_INPUT);
+	node->node_list = new_vector();
 
-	expect_tok(TK_IDENT);
+	expect_tok('(');
 
-	symbol            = find_symbol(token);
-	node->rhs         = new_node(K_VAR);
-	node->rhs->symbol = symbol;
+	do
+	{
+		Token *token = tokens->data[count_tk];
+		Node *buf_node = new_node(K_VAR);
+
+		expect_tok(TK_IDENT);
+
+		buf_node->symbol = find_symbol(token);
+
+		vec_push(node->node_list, buf_node);
+	}
+	while (check_tok(','));
 
 	expect_tok(')');
 	expect_tok(';');
@@ -554,7 +556,6 @@ Node *parsing(Vector *_tokens)
 	string_list = new_vector();
 
 	Node *node = new_node(K_PROGRAM);
-
 	node->rhs = statements();
 
 	return node;

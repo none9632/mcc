@@ -50,7 +50,7 @@ static void cg_str_data()
 
 void cg_start()
 {
-	fprintf(output_file, ".print_int:\n");
+	fprintf(output_file, ".io_int:\n");
 	fprintf(output_file, "\t.string \"%%i\"\n");
 	cg_str_data();
 
@@ -119,7 +119,7 @@ int cg_and(int reg1, int reg2)
 void cg_print_int(int reg)
 {
 	fprintf(output_file, "\tmovq %s, %%rsi\n", reg_list[reg]);
-	fprintf(output_file, "\tmovq $.print_int, %%rdi\n");
+	fprintf(output_file, "\tmovq $.io_int, %%rdi\n");
 	fprintf(output_file, "\txor %%rax, %%rax\n");
 	fprintf(output_file, "\tcall printf\n");
 }
@@ -129,6 +129,14 @@ void cg_print_str(int number)
 	fprintf(output_file, "\tmovq $.LC%i, %%rdi\n", number);
 	fprintf(output_file, "\txor %%rax, %%rax\n");
 	fprintf(output_file, "\tcall printf\n");
+}
+
+void cg_input_int(char *name)
+{
+	fprintf(output_file, "\tleaq %s, %%rsi\n", name);
+	fprintf(output_file, "\tmovq $.io_int, %%rdi\n");
+	fprintf(output_file, "\txor %%rax, %%rax\n");
+	fprintf(output_file, "\tcall scanf\n");
 }
 
 int cg_compare(int reg1, int reg2, char *how)

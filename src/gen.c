@@ -116,6 +116,15 @@ static void gen_print(Vector *node_list)
 	}
 }
 
+static void gen_input(Node *node)
+{
+	for (int i = 0; i < node->node_list->length; ++i)
+	{
+		Node *buf_node = node->node_list->data[i];
+		cg_input_int(buf_node->symbol->name);
+	}
+}
+
 static void gen_if(Node *node)
 {
 	int reg = gen_expr(node->lhs->rhs);
@@ -179,6 +188,9 @@ static void gen_statements(Node *node)
 				break;
 			case K_PRINT:
 				gen_print(buf_node->node_list);
+				break;
+			case K_INPUT:
+				gen_input(buf_node);
 				break;
 			case K_IF_ELSE:
 				gen_if_else(buf_node);

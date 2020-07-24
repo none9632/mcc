@@ -17,6 +17,7 @@ void cg_jmp        (int offset);
 
 void cg_print_int (int reg);
 void cg_print_str (int number);
+void cg_input_int (char *name);
 
 void cg_gsym       (char *name);
 int  cg_load_gsym  (char *name);
