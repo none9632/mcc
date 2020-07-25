@@ -362,7 +362,7 @@ static Node *init_while()
 	Node *node = new_node(K_WHILE);
 
 	expect_tok('(');
-	node->lhs = primary_expr();
+	node->lhs = expr();
 	expect_tok(')');
 
 	node->rhs = statements();
@@ -380,7 +380,7 @@ static Node *init_do_while()
 	expect_tok(TK_WHILE);
 
 	expect_tok('(');
-	node->rhs = primary_expr();
+	node->rhs = expr();
 	expect_tok(')');
 
 	expect_tok(';');
@@ -395,7 +395,7 @@ static Node *init_if()
 	Node *node = new_node(K_IF);
 
 	expect_tok('(');
-	node->lhs = primary_expr();
+	node->lhs = expr();
 	expect_tok(')');
 
 	node->rhs = statements();

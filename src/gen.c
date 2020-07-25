@@ -53,11 +53,11 @@ static int gen_expr(Node *node)
 	return -1;
 }
 
-static void gen_init_vars(Node *node)
+static void gen_init_vars(Vector *node_list)
 {
-	for (int i = 0; i < node->node_list->length; ++i)
+	for (int i = 0; i < node_list->length; ++i)
 	{
-		Node *buf_node = node->node_list->data[i];
+		Node *buf_node = node_list->data[i];
 
 		if (buf_node->kind == K_VAR)
 		{
@@ -116,18 +116,18 @@ static void gen_print(Vector *node_list)
 	}
 }
 
-static void gen_input(Node *node)
+static void gen_input(Vector *node_list)
 {
-	for (int i = 0; i < node->node_list->length; ++i)
+	for (int i = 0; i < node_list->length; ++i)
 	{
-		Node *buf_node = node->node_list->data[i];
+		Node *buf_node = node_list->data[i];
 		cg_input_int(buf_node->symbol->name);
 	}
 }
 
 static void gen_if(Node *node)
 {
-	int reg = gen_expr(node->lhs->rhs);
+	int reg = gen_expr(node->lhs);
 
 	cg_condit_jmp(reg);
 	gen_statements(node->rhs);
@@ -138,7 +138,7 @@ static void gen_if_else(Node *node)
 {
 	Node *n_if   = node->lhs,
 	     *n_else = node->rhs;
-	int   reg    = gen_expr(n_if->lhs->rhs);
+	int   reg    = gen_expr(n_if->lhs);
 
 	cg_condit_jmp(reg);
 	gen_statements(n_if->rhs);
@@ -151,7 +151,7 @@ static void gen_if_else(Node *node)
 static void gen_while(Node *node)
 {
 	cg_label();
-	int reg = gen_expr(node->lhs->rhs);
+	int reg = gen_expr(node->lhs);
 	cg_condit_jmp(reg);
 	gen_statements(node->rhs);
 	cg_jmp(-1);
@@ -162,7 +162,7 @@ static void gen_do_while(Node *node)
 {
 	cg_label();
 	gen_statements(node->lhs);
-	int reg = gen_expr(node->rhs->rhs);
+	int reg = gen_expr(node->rhs);
 	cg_condit_jmp(reg);
 	cg_jmp(-1);
 	cg_label();
@@ -176,7 +176,7 @@ static void gen_statements(Node *node)
 		switch (buf_node->kind)
 		{
 			case K_INIT_VARS:
-				gen_init_vars(buf_node);
+				gen_init_vars(buf_node->node_list);
 				break;
 			case K_ADDA:
 			case K_SUBA:
@@ -190,7 +190,7 @@ static void gen_statements(Node *node)
 				gen_print(buf_node->node_list);
 				break;
 			case K_INPUT:
-				gen_input(buf_node);
+				gen_input(buf_node->node_list);
 				break;
 			case K_IF_ELSE:
 				gen_if_else(buf_node);

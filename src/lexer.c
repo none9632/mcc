@@ -1,7 +1,6 @@
 #include "../include/lexer.h"
 
-#define TABLE_KEYWORDS_SIZE 7
-#define TABLE_SYMBOLS_SIZE 25
+#define TABLE_KEYWORDS_SIZE 32
 
 typedef struct keyword
 {
@@ -16,24 +15,14 @@ static int column = 1;
 
 static const Keyword table_keywords[TABLE_KEYWORDS_SIZE] =
 {
-	{"if",    TK_IF,    0},
-	{"else",  TK_ELSE,  0},
-	{"do",    TK_DO,    0},
-	{"while", TK_WHILE, 0},
-	{"int",   TK_INT,   0},
-	{"input", TK_INPUT, 0},
-	{"print", TK_PRINT, 0}
-};
-
-static const Keyword table_symbols[TABLE_SYMBOLS_SIZE] =
-{
-	{"+=", TK_PLUSA, 2},  {"-=", TK_MINUSA, 2},  {"*=", TK_MULTA,  2},  {"/=", TK_DIVA,  2},
-	{"%=", TK_MODA,  2},  {"<=", TK_LESSEQ, 2},  {">=", TK_MOREEQ, 2},  {"==", TK_EQUAL, 2},
-	{"!=", TK_NOTEQ, 2},  {"||", TK_OR,     2},  {"&&", TK_AND,    2},  {"+",  '+',      1},
-	{"-",  '-',      1},  {"*",  '*',       1},  {"/",  '/',       1},  {"%",  '%',      1},
-	{"=",  '=',      1},  {"<",  '<',       1},  {">",  '>',       1},  {"(",  '(',      1},
-	{")",  ')',      1},  {"{",  '{',       1},  {"}",  '}',       1},  {";",  ';',      1},
-	{",",  ',',      1}
+	{"if",  TK_IF,     2}, {"else",  TK_ELSE,   4}, {"do",    TK_DO,    2}, {"while", TK_WHILE, 5},
+	{"int", TK_INT,    3}, {"input", TK_INPUT,  5}, {"print", TK_PRINT, 5}, {"+=",    TK_PLUSA, 2},
+	{"-=",  TK_MINUSA, 2}, {"*=",    TK_MULTA,  2}, {"/=",    TK_DIVA,  2}, {"%=",    TK_MODA,  2},
+	{"<=",  TK_LESSEQ, 2}, {">=",    TK_MOREEQ, 2}, {"==",    TK_EQUAL, 2}, {"!=",    TK_NOTEQ, 2},
+	{"||",  TK_OR,     2}, {"&&",    TK_AND,    2}, {"+",     '+',      1}, {"-",     '-',      1},
+	{"*",   '*',       1}, {"/",     '/',       1}, {"%",     '%',      1}, {"=",     '=',      1},
+	{"<",   '<',       1}, {">",     '>',       1}, {"(",     '(',      1}, {")",     ')',      1},
+	{"{",   '{',       1}, {"}",     '}',       1}, {";",     ';',      1}, {",",     ',',      1}
 };
 
 static char *read_file(FILE *file)
@@ -61,33 +50,20 @@ static char *read_file(FILE *file)
 	return str;
 }
 
-static int search_TK(char *name)
+static int search_keyword(Token *token, char *p_str)
 {
 	for (int i = 0; i < TABLE_KEYWORDS_SIZE; i++)
 	{
-		if (strcmp(name, table_keywords[i].data) == 0)
-			return table_keywords[i].type;
-	}
-
-	return TK_IDENT;
-}
-
-static int read_symbols(Token *token, char *p_str)
-{
-	for (int i = 0; i < TABLE_SYMBOLS_SIZE; i++)
-	{
-		if (!strncmp(table_symbols[i].data, p_str, table_symbols[i].length))
+		if (!strncmp(table_keywords[i].data, p_str, table_keywords[i].length))
 		{
-			token->type   = table_symbols[i].type;
-			token->length = table_symbols[i].length;
-			token->line   = line;
-			token->column = column;
+			token->type   = table_keywords[i].type;
+			token->length = table_keywords[i].length;
 
-			return table_symbols[i].length;
+			return 0;
 		}
 	}
 
-	return 0;
+	return -1;
 }
 
 static char *read_ident(Token *token, char *p_str)
@@ -110,7 +86,7 @@ static char *read_ident(Token *token, char *p_str)
 	memcpy(token->str, buf_p, length - 1);
 
 	token->str[length - 1] = '\0';
-	token->type            = search_TK(token->str);
+	token->type            = TK_IDENT;
 	token->length          = length;
 
 	return p_str;
@@ -214,7 +190,6 @@ static char *read_comment(char *p_str)
 static Vector *scan(char *p_str)
 {
 	Vector *tokens = new_vector();
-	int     offset;
 
 	while (*p_str != '\0')
 	{
@@ -242,11 +217,13 @@ static Vector *scan(char *p_str)
 		else if (!strncmp(p_str, "/*", 2) || !strncmp(p_str, "//", 2))
 			p_str = read_comment(p_str);
 
-		// Symbols
-		else if ((offset = read_symbols(token, p_str)) != 0)
+		// Keywords
+		else if (search_keyword(token, p_str) == 0)
 		{
-			p_str  += offset;
-			column += offset;
+			token->line   = line;
+			token->column = column;
+			p_str        += token->length;
+			column       += token->length;
 
 			vec_push(tokens, token);
 		}

@@ -9,7 +9,6 @@
 typedef struct symbol
 {
 	char *name;
-	int value;
 	int type;
 }
 Symbol;

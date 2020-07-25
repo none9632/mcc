@@ -21,7 +21,6 @@ Symbol *new_symbol(int type)
 		error(0, 0, "memory allocation error in new_symbol()");
 
 	symbol->name  = NULL;
-	symbol->value = 0;
 	symbol->type  = type;
 
 	return symbol;
