@@ -130,9 +130,9 @@ void cg_print_str(int number)
 	fprintf(output_file, "\tcall printf\n");
 }
 
-void cg_input(char *name)
+void cg_input(int id)
 {
-	fprintf(output_file, "\tleaq %s, %%rsi\n", name);
+	fprintf(output_file, "\tleaq var%i, %%rsi\n", id);
 	fprintf(output_file, "\tmovq $.io_int, %%rdi\n");
 	fprintf(output_file, "\txor %%rax, %%rax\n");
 	fprintf(output_file, "\tcall scanf\n");
@@ -272,25 +272,25 @@ int cg_load(int value)
 	return reg;
 }
 
-void cg_gsym(char *name)
+void cg_gsym(int id)
 {
-	fprintf(output_file, ".comm %s, 4, 8\n", name);
+	fprintf(output_file, ".comm var%i, 4, 8\n", id);
 }
 
-int cg_load_gsym(char *name)
+int cg_load_gsym(int id)
 {
 	int reg = alloc_reg();
 
 	if (reg == -1)
-		fprintf(output_file, "\tpushq %s\n", name);
+		fprintf(output_file, "\tpushq var%i\n", id);
 	else
-		fprintf(output_file, "\tmovq %s, %s\n", name, reg64_list[reg]);
+		fprintf(output_file, "\tmovq var%i, %s\n", id, reg64_list[reg]);
 
 	return reg;
 }
 
-void cg_store_gsym(int reg, char *name)
+void cg_store_gsym(int reg, int id)
 {
-	fprintf(output_file, "\tmovl %sd, %s\n", reg64_list[reg], name);
+	fprintf(output_file, "\tmovl %sd, var%i\n", reg64_list[reg], id);
 	free_reg(reg);
 }

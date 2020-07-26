@@ -50,7 +50,7 @@ static int gen_expr(Node *node)
 			case K_NUM:
 				return cg_load(node->value);
 			case K_VAR:
-				return cg_load_gsym(node->symbol->name);
+				return cg_load_gsym(node->symbol->id);
 			default:
 				error(0, 0, "unknown ast kind");
 		}
@@ -67,27 +67,27 @@ static void gen_init_vars(Vector *node_list)
 
 		if (buf_node->kind == K_VAR)
 		{
-			char *name = buf_node->symbol->name;
-			cg_gsym(name);
+			int id = buf_node->symbol->id;
+			cg_gsym(id);
 		}
 		else
 		{
-			char *name = buf_node->lhs->symbol->name;
-			int   reg  = gen_expr(buf_node->rhs);
-			cg_gsym(name);
-			cg_store_gsym(reg, name);
+			int id  = buf_node->lhs->symbol->id;
+			int reg = gen_expr(buf_node->rhs);
+			cg_gsym(id);
+			cg_store_gsym(reg, id);
 		}
 	}
 }
 
 static void gen_assign(Node *node)
 {
-	char *name = node->lhs->symbol->name;
-	int   reg1 = gen_expr(node->rhs);
-	int   reg2;
+	int id   = node->lhs->symbol->id;
+	int reg1 = gen_expr(node->rhs);
+	int reg2;
 
 	if (node->kind != K_ASSIGN)
-		reg2 = cg_load_gsym(name);
+		reg2 = cg_load_gsym(id);
 
 	switch (node->kind)
 	{
@@ -98,7 +98,7 @@ static void gen_assign(Node *node)
 		case K_MODA:  reg1 = cg_mod(reg2, reg1);  break;
 	}
 
-	cg_store_gsym(reg1, name);
+	cg_store_gsym(reg1, id);
 }
 
 static void gen_print(Vector *node_list)
@@ -126,7 +126,7 @@ static void gen_input(Vector *node_list)
 	for (int i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
-		cg_input(buf_node->symbol->name);
+		cg_input(buf_node->symbol->id);
 	}
 }
 

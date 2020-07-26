@@ -9,6 +9,7 @@
 typedef struct symbol
 {
 	char *name;
+	int id;
 	int type;
 }
 Symbol;
@@ -23,5 +24,6 @@ Table;
 Table  *new_table  (Table *prev);
 Symbol *new_symbol ();
 Symbol *find       (Table *table, char *name);
+Symbol *find_all   (Table *table, char *name);
 
 #endif

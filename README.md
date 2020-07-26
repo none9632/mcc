@@ -1,5 +1,5 @@
-# myCompiler
-This is my poorly written compiler, which I wrote to study the topic compilers. This is my first project so the compiler is far from perfect.
+# myCompiler (*the project is not ready yet*)
+This is my poorly written compiler, which I wrote to study the topic compilers.
 
 ## Links
 
@@ -14,7 +14,7 @@ Resources that I used to create this project.
 
 ## Author
 
-Ivan Andreev\
+Ivan Andreev  
 Email:  ivanandreev1234@protonmail.com
 
 ## License

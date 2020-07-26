@@ -14,7 +14,7 @@ static Token *expect_tok(int type)
 
 	if (count_tk >= tokens->length || token->type != type)
 	{
-		// If the counter is larger than the number of tokens
+		// If the counter is larger than the id of tokens
 		// then we take the last token.
 		if (count_tk >= tokens->length)
 			token = tokens->data[--tokens->length];
@@ -51,7 +51,7 @@ static int check_tok(int type)
 
 static Symbol *find_symbol(Token *token)
 {
-	Symbol *symbol = find(symbol_table, token->str);
+	Symbol *symbol = find_all(symbol_table, token->str);
 
 	if (symbol == NULL)
 		error(token->line, token->column, "'%s' is undeclared", token->str);
@@ -324,7 +324,7 @@ static Node *init_var()
 	do
 	{
 		Symbol *symbol = new_symbol(TK_INT);
-		Token *token = tokens->data[count_tk];
+		Token  *token  = tokens->data[count_tk];
 
 		expect_tok(TK_IDENT);
 
