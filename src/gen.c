@@ -1,8 +1,14 @@
 #include "../include/gen.h"
 
 FILE *output_file;
+int   l_count;
 
 static void gen_statements(Node *node);
+
+static int get_label()
+{
+	return l_count++;
+}
 
 static int gen_expr(Node *node)
 {
@@ -14,9 +20,9 @@ static int gen_expr(Node *node)
 		switch (node->kind)
 		{
 			case K_OR:
-				return cg_or(reg1, reg2);
+				return cg_or(reg1, reg2, get_label(), get_label());
 			case K_AND:
-				return cg_and(reg1, reg2);
+				return cg_and(reg1, reg2, get_label(), get_label());
 			case K_EQUAL:
 				return cg_compare(reg1, reg2, "sete");
 			case K_NOT_EQUAL:
@@ -100,14 +106,13 @@ static void gen_print(Vector *node_list)
 	for (int i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
-		int   buffer;
+		int   reg;
 
 		switch (buf_node->kind)
 		{
 			case K_EXPR:
-				buffer = gen_expr(buf_node->rhs);
-				cg_print_int(buffer);
-				free_reg(buffer);
+				reg = gen_expr(buf_node->rhs);
+				cg_print_int(reg);
 				break;
 			case K_STRING:
 				cg_print_str(buf_node->value);
@@ -121,51 +126,62 @@ static void gen_input(Vector *node_list)
 	for (int i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
-		cg_input_int(buf_node->symbol->name);
+		cg_input(buf_node->symbol->name);
 	}
 }
 
 static void gen_if(Node *node)
 {
-	int reg = gen_expr(node->lhs);
+	int reg   = gen_expr(node->lhs);
+	int label = get_label();
 
-	cg_condit_jmp(reg);
+	cg_condit_jmp(reg, label);
 	gen_statements(node->rhs);
-	cg_label();
+	cg_label(label);
 }
 
 static void gen_if_else(Node *node)
 {
-	Node *n_if   = node->lhs,
-	     *n_else = node->rhs;
+	Node *n_if   = node->lhs;
+	Node *n_else = node->rhs;
 	int   reg    = gen_expr(n_if->lhs);
+	int   label1 = get_label();
+	int   label2 = get_label();
 
-	cg_condit_jmp(reg);
+	cg_condit_jmp(reg, label1);
 	gen_statements(n_if->rhs);
-	cg_jmp(1);
-	cg_label();
+	cg_jmp(label2);
+	cg_label(label1);
 	gen_statements(n_else->rhs);
-	cg_label();
+	cg_label(label2);
 }
 
 static void gen_while(Node *node)
 {
-	cg_label();
-	int reg = gen_expr(node->lhs);
-	cg_condit_jmp(reg);
+	int label1 = get_label();
+	int label2 = get_label();
+	int reg;
+
+	cg_label(label1);
+	reg = gen_expr(node->lhs);
+	cg_condit_jmp(reg, label2);
 	gen_statements(node->rhs);
-	cg_jmp(-1);
-	cg_label();
+	cg_jmp(label1);
+	cg_label(label2);
 }
 
 static void gen_do_while(Node *node)
 {
-	cg_label();
+	int label1 = get_label();
+	int label2 = get_label();
+	int reg;
+
+	cg_label(label1);
 	gen_statements(node->lhs);
-	int reg = gen_expr(node->rhs);
-	cg_condit_jmp(reg);
-	cg_jmp(-1);
-	cg_label();
+	reg = gen_expr(node->rhs);
+	cg_condit_jmp(reg, label2);
+	cg_jmp(label1);
+	cg_label(label2);
 }
 
 static void gen_statements(Node *node)
@@ -211,6 +227,7 @@ static void gen_statements(Node *node)
 void gen(Node *tree)
 {
 	output_file = fopen("output.s", "w+");
+	l_count     = 0;
 
 	if (output_file == NULL)
 		error(0, 0, "file output.asm can't be created");
