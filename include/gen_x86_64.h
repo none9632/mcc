@@ -4,7 +4,6 @@
 #include <stdio.h>
 
 #include "vector.h"
-#include "error.h"
 
 void cg_start ();
 void cg_end   ();

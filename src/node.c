@@ -1,6 +1,7 @@
 #include "../include/node.h"
 
 static char *prefix;
+
 extern Vector *string_list;
 
 Node *new_node(int kind)

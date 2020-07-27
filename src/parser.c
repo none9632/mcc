@@ -14,7 +14,7 @@ static Token *expect_tok(int type)
 
 	if (count_tk >= tokens->length || token->type != type)
 	{
-		// If the counter is larger than the id of tokens
+		// If the counter is larger than the number of tokens
 		// then we take the last token.
 		if (count_tk >= tokens->length)
 			token = tokens->data[--tokens->length];
@@ -558,5 +558,6 @@ Node *parsing(Vector *_tokens)
 	Node *node = new_node(K_PROGRAM);
 	node->rhs = statements();
 
+	vec_free(tokens);
 	return node;
 }

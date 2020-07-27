@@ -16,5 +16,6 @@ Vector;
 
 Vector *new_vector ();
 void    vec_push   (Vector *vector, void *elem);
+void    vec_free   (Vector *vector);
 
 #endif

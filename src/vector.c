@@ -29,3 +29,12 @@ void vec_push(Vector *vector, void *elem)
 	}
 	vector->data[vector->length++] = elem;
 }
+
+void vec_free(Vector *vector)
+{
+	for (int i = 0; i < vector->length; ++i)
+	{
+		free(vector->data[i]);
+	}
+	free(vector);
+}

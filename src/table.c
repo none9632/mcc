@@ -22,9 +22,9 @@ Symbol *new_symbol(int type)
 	if (symbol == NULL)
 		error(0, 0, "memory allocation error in new_symbol()");
 
-	symbol->id = id_count++;
-	symbol->name   = NULL;
-	symbol->type   = type;
+	symbol->id   = id_count++;
+	symbol->name = NULL;
+	symbol->type = type;
 
 	return symbol;
 }
