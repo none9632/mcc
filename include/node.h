@@ -20,6 +20,7 @@ enum
 	K_INPUT,
 	K_WHILE,
 	K_DO_WHILE,
+	K_FOR,
 	K_INIT_VARS,
 	K_EXPR,
 	K_OR,

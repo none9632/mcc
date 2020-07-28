@@ -29,10 +29,11 @@ enum
 	TK_IF,           // "if"
 	TK_ELSE,         // "else"
 	TK_WHILE,        // "while"
+	TK_DO,           // "do"
+	TK_FOR,          // "for"
 	TK_PRINT,        // "print"
 	TK_INPUT,        // "input"
 	TK_INT,          // "int"
-	TK_DO,           // "do"
 };
 
 typedef struct token

@@ -5,6 +5,8 @@
 
 #include "vector.h"
 
+void free_reg(int reg);
+
 void cg_start ();
 void cg_end   ();
 
@@ -18,7 +20,7 @@ void cg_input     (int id);
 
 void cg_gsym       (int id);
 int  cg_load_gsym  (int id);
-void cg_store_gsym (int reg, int id);
+int  cg_store_gsym (int reg, int id);
 
 int cg_or      (int reg1, int reg2, int label1, int label2);
 int cg_and     (int reg1, int reg2, int label1, int label2);

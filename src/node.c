@@ -34,6 +34,7 @@ static void print_kind(Node *n)
 		case K_INPUT:      printf("<input>\n");             break;
 		case K_WHILE:      printf("<while>\n");             break;
 		case K_DO_WHILE:   printf("<do-while>\n");          break;
+		case K_FOR:        printf("<for>\n");               break;
 		case K_INIT_VARS:  printf("<init-vars>\n");         break;
 		case K_EXPR:       printf("<expr>\n");              break;
 		case K_OR:         printf("||\n");                  break;
@@ -58,7 +59,7 @@ static void print_kind(Node *n)
 		case K_DIVA:       printf("/=\n");                  break;
 		case K_MODA:       printf("%%=\n");                 break;
 		case K_ASSIGN:     printf("=\n");                   break;
-		case K_NONE:       printf("none\n");                break;
+		case K_NONE:       printf("<none>\n");              break;
 		case K_STRING:
 			printf("\"%s\"\n", (char *)string_list->data[n->value]);
 			break;

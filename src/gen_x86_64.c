@@ -37,7 +37,7 @@ static int alloc_reg()
 	return -1;
 }
 
-static void free_reg(int reg)
+void free_reg(int reg)
 {
 	free_reg_list[reg] = 1;
 }
@@ -289,8 +289,8 @@ int cg_load_gsym(int id)
 	return reg;
 }
 
-void cg_store_gsym(int reg, int id)
+int cg_store_gsym(int reg, int id)
 {
 	fprintf(output_file, "\tmovl %sd, var%i\n", reg64_list[reg], id);
-	free_reg(reg);
+	return reg;
 }

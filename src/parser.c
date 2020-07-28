@@ -257,23 +257,7 @@ static Node *or()
 	return node;
 }
 
-static Node *expr()
-{
-	Node *node = or();
-
-	return node;
-}
-
-static Node *primary_expr()
-{
-	Node *node = new_node(K_EXPR);
-
-	node->rhs = expr();
-
-	return node;
-}
-
-static Node *assign_expression()
+static Node *assign()
 {
 	Token *token = tokens->data[count_tk++];
 	Node  *node;
@@ -286,7 +270,6 @@ static Node *assign_expression()
 		check_tok('=')       )
 	{
 		Symbol *symbol = find_symbol(token);
-
 		token = tokens->data[count_tk - 1];
 
 		switch (token->type)
@@ -301,20 +284,54 @@ static Node *assign_expression()
 
 		node->lhs         = new_node(K_VAR);
 		node->lhs->symbol = symbol;
-		node->rhs         = expr();
+		node->rhs         = assign();
 	}
 	else
 	{
 		--count_tk;
-		node = primary_expr();
+		node = or();
 	}
-
-	expect_tok(';');
 
 	return node;
 }
 
-static Node *init_var()
+static Node *expr()
+{
+	Node *node = assign();
+
+	if (check_tok(TK_PLUSA)  ||
+		check_tok(TK_MINUSA) ||
+		check_tok(TK_MULTA)  ||
+		check_tok(TK_DIVA)   ||
+		check_tok(TK_MODA)   ||
+		check_tok('=')       )
+	{
+		Token *token = tokens->data[count_tk - 1];
+		error(token->line, token->column,
+			  "lvalue required as left operand of assignment");
+	}
+
+	return node;
+}
+
+static Node *primary_expr()
+{
+	Node  *node = new_node(K_EXPR);
+
+	node->rhs = expr();
+
+	return node;
+}
+
+static Node *expr_stmt()
+{
+	Node *node = primary_expr();
+
+	expect_tok(';');
+	return node;
+}
+
+static Node *init_vars()
 {
 	++count_tk;
 
@@ -350,8 +367,14 @@ static Node *init_var()
 	}
 	while (check_tok(','));
 
-	expect_tok(';');
+	return node;
+}
 
+static Node *init_vars_stmt()
+{
+	Node *node = init_vars();
+
+	expect_tok(';');
 	return node;
 }
 
@@ -378,12 +401,50 @@ static Node *init_do_while()
 	node->lhs = statements();
 
 	expect_tok(TK_WHILE);
-
 	expect_tok('(');
 	node->rhs = expr();
 	expect_tok(')');
-
 	expect_tok(';');
+
+	return node;
+}
+
+static Node *init_for()
+{
+	++count_tk;
+
+	Node  *node  = new_node(K_FOR);
+	Token *token = expect_tok('(');
+
+	node->node_list = new_vector();
+	symbol_table    = new_table(symbol_table);
+
+	if (token->type == TK_INT)
+		vec_push(node->node_list, init_vars());
+	else if (token->type != ';')
+		vec_push(node->node_list, primary_expr());
+	else
+		vec_push(node->node_list, new_node(K_NONE));
+
+	token = expect_tok(';');
+
+	if (token->type != ';')
+		vec_push(node->node_list, primary_expr());
+	else
+		vec_push(node->node_list, new_node(K_NONE));
+
+	token = expect_tok(';');
+
+	if (token->type != ')')
+		vec_push(node->node_list, primary_expr());
+	else
+		vec_push(node->node_list, new_node(K_NONE));
+
+	expect_tok(')');
+
+	vec_push(node->node_list, statements());
+
+	symbol_table = symbol_table->prev;
 
 	return node;
 }
@@ -464,8 +525,8 @@ static Node *init_input()
 
 	do
 	{
-		Token *token = tokens->data[count_tk];
-		Node *buf_node = new_node(K_VAR);
+		Token *token    = tokens->data[count_tk];
+		Node  *buf_node = new_node(K_VAR);
 
 		expect_tok(TK_IDENT);
 
@@ -497,6 +558,9 @@ static Node *statement()
 		case TK_DO:
 			node = init_do_while();
 			break;
+		case TK_FOR:
+			node = init_for();
+			break;
 		case TK_PRINT:
 			node = init_print();
 			break;
@@ -504,14 +568,14 @@ static Node *statement()
 			node = init_input();
 			break;
 		case TK_INT:
-			node = init_var();
+			node = init_vars_stmt();
 			break;
 		case TK_IDENT:
 		case TK_NUM:
 		case '(':
 		case '-':
 		case '+':
-			node = assign_expression();
+			node = expr_stmt();
 			break;
 		case ';':
 			++count_tk;
