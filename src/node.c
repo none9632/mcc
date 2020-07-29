@@ -14,9 +14,8 @@ Node *new_node(int kind)
 	node->kind      = kind;
 	node->value     = 0;
 	node->symbol    = NULL;
-	node->lhs       = NULL;
+	node->u.lhs     = NULL;
 	node->rhs       = NULL;
-	node->node_list = NULL;
 
 	return node;
 }
@@ -97,7 +96,16 @@ static void new_prefix(int prefix_len, int is_left)
 		prefix[prefix_len] = '|';
 }
 
-void print_node(Node *node, int prefix_len, int is_left)
+static int is_node_list(int kind)
+{
+	return (kind == K_STATEMENTS ||
+	        kind == K_INIT_VARS  ||
+	        kind == K_FOR        ||
+	        kind == K_PRINT      ||
+	        kind == K_INPUT      );
+}
+
+static void print_node(Node *node, int prefix_len, int is_left)
 {
 	if (node != NULL)
 	{
@@ -108,16 +116,16 @@ void print_node(Node *node, int prefix_len, int is_left)
 		new_prefix(prefix_len, is_left);
 		prefix_len += 4;
 
-		if (node->node_list != NULL)
+		if (is_node_list(node->kind))
 		{
 			int i = 0;
-			for (; i < node->node_list->length - 1; ++i)
-				print_node(node->node_list->data[i], prefix_len, 1);
-			print_node(node->node_list->data[i], prefix_len, 0);
+			for (; i < node->u.node_list->length - 1; ++i)
+				print_node(node->u.node_list->data[i], prefix_len, 1);
+			print_node(node->u.node_list->data[i], prefix_len, 0);
 		}
 		else
 		{
-			print_node(node->lhs, prefix_len, 1);
+			print_node(node->u.lhs, prefix_len, 1);
 			print_node(node->rhs, prefix_len, 0);
 		}
 	}

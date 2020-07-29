@@ -10,20 +10,25 @@ static int get_label()
 	return l_count++;
 }
 
+static int is_assignment_op(int kind)
+{
+	return (kind == K_ASSIGN ||
+		    kind == K_ADDA   ||
+		    kind == K_SUBA   ||
+		    kind == K_MULTA  ||
+		    kind == K_DIVA   ||
+		    kind == K_MODA   );
+}
+
 static int gen_expr(Node *node)
 {
 	if (node != NULL)
 	{
 		int reg1, reg2;
 
-		if (node->kind == K_ASSIGN ||
-		    node->kind == K_ADDA   ||
-		    node->kind == K_SUBA   ||
-		    node->kind == K_MULTA  ||
-		    node->kind == K_DIVA   ||
-		    node->kind == K_MODA   )
+		if (is_assignment_op(node->kind))
 		{
-			int id = node->lhs->symbol->id;
+			int id = node->u.lhs->symbol->id;
 
 			reg1 = gen_expr(node->rhs);
 			if (node->kind != K_ASSIGN)
@@ -41,7 +46,7 @@ static int gen_expr(Node *node)
 			return cg_store_gsym(reg1, id);
 		}
 
-		reg1 = gen_expr(node->lhs);
+		reg1 = gen_expr(node->u.lhs);
 		reg2 = gen_expr(node->rhs);
 
 		switch (node->kind)
@@ -99,7 +104,7 @@ static void gen_init_vars(Vector *node_list)
 		}
 		else
 		{
-			int id  = buf_node->lhs->symbol->id;
+			int id  = buf_node->u.lhs->symbol->id;
 			int reg = gen_expr(buf_node->rhs);
 			cg_gsym(id);
 			cg_store_gsym(reg, id);
@@ -139,7 +144,7 @@ static void gen_input(Vector *node_list)
 
 static void gen_if(Node *node)
 {
-	int reg   = gen_expr(node->lhs);
+	int reg   = gen_expr(node->u.lhs);
 	int label = get_label();
 
 	cg_condit_jmp(reg, label);
@@ -149,9 +154,10 @@ static void gen_if(Node *node)
 
 static void gen_if_else(Node *node)
 {
-	Node *n_if   = node->lhs;
+	Node *n_if   = node->u.lhs;
 	Node *n_else = node->rhs;
-	int   reg    = gen_expr(n_if->lhs);
+
+	int   reg    = gen_expr(n_if->u.lhs);
 	int   label1 = get_label();
 	int   label2 = get_label();
 
@@ -170,7 +176,7 @@ static void gen_while(Node *node)
 	int reg;
 
 	cg_label(label1);
-	reg = gen_expr(node->lhs);
+	reg = gen_expr(node->u.lhs);
 	cg_condit_jmp(reg, label2);
 	gen_statements(node->rhs);
 	cg_jmp(label1);
@@ -184,7 +190,7 @@ static void gen_do_while(Node *node)
 	int reg;
 
 	cg_label(label1);
-	gen_statements(node->lhs);
+	gen_statements(node->u.lhs);
 	reg = gen_expr(node->rhs);
 	cg_condit_jmp(reg, label2);
 	cg_jmp(label1);
@@ -202,7 +208,7 @@ static void gen_for(Vector *node_list)
 	int label2 = get_label();
 
 	if (arg1->kind == K_INIT_VARS)
-		gen_init_vars(arg1->node_list);
+		gen_init_vars(arg1->u.node_list);
 	else if (arg1->kind == K_EXPR)
 		gen_expr(arg1->rhs);
 
@@ -225,24 +231,24 @@ static void gen_for(Vector *node_list)
 
 static void gen_statements(Node *node)
 {
-	for (int i = 0; i < node->node_list->length; ++i)
+	for (int i = 0; i < node->u.node_list->length; ++i)
 	{
-		Node *buf_node = node->node_list->data[i];
+		Node *buf_node = node->u.node_list->data[i];
 		int   reg;
 		switch (buf_node->kind)
 		{
 			case K_INIT_VARS:
-				gen_init_vars(buf_node->node_list);
+				gen_init_vars(buf_node->u.node_list);
 				break;
 			case K_EXPR:
 				reg = gen_expr(buf_node->rhs);
 				free_reg(reg);
 				break;
 			case K_PRINT:
-				gen_print(buf_node->node_list);
+				gen_print(buf_node->u.node_list);
 				break;
 			case K_INPUT:
-				gen_input(buf_node->node_list);
+				gen_input(buf_node->u.node_list);
 				break;
 			case K_IF_ELSE:
 				gen_if_else(buf_node);
@@ -257,7 +263,7 @@ static void gen_statements(Node *node)
 				gen_do_while(buf_node);
 				break;
 			case K_FOR:
-				gen_for(buf_node->node_list);
+				gen_for(buf_node->u.node_list);
 				break;
 		}
 	}

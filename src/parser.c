@@ -59,10 +59,20 @@ static Symbol *find_symbol(Token *token)
 	return symbol;
 }
 
+static int is_assignment_op()
+{
+	return (check_tok(TK_PLUSA)  ||
+		    check_tok(TK_MINUSA) ||
+		    check_tok(TK_MULTA)  ||
+		    check_tok(TK_DIVA)   ||
+		    check_tok(TK_MODA)   ||
+		    check_tok('=')       );
+}
+
 static Node *factor()
 {
 	Token *token = tokens->data[count_tk];
-	Node  *node;
+	Node  *node  = NULL;
 
 	if (check_tok(TK_NUM))
 	{
@@ -114,7 +124,7 @@ static Node *unary()
 	return node;
 }
 
-static Node *term()
+static Node *mult()
 {
 	Node  *node  = unary();
 	Token *token = tokens->data[count_tk];
@@ -125,9 +135,9 @@ static Node *term()
 	{
 		Node *buf_node = new_node(K_NONE);
 
-		buf_node->lhs = node;
-		buf_node->rhs = unary();
-		node          = buf_node;
+		buf_node->u.lhs = node;
+		buf_node->rhs   = unary();
+		node            = buf_node;
 
 		switch (token->type)
 		{
@@ -142,9 +152,9 @@ static Node *term()
 	return node;
 }
 
-static Node *add_and_sub()
+static Node *add()
 {
-	Node  *node  = term();
+	Node  *node  = mult();
 	Token *token = tokens->data[count_tk];
 
 	while (check_tok('+') ||
@@ -152,9 +162,9 @@ static Node *add_and_sub()
 	{
 		Node *buf_node = new_node(K_NONE);
 
-		buf_node->lhs = node;
-		buf_node->rhs = term();
-		node          = buf_node;
+		buf_node->u.lhs = node;
+		buf_node->rhs   = mult();
+		node            = buf_node;
 
 		switch (token->type)
 		{
@@ -171,7 +181,7 @@ static Node *add_and_sub()
 // comparison operators
 static Node *comp_op()
 {
-	Node  *node  = add_and_sub();
+	Node  *node  = add();
 	Token *token = tokens->data[count_tk];
 
 	while (check_tok('>')       ||
@@ -181,9 +191,9 @@ static Node *comp_op()
 	{
 		Node *buf_node = new_node(K_NONE);
 
-		buf_node->lhs = node;
-		buf_node->rhs = add_and_sub();
-		node          = buf_node;
+		buf_node->u.lhs = node;
+		buf_node->rhs   = add();
+		node            = buf_node;
 
 		switch (token->type)
 		{
@@ -209,9 +219,9 @@ static Node *equality_op()
 	{
 		Node *buf_node = new_node(K_NONE);
 
-		buf_node->lhs = node;
-		buf_node->rhs = comp_op();
-		node          = buf_node;
+		buf_node->u.lhs = node;
+		buf_node->rhs   = comp_op();
+		node            = buf_node;
 
 		switch (token->type)
 		{
@@ -233,9 +243,9 @@ static Node *and()
 	{
 		Node *buf_node = new_node(K_AND);
 
-		buf_node->lhs = node;
-		buf_node->rhs = equality_op();
-		node          = buf_node;
+		buf_node->u.lhs = node;
+		buf_node->rhs   = equality_op();
+		node            = buf_node;
 	}
 
 	return node;
@@ -249,9 +259,9 @@ static Node *or()
 	{
 		Node *buf_node = new_node(K_OR);
 
-		buf_node->lhs = node;
-		buf_node->rhs = and();
-		node          = buf_node;
+		buf_node->u.lhs = node;
+		buf_node->rhs   = and();
+		node            = buf_node;
 	}
 
 	return node;
@@ -262,12 +272,7 @@ static Node *assign()
 	Token *token = tokens->data[count_tk++];
 	Node  *node;
 
-	if (check_tok(TK_PLUSA)  ||
-		check_tok(TK_MINUSA) ||
-		check_tok(TK_MULTA)  ||
-		check_tok(TK_DIVA)   ||
-		check_tok(TK_MODA)   ||
-		check_tok('=')       )
+	if (is_assignment_op())
 	{
 		Symbol *symbol = find_symbol(token);
 		token = tokens->data[count_tk - 1];
@@ -282,9 +287,9 @@ static Node *assign()
 			case '=':       node = new_node(K_ASSIGN); break;
 		}
 
-		node->lhs         = new_node(K_VAR);
-		node->lhs->symbol = symbol;
-		node->rhs         = assign();
+		node->u.lhs         = new_node(K_VAR);
+		node->u.lhs->symbol = symbol;
+		node->rhs           = assign();
 	}
 	else
 	{
@@ -299,12 +304,7 @@ static Node *expr()
 {
 	Node *node = assign();
 
-	if (check_tok(TK_PLUSA)  ||
-		check_tok(TK_MINUSA) ||
-		check_tok(TK_MULTA)  ||
-		check_tok(TK_DIVA)   ||
-		check_tok(TK_MODA)   ||
-		check_tok('=')       )
+	if (is_assignment_op())
 	{
 		Token *token = tokens->data[count_tk - 1];
 		error(token->line, token->column,
@@ -323,7 +323,7 @@ static Node *primary_expr()
 	return node;
 }
 
-static Node *expr_stmt()
+static Node *parse_expr_stmt()
 {
 	Node *node = primary_expr();
 
@@ -331,12 +331,12 @@ static Node *expr_stmt()
 	return node;
 }
 
-static Node *init_vars()
+static Node *parse_vars()
 {
 	++count_tk;
 
 	Node *node = new_node(K_INIT_VARS);
-	node->node_list = new_vector();
+	node->u.node_list = new_vector();
 
 	do
 	{
@@ -358,34 +358,34 @@ static Node *init_vars()
 		if (check_tok('='))
 		{
 			Node *assign = new_node(K_ASSIGN);
-			assign->lhs = var;
+			assign->u.lhs = var;
 			assign->rhs = expr();
 			var         = assign;
 		}
 
-		vec_push(node->node_list, var);
+		vec_push(node->u.node_list, var);
 	}
 	while (check_tok(','));
 
 	return node;
 }
 
-static Node *init_vars_stmt()
+static Node *parse_vars_stmt()
 {
-	Node *node = init_vars();
+	Node *node = parse_vars();
 
 	expect_tok(';');
 	return node;
 }
 
-static Node *init_while()
+static Node *parse_while()
 {
 	++count_tk;
 
 	Node *node = new_node(K_WHILE);
 
 	expect_tok('(');
-	node->lhs = expr();
+	node->u.lhs = expr();
 	expect_tok(')');
 
 	node->rhs = statements();
@@ -393,12 +393,12 @@ static Node *init_while()
 	return node;
 }
 
-static Node *init_do_while()
+static Node *parse_do_while()
 {
 	++count_tk;
 
 	Node *node = new_node(K_DO_WHILE);
-	node->lhs = statements();
+	node->u.lhs = statements();
 
 	expect_tok(TK_WHILE);
 	expect_tok('(');
@@ -409,54 +409,54 @@ static Node *init_do_while()
 	return node;
 }
 
-static Node *init_for()
+static Node *parse_for()
 {
 	++count_tk;
 
 	Node  *node  = new_node(K_FOR);
 	Token *token = expect_tok('(');
 
-	node->node_list = new_vector();
+	node->u.node_list = new_vector();
 	symbol_table    = new_table(symbol_table);
 
 	if (token->type == TK_INT)
-		vec_push(node->node_list, init_vars());
+		vec_push(node->u.node_list, parse_vars());
 	else if (token->type != ';')
-		vec_push(node->node_list, primary_expr());
+		vec_push(node->u.node_list, primary_expr());
 	else
-		vec_push(node->node_list, new_node(K_NONE));
+		vec_push(node->u.node_list, new_node(K_NONE));
 
 	token = expect_tok(';');
 
 	if (token->type != ';')
-		vec_push(node->node_list, primary_expr());
+		vec_push(node->u.node_list, primary_expr());
 	else
-		vec_push(node->node_list, new_node(K_NONE));
+		vec_push(node->u.node_list, new_node(K_NONE));
 
 	token = expect_tok(';');
 
 	if (token->type != ')')
-		vec_push(node->node_list, primary_expr());
+		vec_push(node->u.node_list, primary_expr());
 	else
-		vec_push(node->node_list, new_node(K_NONE));
+		vec_push(node->u.node_list, new_node(K_NONE));
 
 	expect_tok(')');
 
-	vec_push(node->node_list, statements());
+	vec_push(node->u.node_list, statements());
 
 	symbol_table = symbol_table->prev;
 
 	return node;
 }
 
-static Node *init_if()
+static Node *parse_if_else()
 {
 	++count_tk;
 
 	Node *node = new_node(K_IF);
 
 	expect_tok('(');
-	node->lhs = expr();
+	node->u.lhs = expr();
 	expect_tok(')');
 
 	node->rhs = statements();
@@ -466,7 +466,7 @@ static Node *init_if()
 		Node *buffer_node = node;
 
 		node           = new_node(K_IF_ELSE);
-		node->lhs      = buffer_node;
+		node->u.lhs    = buffer_node;
 		node->rhs      = new_node(K_ELSE);
 		node->rhs->rhs = statements();
 	}
@@ -474,13 +474,13 @@ static Node *init_if()
 	return node;
 }
 
-static Node *init_print()
+static Node *parse_print()
 {
 	++count_tk;
 
 	Node *node = new_node(K_PRINT);
 
-	node->node_list = new_vector();
+	node->u.node_list = new_vector();
 
 	expect_tok('(');
 
@@ -493,7 +493,7 @@ static Node *init_print()
 			check_tok('+'))
 		{
 			--count_tk;
-			vec_push(node->node_list, primary_expr());
+			vec_push(node->u.node_list, primary_expr());
 		}
 		else if (check_tok(TK_STR))
 		{
@@ -503,7 +503,7 @@ static Node *init_print()
 			vec_push(string_list, token->str);
 			string->value = string_list->length - 1;
 
-			vec_push(node->node_list, string);
+			vec_push(node->u.node_list, string);
 		}
 	}
 	while (check_tok(','));
@@ -514,12 +514,12 @@ static Node *init_print()
 	return node;
 }
 
-static Node *init_input()
+static Node *parse_input()
 {
 	++count_tk;
 
 	Node *node = new_node(K_INPUT);
-	node->node_list = new_vector();
+	node->u.node_list = new_vector();
 
 	expect_tok('(');
 
@@ -532,7 +532,7 @@ static Node *init_input()
 
 		buf_node->symbol = find_symbol(token);
 
-		vec_push(node->node_list, buf_node);
+		vec_push(node->u.node_list, buf_node);
 	}
 	while (check_tok(','));
 
@@ -550,32 +550,32 @@ static Node *statement()
 	switch (token->type)
 	{
 		case TK_IF:
-			node = init_if();
+			node = parse_if_else();
 			break;
 		case TK_WHILE:
-			node = init_while();
+			node = parse_while();
 			break;
 		case TK_DO:
-			node = init_do_while();
+			node = parse_do_while();
 			break;
 		case TK_FOR:
-			node = init_for();
+			node = parse_for();
 			break;
 		case TK_PRINT:
-			node = init_print();
+			node = parse_print();
 			break;
 		case TK_INPUT:
-			node = init_input();
+			node = parse_input();
 			break;
 		case TK_INT:
-			node = init_vars_stmt();
+			node = parse_vars_stmt();
 			break;
 		case TK_IDENT:
 		case TK_NUM:
 		case '(':
 		case '-':
 		case '+':
-			node = expr_stmt();
+			node = parse_expr_stmt();
 			break;
 		case ';':
 			++count_tk;
@@ -594,14 +594,14 @@ static Node *statements()
 	Node  *node  = new_node(K_STATEMENTS);
 
 	symbol_table    = new_table(symbol_table);
-	node->node_list = new_vector();
+	node->u.node_list = new_vector();
 
 	while (count_tk < tokens->length && token->type != '}')
 	{
 		Node *returned_node = statement();
 
 		if (returned_node != NULL)
-			vec_push(node->node_list, returned_node);
+			vec_push(node->u.node_list, returned_node);
 
 		token = tokens->data[count_tk];
 	}

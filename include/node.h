@@ -55,10 +55,15 @@ typedef struct node
 	int value;
 	Symbol *symbol;
 
-	struct node *lhs; // left-hand side
-	struct node *rhs; // right-hand side
+	// Using union, node takes up less memory space.
+	union
+	{
+		struct node *lhs; // left-hand side
+		Vector *node_list;
+	}
+	u;
 
-	Vector *node_list;
+	struct node *rhs; // right-hand side
 }
 Node;
 

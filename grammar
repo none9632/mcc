@@ -54,30 +54,17 @@
                  | <id> '%=' <op_assign>
                  | <op_or>
 
-<op_or>        ::= <op_and> '||' <op_and>
-                 | <op_and>
+<op_or>        ::= <op_and> { '||' <op_and> }
 
-<op_and>       ::= <op_equate> '&&' <op_equate>
-                 | <op_equate>
+<op_and>       ::= <op_equate> { '&&' <op_equate> }
 
-<op_equate>    ::= <op_compare> '==' <op_compare>
-                 | <op_compare> '!=' <op_compare>
-                 | <op_compare>
+<op_equate>    ::= <op_compare> { ( '==' | '!=' ) <op_compare> }
 
-<op_compare>   ::= <op_add> '<'  <op_add>
-                 | <op_add> '>'  <op_add>
-                 | <op_add> '<=' <op_add>
-                 | <op_add> '>=' <op_add>
-                 | <op_add>
+<op_compare>   ::= <op_add> { ( '<' | '>' | '<=' | '>=' ) <op_add> }
 
-<op_add>       ::= <op_mult> '+' <op_mult>
-                 | <op_mult> '-' <op_mult>
-                 | <op_mult>
+<op_add_sub>   ::= <op_mult> { ( '+' | '-' ) <op_mult> }
 
-<op_mult>      ::= <op_unary> '*' <op_unary>
-                 | <op_unary> '/' <op_unary>
-                 | <op_unary> '%' <op_unary>
-                 | <op_unary>
+<op_mult_div>  ::= <op_unary> { ( '*' | '/' | '%' ) <op_unary> }
 
 <op_unary>     ::= '+' <op_unary>
                  | '-' <op_unary>
