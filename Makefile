@@ -1,7 +1,7 @@
 TARGET := myCompiler
 
 CC     := gcc
-CCFLAG := -Wall -g
+CCFLAG := -Wall
 
 OBJ_PATH := obj
 SRC_PATH := src

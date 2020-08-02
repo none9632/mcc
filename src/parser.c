@@ -12,12 +12,11 @@ static Token *expect_tok(int type)
 {
 	Token *token = tokens->data[count_tk];
 
-	if (count_tk >= tokens->length || token->type != type)
+	if (token->type != type)
 	{
-		// If the counter is larger than the number of tokens
-		// then we take the last token.
-		if (count_tk >= tokens->length)
-			token = tokens->data[--tokens->length];
+		// To display the line and column correctly
+		if (token->type == TK_EOF)
+			token = tokens->data[count_tk - 1];
 
 		switch (type)
 		{
@@ -26,6 +25,9 @@ static Token *expect_tok(int type)
 				break;
 			case TK_WHILE:
 				error(token->line, token->column, "expected 'while'");
+				break;
+			case TK_INT:
+				error(token->line, token->column, "expected 'int'");
 				break;
 			default:
 				error(token->line, token->column, "expected '%c' character", type);
@@ -40,7 +42,7 @@ static int check_tok(int type)
 {
 	Token *token = tokens->data[count_tk];
 
-	if (count_tk < tokens->length && token->type == type)
+	if (token->type == type)
 	{
 		++count_tk;
 		return 1;
@@ -69,6 +71,21 @@ static int is_assignment_op()
 		    check_tok('=')       );
 }
 
+static Node *params()
+{
+	Node *node = new_node(K_PARAMS);
+	node->u.node_list = new_vector();
+
+	do
+	{
+		Node *buf_node = expr();
+		vec_push(node->u.node_list, buf_node);
+	}
+	while (check_tok(','));
+
+	return node;
+}
+
 static Node *factor()
 {
 	Token *token = tokens->data[count_tk];
@@ -82,8 +99,17 @@ static Node *factor()
 	else if (check_tok(TK_IDENT))
 	{
 		Symbol *symbol = find_symbol(token);
+		if (check_tok('('))
+		{
+			Token *token = tokens->data[count_tk];
 
-		node         = new_node(K_VAR);
+			node = new_node(K_FUNC);
+			if (token->type != ')' && token->type != TK_EOF)
+				node->rhs = params();
+			expect_tok(')');
+		}
+		else
+			node = new_node(K_VAR);
 		node->symbol = symbol;
 	}
 	else if (check_tok('('))
@@ -316,7 +342,7 @@ static Node *expr()
 
 static Node *primary_expr()
 {
-	Node  *node = new_node(K_EXPR);
+	Node *node = new_node(K_EXPR);
 
 	node->rhs = expr();
 
@@ -331,7 +357,7 @@ static Node *parse_expr_stmt()
 	return node;
 }
 
-static Node *parse_vars()
+static Node *parse_init_vars()
 {
 	++count_tk;
 
@@ -359,8 +385,8 @@ static Node *parse_vars()
 		{
 			Node *assign = new_node(K_ASSIGN);
 			assign->u.lhs = var;
-			assign->rhs = expr();
-			var         = assign;
+			assign->rhs   = expr();
+			var           = assign;
 		}
 
 		vec_push(node->u.node_list, var);
@@ -372,7 +398,7 @@ static Node *parse_vars()
 
 static Node *parse_vars_stmt()
 {
-	Node *node = parse_vars();
+	Node *node = parse_init_vars();
 
 	expect_tok(';');
 	return node;
@@ -417,25 +443,25 @@ static Node *parse_for()
 	Token *token = expect_tok('(');
 
 	node->u.node_list = new_vector();
-	symbol_table    = new_table(symbol_table);
+	symbol_table      = new_table(symbol_table);
 
 	if (token->type == TK_INT)
-		vec_push(node->u.node_list, parse_vars());
-	else if (token->type != ';')
+		vec_push(node->u.node_list, parse_init_vars());
+	else if (token->type != ';' && token->type != TK_EOF)
 		vec_push(node->u.node_list, primary_expr());
 	else
 		vec_push(node->u.node_list, new_node(K_NONE));
 
 	token = expect_tok(';');
 
-	if (token->type != ';')
+	if (token->type != ';' && token->type != TK_EOF)
 		vec_push(node->u.node_list, primary_expr());
 	else
 		vec_push(node->u.node_list, new_node(K_NONE));
 
 	token = expect_tok(';');
 
-	if (token->type != ')')
+	if (token->type != ')' && token->type != TK_EOF)
 		vec_push(node->u.node_list, primary_expr());
 	else
 		vec_push(node->u.node_list, new_node(K_NONE));
@@ -593,10 +619,10 @@ static Node *statements()
 	Token *token = expect_tok('{');
 	Node  *node  = new_node(K_STATEMENTS);
 
-	symbol_table    = new_table(symbol_table);
+	symbol_table      = new_table(symbol_table);
 	node->u.node_list = new_vector();
 
-	while (count_tk < tokens->length && token->type != '}')
+	while (token->type != '}' && token->type != TK_EOF)
 	{
 		Node *returned_node = statement();
 
@@ -613,14 +639,100 @@ static Node *statements()
 	return node;
 }
 
+static Node *init_params()
+{
+	Node *node = new_node(K_INIT_VARS);
+	node->u.node_list = new_vector();
+
+	do
+	{
+		Token  *token  = expect_tok(TK_INT);
+		Symbol *symbol = new_symbol(TK_INT);
+
+		expect_tok(TK_IDENT);
+
+		symbol->name = token->str;
+
+		vec_push(symbol_table->symbols, symbol);
+
+		Node *var = new_node(K_VAR);
+		var->symbol = symbol;
+
+		vec_push(node->u.node_list, var);
+	}
+	while (check_tok(','));
+
+	return node;
+}
+
+static Node *parse_func()
+{
+	Node   *node   = new_node(K_FUNC);
+	Node   *params = NULL,
+	       *stmt   = NULL;
+	Token  *token  = tokens->data[count_tk];
+	Symbol *symbol = new_symbol(token->type);
+
+	token        = expect_tok(TK_INT);
+	symbol->name = token->str;
+	node->symbol = symbol;
+
+	vec_push(symbol_table->symbols, symbol);
+	symbol_table = new_table(symbol_table);
+
+	expect_tok(TK_IDENT);
+
+	token = expect_tok('(');
+
+	if (token->type == TK_INT)
+		params = init_params();
+
+	token = expect_tok(')');
+
+	if (token->type == '{')
+		stmt = statements();
+	else
+		expect_tok(';');
+
+	if (params == NULL)
+		node->rhs = stmt;
+	else if (stmt == NULL)
+		node->rhs = params;
+	else
+	{
+		node->u.lhs = params;
+		node->rhs = stmt;
+	}
+
+	symbol_table = symbol_table->prev;
+
+	return node;
+}
+
+static Node *parse_prog()
+{
+	Node  *node  = new_node(K_PROGRAM);
+	Token *token = tokens->data[count_tk];
+
+	node->u.node_list = new_vector();
+
+	while (token->type != TK_EOF)
+	{
+		vec_push(node->u.node_list, parse_func());
+		token = tokens->data[count_tk];
+	}
+
+	return node;
+}
+
 Node *parsing(Vector *_tokens)
 {
-	tokens      = _tokens;
-	count_tk    = 0;
-	string_list = new_vector();
+	tokens       = _tokens;
+	count_tk     = 0;
+	string_list  = new_vector();
+	symbol_table = new_table(NULL);
 
-	Node *node = new_node(K_PROGRAM);
-	node->rhs = statements();
+	Node *node = parse_prog();
 
 	vec_free(tokens);
 	return node;

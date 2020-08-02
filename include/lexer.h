@@ -34,6 +34,7 @@ enum
 	TK_PRINT,        // "print"
 	TK_INPUT,        // "input"
 	TK_INT,          // "int"
+	TK_EOF           // End of file
 };
 
 typedef struct token

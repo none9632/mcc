@@ -12,6 +12,8 @@
 enum
 {
 	K_PROGRAM,
+	K_FUNC,
+	K_PARAMS,
 	K_STATEMENTS,
 	K_IF_ELSE,
 	K_IF,

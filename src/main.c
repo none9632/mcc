@@ -63,7 +63,8 @@ int main(int argc, char **argv)
 	if (print_ast == 1)
 		start_print_node(tree);
 
-	gen(tree);
+	if (print_ast != 1)
+		gen(tree);
 
 	exit(EXIT_SUCCESS);
 }

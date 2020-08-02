@@ -191,10 +191,11 @@ static char *read_comment(char *p_str)
 static Vector *scan(char *p_str)
 {
 	Vector *tokens = new_vector();
+	Token  *token;
 
 	while (*p_str != '\0')
 	{
-		Token *token = malloc(sizeof(Token));
+		token = malloc(sizeof(Token));
 
 		if (token == NULL)
 			error(0, 0, "memory allocation error in scan()");
@@ -263,6 +264,13 @@ static Vector *scan(char *p_str)
 		else
 			error(line, column, "unknown character");
 	}
+
+	token         = malloc(sizeof(Token));
+	token->type   = TK_EOF;
+	token->line   = line;
+	token->column = column;
+
+	vec_push(tokens, token);
 
 	return tokens;
 }
