@@ -27,7 +27,10 @@ static Token *expect_tok(int type)
 				error(token->line, token->column, "expected 'while'");
 				break;
 			case TK_INT:
-				error(token->line, token->column, "expected 'int'");
+				if (token->str != NULL)
+					error(token->line, token->column, "unknown type name '%s'", token->str);
+				else
+					error(token->line, token->column, "expected parameter declarator", token->str);
 				break;
 			default:
 				error(token->line, token->column, "expected '%c' character", type);

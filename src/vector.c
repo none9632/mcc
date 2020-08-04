@@ -5,14 +5,14 @@ Vector *new_vector()
 	Vector *vector = malloc(sizeof(Vector));
 
 	if (vector == NULL)
-		error(0, 0, "memory allocation error in new_vector()");
+		func_error();
 
 	vector->length   = 0;
 	vector->capacity = 16;
 	vector->data     = malloc(sizeof(void *) * vector->capacity);
 
 	if (vector->data == NULL)
-		error(0, 0, "memory allocation error in new_vector()");
+		func_error();
 
 	return vector;
 }
@@ -25,7 +25,7 @@ void vec_push(Vector *vector, void *elem)
 		vector->data      = realloc(vector->data, sizeof(void *) * vector->capacity);
 
 		if (vector->data == NULL)
-			error(0, 0, "memory allocation error in vec_push()");
+			func_error();
 	}
 	vector->data[vector->length++] = elem;
 }
@@ -33,8 +33,6 @@ void vec_push(Vector *vector, void *elem)
 void vec_free(Vector *vector)
 {
 	for (int i = 0; i < vector->length; ++i)
-	{
 		free(vector->data[i]);
-	}
 	free(vector);
 }

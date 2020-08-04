@@ -23,3 +23,9 @@ void error(int line, int column, char *format, ...)
 
 	exit(EXIT_FAILURE);
 }
+
+void func_error()
+{
+	char *error_buf = strerror(errno);
+	error(0, 0, error_buf);
+}

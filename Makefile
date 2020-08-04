@@ -1,6 +1,6 @@
 TARGET := myCompiler
 
-CC     := gcc
+CC     := clang
 CCFLAG := -Wall
 
 OBJ_PATH := obj

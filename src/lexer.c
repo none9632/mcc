@@ -35,18 +35,22 @@ static char *read_file(FILE *file)
 	str    = NULL;
 	length = 1;
 
-	do
+	while ((count_read = fread(buffer, sizeof(char), 4096, file)) != 0)
 	{
-		count_read = fread(buffer, sizeof(char), 4096, file);
-		length    += count_read;
-		str        = realloc(str, length);
+		str = realloc(str, length + count_read);
 
 		if (str == NULL)
 			error(0, 0, "memory allocation error in read_file()");
 
-		memcpy(str + length - count_read - 1, buffer, count_read);
+		memcpy(str + length - 1, buffer, count_read);
+
+		length += count_read;
 	}
-	while (count_read != 0);
+
+	if (!feof(file))
+		func_error();
+
+	str[length - 1] = '\0';
 
 	return str;
 }
@@ -82,7 +86,7 @@ static char *read_ident(Token *token, char *p_str)
 	token->str = malloc(sizeof(char) * length);
 
 	if (token->str == NULL)
-		error(0, 0, "memory allocation error in read_ident()");
+		func_error();
 
 	memcpy(token->str, buf_p, length - 1);
 
@@ -111,8 +115,9 @@ static char *read_num(Token *token, char *p_str)
 
 static char *read_str(Token *token, char *p_str)
 {
-	char  *buf_p  = ++p_str;
-	size_t length = 1;               // 1 need for '\0' symbol in the end of string
+	char  *buf_p      = ++p_str;
+	size_t length     = 1;            // 1 need for '\0' symbol in the end of string
+	int    buf_column = column;
 
 	++column;
 
@@ -130,13 +135,13 @@ static char *read_str(Token *token, char *p_str)
 	}
 
 	if (*p_str != '\"')
-		error(line, --column, "missing terminating \" character");
+		error(line, buf_column, "missing terminating '\"' character");
 
 	++column;
 	token->str = malloc(sizeof(char) * length);
 
 	if (token->str == NULL)
-		error(0, 0, "memory allocation error in read_str()");
+		func_error();
 
 	memcpy(token->str, buf_p, length - 1);
 
@@ -198,7 +203,7 @@ static Vector *scan(char *p_str)
 		token = malloc(sizeof(Token));
 
 		if (token == NULL)
-			error(0, 0, "memory allocation error in scan()");
+			func_error();
 
 		// Whitespace
 		if (isspace(*p_str))
@@ -265,7 +270,11 @@ static Vector *scan(char *p_str)
 			error(line, column, "unknown character");
 	}
 
-	token         = malloc(sizeof(Token));
+	token = malloc(sizeof(Token));
+
+	if (token == NULL)
+		func_error();
+
 	token->type   = TK_EOF;
 	token->line   = line;
 	token->column = column;
@@ -277,10 +286,10 @@ static Vector *scan(char *p_str)
 
 Vector *lexer(char *file_name)
 {
-	FILE *file = fopen(file_name, "r");
+	FILE *file = fopen(file_name, "r+");
 
 	if (file == NULL)
-		error(0, 0, "file can't open");
+		func_error();
 
 	char   *str    = read_file(file);
 	Vector *tokens = scan(str);

@@ -9,7 +9,7 @@ Node *new_node(int kind)
 	Node *node = malloc(sizeof(Node));
 
 	if (node == NULL)
-		error(0, 0, "memory allocation error in new_node()");
+		func_error();
 
 	node->kind      = kind;
 	node->value     = 0;
@@ -89,7 +89,7 @@ static void new_prefix(int prefix_len, int is_left)
 	prefix = realloc(prefix, prefix_len + 4);
 
 	if (prefix == NULL)
-		error(0, 0, "memory allocation error in new_prefix()");
+		func_error();
 
 	for (int i = prefix_len; i < prefix_len + 4; ++i)
 		prefix[i] = ' ';

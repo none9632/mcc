@@ -275,7 +275,7 @@ void gen(Node *tree)
 	l_count     = 0;
 
 	if (output_file == NULL)
-		error(0, 0, "file output.asm can't be created");
+		func_error();
 
 	cg_start();
 	gen_statements(tree->rhs);

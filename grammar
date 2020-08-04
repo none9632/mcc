@@ -24,8 +24,7 @@
 
 <statements>       ::= '{' { <statement> } '}'
 
-<statement>        ::= <func_call_stmt>
-                     | <if_else>
+<statement>        ::= <if_else>
                      | <print>
                      | <input>
                      | <while_loop>
