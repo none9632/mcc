@@ -4,6 +4,7 @@ static Vector *tokens;
 Vector        *string_list;
 static Table  *symbol_table;
 static int     count_tk;
+static size_t  size_local_vars;
 
 static Node *expr();
 static Node *statements();
@@ -102,17 +103,18 @@ static Node *factor()
 	else if (check_tok(TK_IDENT))
 	{
 		Symbol *symbol = find_symbol(token);
-		if (check_tok('('))
-		{
-			Token *token = tokens->data[count_tk];
 
-			node = new_node(K_FUNC);
+		if (symbol->type == S_FUNC)
+		{
+			token = expect_tok('(');
+			node  = new_node(K_FUNC);
 			if (token->type != ')' && token->type != TK_EOF)
 				node->rhs = params();
 			expect_tok(')');
 		}
 		else
 			node = new_node(K_VAR);
+
 		node->symbol = symbol;
 	}
 	else if (check_tok('('))
@@ -369,20 +371,20 @@ static Node *parse_init_vars()
 
 	do
 	{
-		Symbol *symbol = new_symbol(TK_INT);
+		Symbol *symbol = new_symbol(S_VAR);
 		Token  *token  = tokens->data[count_tk];
+		Node   *var    = new_node(K_VAR);
 
 		expect_tok(TK_IDENT);
 
 		if (find(symbol_table, token->str) != NULL)
 			error(token->line, token->column, "redefinition of '%s'", token->str);
 
-		symbol->name = token->str;
+		symbol->name     = token->str;
+		var->symbol      = symbol;
+		size_local_vars += 8;
 
 		vec_push(symbol_table->symbols, symbol);
-
-		Node *var = new_node(K_VAR);
-		var->symbol = symbol;
 
 		if (check_tok('='))
 		{
@@ -508,7 +510,6 @@ static Node *parse_print()
 	++count_tk;
 
 	Node *node = new_node(K_PRINT);
-
 	node->u.node_list = new_vector();
 
 	expect_tok('(');
@@ -519,7 +520,7 @@ static Node *parse_print()
 			check_tok(TK_NUM)   ||
 			check_tok('(')      ||
 			check_tok('-')      ||
-			check_tok('+'))
+			check_tok('+')      )
 		{
 			--count_tk;
 			vec_push(node->u.node_list, primary_expr());
@@ -528,10 +529,9 @@ static Node *parse_print()
 		{
 			Token *token  = tokens->data[count_tk - 1];
 			Node  *string = new_node(K_STRING);
+			string->value = string_list->length;
 
 			vec_push(string_list, token->str);
-			string->value = string_list->length - 1;
-
 			vec_push(node->u.node_list, string);
 		}
 	}
@@ -566,6 +566,27 @@ static Node *parse_input()
 	while (check_tok(','));
 
 	expect_tok(')');
+	expect_tok(';');
+
+	return node;
+}
+
+static Node *parse_ret_stmt()
+{
+	++count_tk;
+
+	Node *node = new_node(K_RETURN);
+
+	if (check_tok(TK_IDENT) ||
+		check_tok(TK_NUM)   ||
+		check_tok('(')      ||
+		check_tok('-')      ||
+		check_tok('+')      )
+	{
+		--count_tk;
+		node->rhs = expr();
+	}
+
 	expect_tok(';');
 
 	return node;
@@ -606,6 +627,9 @@ static Node *statement()
 		case '+':
 			node = parse_expr_stmt();
 			break;
+		case TK_RETURN:
+			node = parse_ret_stmt();
+			break;
 		case ';':
 			++count_tk;
 			break;
@@ -644,23 +668,21 @@ static Node *statements()
 
 static Node *init_params()
 {
-	Node *node = new_node(K_INIT_VARS);
+	Node *node = new_node(K_INIT_PARAMS);
 	node->u.node_list = new_vector();
 
 	do
 	{
 		Token  *token  = expect_tok(TK_INT);
-		Symbol *symbol = new_symbol(TK_INT);
+		Symbol *symbol = new_symbol(S_VAR);
+		Node   *var    = new_node(K_VAR);
 
 		expect_tok(TK_IDENT);
 
-		symbol->name = token->str;
+		symbol->name    = token->str;
+		var->symbol     = symbol;
 
 		vec_push(symbol_table->symbols, symbol);
-
-		Node *var = new_node(K_VAR);
-		var->symbol = symbol;
-
 		vec_push(node->u.node_list, var);
 	}
 	while (check_tok(','));
@@ -671,14 +693,17 @@ static Node *init_params()
 static Node *parse_func()
 {
 	Node   *node   = new_node(K_FUNC);
-	Node   *params = NULL,
-	       *stmt   = NULL;
-	Token  *token  = tokens->data[count_tk];
-	Symbol *symbol = new_symbol(token->type);
+	Token  *token  = expect_tok(TK_INT);
+	Symbol *symbol = find(symbol_table, token->str);
 
-	token        = expect_tok(TK_INT);
-	symbol->name = token->str;
-	node->symbol = symbol;
+	if (symbol == NULL)
+	{
+		symbol       = new_symbol(S_FUNC);
+		symbol->name = token->str;
+	}
+
+	node->symbol    = symbol;
+	size_local_vars = 0;
 
 	vec_push(symbol_table->symbols, symbol);
 	symbol_table = new_table(symbol_table);
@@ -688,25 +713,24 @@ static Node *parse_func()
 	token = expect_tok('(');
 
 	if (token->type == TK_INT)
-		params = init_params();
+		node->u.lhs = init_params();
+	else
+		node->u.lhs = new_node(K_NONE);
 
 	token = expect_tok(')');
 
 	if (token->type == '{')
-		stmt = statements();
-	else
-		expect_tok(';');
-
-	if (params == NULL)
-		node->rhs = stmt;
-	else if (stmt == NULL)
-		node->rhs = params;
+		node->rhs = statements();
 	else
 	{
-		node->u.lhs = params;
-		node->rhs = stmt;
+		node->rhs = new_node(K_NONE);
+		expect_tok(';');
 	}
 
+	if (size_local_vars % 16 != 0)
+		size_local_vars = (size_local_vars / 16 + 1) * 16;
+
+	node->value  = size_local_vars;
 	symbol_table = symbol_table->prev;
 
 	return node;

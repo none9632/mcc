@@ -6,10 +6,17 @@
 #include "error.h"
 #include "vector.h"
 
+// list of symbols types
+enum
+{
+	S_VAR,
+	S_FUNC
+};
+
 typedef struct symbol
 {
 	char *name;
-	int id;
+	char *pointer;
 	int type;
 }
 Symbol;
@@ -22,7 +29,7 @@ typedef struct table
 Table;
 
 Table  *new_table  (Table *prev);
-Symbol *new_symbol ();
+Symbol *new_symbol (int type);
 Symbol *find       (Table *table, char *name);
 Symbol *find_all   (Table *table, char *name);
 

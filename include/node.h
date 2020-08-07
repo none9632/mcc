@@ -13,6 +13,7 @@ enum
 {
 	K_PROGRAM,
 	K_FUNC,
+	K_INIT_PARAMS,
 	K_PARAMS,
 	K_STATEMENTS,
 	K_IF_ELSE,
@@ -23,6 +24,7 @@ enum
 	K_WHILE,
 	K_DO_WHILE,
 	K_FOR,
+	K_RETURN,
 	K_INIT_VARS,
 	K_EXPR,
 	K_OR,

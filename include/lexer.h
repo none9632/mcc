@@ -31,9 +31,11 @@ enum
 	TK_WHILE,        // "while"
 	TK_DO,           // "do"
 	TK_FOR,          // "for"
+	TK_RETURN,       // "return"
 	TK_PRINT,        // "print"
 	TK_INPUT,        // "input"
 	TK_INT,          // "int"
+	TK_VOID,         // "void"
 	TK_EOF           // End of file
 };
 

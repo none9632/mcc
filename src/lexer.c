@@ -1,6 +1,6 @@
 #include "../include/lexer.h"
 
-#define TABLE_KEYWORDS_SIZE 33
+#define TABLE_KEYWORDS_SIZE 35
 
 typedef struct keyword
 {
@@ -15,15 +15,15 @@ static int column = 1;
 
 static const Keyword table_keywords[TABLE_KEYWORDS_SIZE] =
 {
-	{"if",  TK_IF,    2}, {"else", TK_ELSE,   4}, {"do",    TK_DO,     2}, {"while", TK_WHILE, 5},
-	{"for", TK_FOR,   3}, {"int",  TK_INT,    3}, {"input", TK_INPUT,  5}, {"print", TK_PRINT, 5},
-	{"+=",  TK_PLUSA, 2}, {"-=",   TK_MINUSA, 2}, {"*=",    TK_MULTA,  2}, {"/=",    TK_DIVA,  2},
-	{"%=",  TK_MODA,  2}, {"<=",   TK_LESSEQ, 2}, {">=",    TK_MOREEQ, 2}, {"==",    TK_EQUAL, 2},
-	{"!=",  TK_NOTEQ, 2}, {"||",   TK_OR,     2}, {"&&",    TK_AND,    2}, {"+",     '+',      1},
-	{"-",   '-',      1}, {"*",    '*',       1}, {"/",     '/',       1}, {"%",     '%',      1},
-	{"=",   '=',      1}, {"<",    '<',       1}, {">",     '>',       1}, {"(",     '(',      1},
-	{")",   ')',      1}, {"{",    '{',       1}, {"}",     '}',       1}, {";",     ';',      1},
-	{",",   ',',      1}
+	{"if",    TK_IF,     2}, {"else",   TK_ELSE,   4}, {"do",   TK_DO,    2}, {"while", TK_WHILE,  5},
+	{"for",   TK_FOR,    3}, {"return", TK_RETURN, 6}, {"void", TK_VOID,  4}, {"int",   TK_INT,    3},
+	{"input", TK_INPUT,  5}, {"print",  TK_PRINT,  5}, {"+=",   TK_PLUSA, 2}, {"-=",    TK_MINUSA, 2},
+	{"*=",    TK_MULTA,  2}, {"/=",     TK_DIVA,   2}, {"%=",   TK_MODA,  2}, {"<=",    TK_LESSEQ, 2},
+	{">=",    TK_MOREEQ, 2}, {"==",     TK_EQUAL,  2}, {"!=",   TK_NOTEQ, 2}, {"||",    TK_OR,     2},
+	{"&&",    TK_AND,    2}, {"+",      '+',       1}, {"-",    '-',      1}, {"*",     '*',       1},
+	{"/",     '/',       1}, {"%",      '%',       1}, {"=",    '=',      1}, {"<",     '<',       1},
+	{">",     '>',       1}, {"(",      '(',       1}, {")",    ')',      1}, {"{",     '{',       1},
+	{"}",     '}',       1}, {";",      ';',       1}, {",",    ',',      1}
 };
 
 static char *read_file(FILE *file)

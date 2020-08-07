@@ -15,16 +15,14 @@ Table *new_table(Table *prev)
 
 Symbol *new_symbol(int type)
 {
-	static int id_count = 0;
-
 	Symbol *symbol = malloc(sizeof(Symbol));
 
 	if (symbol == NULL)
 		func_error();
 
-	symbol->id   = id_count++;
-	symbol->name = NULL;
-	symbol->type = type;
+	symbol->name    = NULL;
+	symbol->pointer = NULL;
+	symbol->type    = type;
 
 	return symbol;
 }
