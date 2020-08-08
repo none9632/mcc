@@ -121,7 +121,7 @@ static int gen_expr(Node *node)
 		}
 	}
 
-	// 'return -1' will never be used.This way there will be no warning
+	// 'return -1' will never be used. This way there will be no warning
 	return -1;
 }
 

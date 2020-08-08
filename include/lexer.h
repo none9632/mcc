@@ -44,8 +44,7 @@ typedef struct token
 	int type;
 	int value;
 
-	char *str;  // for storage table variable or string literal
-	int length; // for output error message
+	char *str;   // for storage table variable or string literal
 
 	int line;
 	int column;

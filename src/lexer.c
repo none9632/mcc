@@ -1,6 +1,7 @@
 #include "../include/lexer.h"
 
-#define TABLE_KEYWORDS_SIZE 35
+#define KEYWORDS_SIZE 10
+#define SYMBOL_KEYWORDS_SIZE 25
 
 typedef struct keyword
 {
@@ -10,39 +11,65 @@ typedef struct keyword
 }
 Keyword;
 
-static int line   = 1;
-static int column = 1;
+static int   line   = 1;
+static int   column = 1;
+static char *p_str;
 
-static const Keyword table_keywords[TABLE_KEYWORDS_SIZE] =
+static const Keyword keywords[KEYWORDS_SIZE] =
 {
 	{"if",    TK_IF,     2}, {"else",   TK_ELSE,   4}, {"do",   TK_DO,    2}, {"while", TK_WHILE,  5},
 	{"for",   TK_FOR,    3}, {"return", TK_RETURN, 6}, {"void", TK_VOID,  4}, {"int",   TK_INT,    3},
-	{"input", TK_INPUT,  5}, {"print",  TK_PRINT,  5}, {"+=",   TK_PLUSA, 2}, {"-=",    TK_MINUSA, 2},
-	{"*=",    TK_MULTA,  2}, {"/=",     TK_DIVA,   2}, {"%=",   TK_MODA,  2}, {"<=",    TK_LESSEQ, 2},
-	{">=",    TK_MOREEQ, 2}, {"==",     TK_EQUAL,  2}, {"!=",   TK_NOTEQ, 2}, {"||",    TK_OR,     2},
-	{"&&",    TK_AND,    2}, {"+",      '+',       1}, {"-",    '-',      1}, {"*",     '*',       1},
-	{"/",     '/',       1}, {"%",      '%',       1}, {"=",    '=',      1}, {"<",     '<',       1},
-	{">",     '>',       1}, {"(",      '(',       1}, {")",    ')',      1}, {"{",     '{',       1},
-	{"}",     '}',       1}, {";",      ';',       1}, {",",    ',',      1}
+	{"input", TK_INPUT,  5}, {"print",  TK_PRINT,  5}
 };
+
+static const Keyword symbol_keywords[SYMBOL_KEYWORDS_SIZE] =
+{
+	{"+=", TK_PLUSA, 2}, {"-=", TK_MINUSA, 2}, {"*=", TK_MULTA,  2}, {"/=", TK_DIVA,  2},
+	{"%=", TK_MODA,  2}, {"<=", TK_LESSEQ, 2}, {">=", TK_MOREEQ, 2}, {"==", TK_EQUAL, 2},
+	{"!=", TK_NOTEQ, 2}, {"||", TK_OR,     2}, {"&&", TK_AND,    2}, {"+",  '+',      1},
+	{"-",  '-',      1}, {"*",  '*',       1}, {"/",  '/',       1}, {"%",  '%',      1},
+	{"=",  '=',      1}, {"<",  '<',       1}, {">",  '>',       1}, {"(",  '(',      1},
+	{")",  ')',      1}, {"{",  '{',       1}, {"}",  '}',       1}, {";",  ';',      1},
+	{",",  ',',      1}
+};
+
+static Token *new_token(int type)
+{
+	Token *token = malloc(sizeof(Token));
+
+	if (token == NULL)
+		func_error();
+
+	token->type   = type;
+	token->line   = line;
+	token->column = column;
+
+	return token;
+}
+
+static void next_char()
+{
+	++column;
+	++p_str;
+}
 
 static char *read_file(FILE *file)
 {
-	char  *str;
+	char  *text;
 	char   buffer[4096];
 	size_t count_read, length;
 
-	str    = NULL;
+	text   = NULL;
 	length = 1;
 
 	while ((count_read = fread(buffer, sizeof(char), 4096, file)) != 0)
 	{
-		str = realloc(str, length + count_read);
+		text = realloc(text, length + count_read);
 
-		if (str == NULL)
-			error(0, 0, "memory allocation error in read_file()");
+		if (text == NULL)
+			func_error();
 
-		memcpy(str + length - 1, buffer, count_read);
+		memcpy(text + length - 1, buffer, count_read);
 
 		length += count_read;
 	}
@@ -50,37 +77,41 @@ static char *read_file(FILE *file)
 	if (!feof(file))
 		func_error();
 
-	str[length - 1] = '\0';
+	text[length - 1] = '\0';
 
-	return str;
+	return text;
 }
 
-static int search_keyword(Token *token, char *p_str)
+static int search_keyword(char *str)
 {
-	for (int i = 0; i < TABLE_KEYWORDS_SIZE; i++)
+	for (int i = 0; i < KEYWORDS_SIZE; ++i)
 	{
-		if (!strncmp(table_keywords[i].data, p_str, table_keywords[i].length))
-		{
-			token->type   = table_keywords[i].type;
-			token->length = table_keywords[i].length;
-
-			return 0;
-		}
+		if (strcmp(keywords[i].data, str) == 0)
+			return keywords[i].type;
 	}
 
+	return TK_IDENT;
+}
+
+static int search_symbol_keyword()
+{
+	for (int i = 0; i < SYMBOL_KEYWORDS_SIZE; ++i)
+	{
+		if (!strncmp(symbol_keywords[i].data, p_str, symbol_keywords[i].length))
+			return i;
+	}
 	return -1;
 }
 
-static char *read_ident(Token *token, char *p_str)
+static void read_ident(Token *token)
 {
 	char  *buf_p  = p_str;
 	size_t length = 1;                 // 1 need for '\0' symbol in the end of string
 
 	while (isalnum(*p_str) || *p_str == '_')
 	{
-		++p_str;
 		++length;
-		++column;
+		next_char();
 	}
 
 	token->str = malloc(sizeof(char) * length);
@@ -89,122 +120,93 @@ static char *read_ident(Token *token, char *p_str)
 		func_error();
 
 	memcpy(token->str, buf_p, length - 1);
-
 	token->str[length - 1] = '\0';
-	token->type            = TK_IDENT;
-	token->length          = length;
-
-	return p_str;
+	token->type            = search_keyword(token->str);
 }
 
-static char *read_num(Token *token, char *p_str)
+static void read_num(Token *token)
 {
 	token->value = 0;
 
 	while (isdigit(*p_str))
 	{
 		token->value = token->value * 10 + *p_str - '0';
-		++p_str;
-		++column;
+		next_char();
 	}
-
-	token->type = TK_NUM;
-
-	return p_str;
 }
 
-static char *read_str(Token *token, char *p_str)
+static void read_str(Token *token)
 {
 	char  *buf_p      = ++p_str;
 	size_t length     = 1;            // 1 need for '\0' symbol in the end of string
-	int    buf_column = column;
-
-	++column;
+	int    buf_column = column++;
 
 	while (*p_str != '\"' && *p_str != '\0' && *p_str != '\n')
 	{
 		if (*p_str == '\\' && *(p_str + 1) == '\"')
 		{
-			++p_str;
 			++length;
-			++column;
+			next_char();
 		}
-		++p_str;
 		++length;
-		++column;
+		next_char();
 	}
 
 	if (*p_str != '\"')
 		error(line, buf_column, "missing terminating '\"' character");
 
-	++column;
+	next_char();
+
 	token->str = malloc(sizeof(char) * length);
 
 	if (token->str == NULL)
 		func_error();
 
 	memcpy(token->str, buf_p, length - 1);
-
 	token->str[length - 1] = '\0';
-	token->type            = TK_STR;
-
-	return ++p_str;
 }
 
-
-static char *read_comment(char *p_str)
+static void read_comment()
 {
 	if (!strncmp(p_str, "//", 2))
 	{
-		while (*p_str != '\0')
-		{
-			if (*++p_str == '\n')
-				break;
-		}
+		while (*p_str != '\0' && *p_str != '\n')
+			++p_str;
 		++p_str;
 		++line;
 		column = 1;
 	}
-	else if (!strncmp(p_str, "/*", 2))
+	else
 	{
 		while (*p_str != '\0')
 		{
 			if (*p_str == '\n')
 			{
 				++line;
-				column = 1;
+				column = 0;
 			}
-			if (*++p_str == '*' && *(p_str + 1) == '/')
+			if (*p_str == '*' && *(p_str + 1) == '/')
 			{
-				column += 2;
-				++p_str;
+				next_char();
 				break;
 			}
-			++column;
+			next_char();
 		}
 
 		if (*p_str == '\0')
 			error(line, --column, "expected '*/' characters");
 
-		++p_str;
-		++column;
+		next_char();
 	}
-
-	return p_str;
 }
 
-static Vector *scan(char *p_str)
+static Vector *scan()
 {
 	Vector *tokens = new_vector();
-	Token  *token;
+	int     buffer;
 
 	while (*p_str != '\0')
 	{
-		token = malloc(sizeof(Token));
-
-		if (token == NULL)
-			func_error();
-
 		// Whitespace
 		if (isspace(*p_str))
 		{
@@ -215,53 +217,49 @@ static Vector *scan(char *p_str)
 					column = 0;
 					++line;
 				}
-				++p_str;
-				++column;
+				next_char();
 			}
 		}
 
 		// Comment
 		else if (!strncmp(p_str, "/*", 2) || !strncmp(p_str, "//", 2))
-			p_str = read_comment(p_str);
+			read_comment();
 
-		// Keywords
-		else if (search_keyword(token, p_str) == 0)
+		// Symbol keywords
+		else if ((buffer = search_symbol_keyword()) != -1)
 		{
-			token->line   = line;
-			token->column = column;
-			p_str        += token->length;
-			column       += token->length;
+			Token *token = new_token(symbol_keywords[buffer].type);
+
+			p_str  += symbol_keywords[buffer].length;
+			column += symbol_keywords[buffer].length;
 
 			vec_push(tokens, token);
 		}
 
-		// Identifier
+		// Identifier or keyword
 		else if (isalpha(*p_str) || *p_str == '_')
 		{
-			token->line   = line;
-			token->column = column;
-			p_str         = read_ident(token, p_str);
+			Token *token = new_token(TK_IDENT);
 
+			read_ident(token);
 			vec_push(tokens, token);
 		}
 
 		// Number literal
 		else if (isdigit(*p_str))
 		{
-			token->line   = line;
-			token->column = column;
-			p_str         = read_num(token, p_str);
+			Token *token = new_token(TK_NUM);
 
+			read_num(token);
 			vec_push(tokens, token);
 		}
 
 		// String literal
 		else if (*p_str == '\"')
 		{
-			token->line   = line;
-			token->column = column;
-			p_str         = read_str(token, p_str);
+			Token *token = new_token(TK_STR);
 
+			read_str(token);
 			vec_push(tokens, token);
 		}
 
@@ -270,16 +268,7 @@ static Vector *scan(char *p_str)
 			error(line, column, "unknown character");
 	}
 
-	token = malloc(sizeof(Token));
-
-	if (token == NULL)
-		func_error();
-
-	token->type   = TK_EOF;
-	token->line   = line;
-	token->column = column;
-
-	vec_push(tokens, token);
+	vec_push(tokens, new_token(TK_EOF));
 
 	return tokens;
 }
@@ -291,11 +280,11 @@ Vector *lexer(char *file_name)
 	if (file == NULL)
 		func_error();
 
-	char   *str    = read_file(file);
-	Vector *tokens = scan(str);
+	char   *text   = (p_str = read_file(file));
+	Vector *tokens = scan();
 
 	fclose(file);
-	free(str);
+	free(text);
 
 	return tokens;
 }
