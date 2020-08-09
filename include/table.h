@@ -18,6 +18,7 @@ typedef struct symbol
 	char *name;
 	char *pointer;
 	int type;
+	int value;
 }
 Symbol;
 

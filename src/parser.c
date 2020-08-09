@@ -75,17 +75,35 @@ static int is_assignment_op()
 		    check_tok('=')       );
 }
 
-static Node *params()
+static Node *params(int num_params)
 {
-	Node *node = new_node(K_PARAMS);
+	Node  *node  = new_node(K_PARAMS);
+	Token *token = NULL;
+
 	node->u.node_list = new_vector();
 
 	do
 	{
+		if (num_params == 0)
+		{
+			token = tokens->data[count_tk];
+			--num_params;
+			break;
+		}
+
 		Node *buf_node = expr();
 		vec_push(node->u.node_list, buf_node);
+		--num_params;
 	}
 	while (check_tok(','));
+
+	if (token == NULL)
+		token = tokens->data[count_tk];
+
+	if (num_params < 0)
+		error(token->line, token->column, "too many arguments to function call");
+	else if (num_params > 0)
+		error(token->line, token->column, "too few arguments to function call");
 
 	return node;
 }
@@ -109,7 +127,7 @@ static Node *factor()
 			token = expect_tok('(');
 			node  = new_node(K_FUNC);
 			if (token->type != ')' && token->type != TK_EOF)
-				node->rhs = params();
+				node->rhs = params(symbol->value);
 			expect_tok(')');
 		}
 		else
@@ -666,7 +684,7 @@ static Node *statements()
 	return node;
 }
 
-static Node *init_params()
+static Node *init_params(int *num_params)
 {
 	Node *node = new_node(K_INIT_PARAMS);
 	node->u.node_list = new_vector();
@@ -684,6 +702,8 @@ static Node *init_params()
 
 		vec_push(symbol_table->symbols, symbol);
 		vec_push(node->u.node_list, var);
+
+		*num_params += 1;
 	}
 	while (check_tok(','));
 
@@ -713,7 +733,7 @@ static Node *parse_func()
 	token = expect_tok('(');
 
 	if (token->type == TK_INT)
-		node->u.lhs = init_params();
+		node->u.lhs = init_params(&symbol->value);
 	else
 		node->u.lhs = new_node(K_NONE);
 

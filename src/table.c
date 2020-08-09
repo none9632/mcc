@@ -23,6 +23,7 @@ Symbol *new_symbol(int type)
 	symbol->name    = NULL;
 	symbol->pointer = NULL;
 	symbol->type    = type;
+	symbol->value   = 0;
 
 	return symbol;
 }
