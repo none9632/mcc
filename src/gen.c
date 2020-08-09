@@ -1,18 +1,16 @@
 #include "../include/gen.h"
 
-#define MAX_STR_SIZE 25
-
-FILE  *output_file;
-size_t offset;
-int    ret_label;
-int    l_count;
+FILE *output_file;
+int   var_offset;
+int   ret_label;
+int   label_count;
 
 static void gen_statements (Vector *node_list);
 static int  gen_expr       (Node *node);
 
 static int get_label()
 {
-	return l_count++;
+	return label_count++;
 }
 
 static int is_assignment_op(int kind)
@@ -27,10 +25,14 @@ static int is_assignment_op(int kind)
 
 static int gen_func_call(Node *node)
 {
-	Node *params  = node->rhs;
-	int  *buf_frl = cg_save_all_reg();
+	Node *params     = node->rhs;
+	int  *buf_frl    = cg_save_all_reg();
+	int   num_params = 0;
 
-	for (int i = params->u.node_list->length - 1; i >= 0; --i)
+	if (params != NULL)
+		num_params = params->u.node_list->length;
+
+	for (int i = num_params - 1; i >= 0; --i)
 	{
 		Node *buf_node = params->u.node_list->data[i];
 		int reg = gen_expr(buf_node);
@@ -39,7 +41,7 @@ static int gen_func_call(Node *node)
 
 	cg_func_call(node->symbol->name);
 
-	for (int i = 0; i < params->u.node_list->length; ++i)
+	for (int i = 0; i < num_params; ++i)
 		cg_pop_stack();
 
 	int ret_val = cg_ret_all_reg(buf_frl);
@@ -52,10 +54,11 @@ static int gen_assign_stmt(Node *node)
 {
 	int reg1, reg2;
 	char *pointer = node->u.lhs->symbol->pointer;
+	int   offset  = node->u.lhs->symbol->value;
 
 	reg1 = gen_expr(node->rhs);
 	if (node->kind != K_ASSIGN)
-		reg2 = cg_load_gsym(pointer);
+		reg2 = cg_load_gsym(pointer, offset);
 
 	switch (node->kind)
 	{
@@ -66,14 +69,14 @@ static int gen_assign_stmt(Node *node)
 		case K_MODA:  reg1 = cg_mod(reg2, reg1);  break;
 	}
 
-	return cg_store_gsym(reg1, pointer);
+	return cg_store_gsym(reg1, pointer, offset);
 }
 
 static int gen_expr(Node *node)
 {
 	if (node != NULL)
 	{
-		if (node->kind == K_FUNC)
+		if (node->kind == K_CALL_FUNC)
 			return gen_func_call(node);
 
 		if (is_assignment_op(node->kind))
@@ -115,7 +118,7 @@ static int gen_expr(Node *node)
 			case K_NUM:
 				return cg_load(node->value);
 			case K_VAR:
-				return cg_load_gsym(node->symbol->pointer);
+				return cg_load_gsym(node->symbol->pointer, node->symbol->value);
 			default:
 				error(0, 0, "unknown ast kind");
 		}
@@ -127,22 +130,23 @@ static int gen_expr(Node *node)
 
 static void gen_init_vars(Vector *node_list)
 {
-	for (int i = 0; i < node_list->length; ++i, ++offset)
+	for (int i = 0; i < node_list->length; ++i, ++var_offset)
 	{
 		Node *buf_node = node_list->data[i];
-		char *str      = malloc(sizeof(char) * MAX_STR_SIZE);
-		sprintf(str, "%li(%%rsp)", offset * 8);
+		char *str      = "%rsp";
 
 		if (buf_node->kind == K_VAR)
 		{
 			buf_node->symbol->pointer = str;
-			cg_uninit_var(str);
+			buf_node->symbol->value   = var_offset * 8;
+			cg_uninit_var(str, buf_node->symbol->value);
 		}
 		else
 		{
 			buf_node->u.lhs->symbol->pointer = str;
+			buf_node->u.lhs->symbol->value   = var_offset * 8;
 			int reg = gen_expr(buf_node->rhs);
-			cg_store_gsym(reg, str);
+			cg_store_gsym(reg, str, buf_node->u.lhs->symbol->value);
 			free_reg(reg);
 		}
 	}
@@ -173,7 +177,7 @@ static void gen_input(Vector *node_list)
 	for (int i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
-		cg_input(buf_node->symbol->pointer);
+		cg_input(buf_node->symbol->pointer, buf_node->symbol->value);
 	}
 }
 
@@ -319,42 +323,52 @@ static void gen_init_params(Vector *node_list)
 	for (int i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
-		char *str      = malloc(sizeof(char) * MAX_STR_SIZE);
+		char *str      = "%rbp";
 
-		sprintf(str, "%i(%%rbp)", (i + 2) * 8);
 		buf_node->symbol->pointer = str;
+		buf_node->symbol->value   = (i + 2) * 8;
 	}
 }
 
-static void gen_func(Vector *node_list)
+static void gen_func(Node *node)
+{
+	ret_label   = get_label();
+	var_offset      = 0;
+
+	cg_start_func(node->symbol->name, node->value);
+
+	if (node->u.lhs->kind == K_INIT_PARAMS)
+		gen_init_params(node->u.lhs->u.node_list);
+
+	if (node->rhs->kind == K_STATEMENTS)
+		gen_statements(node->rhs->u.node_list);
+
+	cg_end_func(ret_label, node->value);
+}
+
+static void gen_prog(Vector *node_list)
 {
 	for (int i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
 
-		ret_label = get_label();
-		offset    = 0;
-
-		cg_start_func(buf_node->symbol->name, buf_node->value);
-
-		if (buf_node->u.lhs->kind == K_INIT_PARAMS)
-			gen_init_params(buf_node->u.lhs->u.node_list);
-
-		if (buf_node->rhs->kind == K_STATEMENTS)
-			gen_statements(buf_node->rhs->u.node_list);
-
-		cg_end_func(ret_label, buf_node->value);
+		switch (buf_node->kind)
+		{
+			case K_DECL_FUNC:
+				gen_func(buf_node);
+				break;
+		}
 	}
 }
 
 void gen(Node *tree)
 {
 	output_file = fopen("output.s", "w+");
-	l_count     = 0;
+	label_count = 0;
 
 	if (output_file == NULL)
 		func_error();
 
 	cg_start_prog();
-	gen_func(tree->u.node_list);
+	gen_prog(tree->u.node_list);
 }

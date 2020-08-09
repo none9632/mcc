@@ -25,11 +25,11 @@ void cg_pop_stack  ();
 
 void cg_print_int (int reg);
 void cg_print_str (int number);
-void cg_input     (char *pointer);
+void cg_input     (char *pointer, int offset);
 
-int  cg_load_gsym  (char *pointer);
-int  cg_store_gsym (int reg, char *pointer);
-void cg_uninit_var (char *pointer);
+int  cg_load_gsym  (char *pointer, int offset);
+int  cg_store_gsym (int reg, char *pointer, int offset);
+void cg_uninit_var (char *pointer, int offset);
 
 int cg_or      (int reg1, int reg2, int label1, int label2);
 int cg_and     (int reg1, int reg2, int label1, int label2);

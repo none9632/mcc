@@ -25,7 +25,9 @@ static void print_kind(Node *node)
 	switch (node->kind)
 	{
 		case K_PROGRAM:     printf("<program>\n");                break;
-		case K_FUNC:        printf("%s()\n", node->symbol->name); break;
+		case K_DEFIN_FUNC:  printf("%s()\n", node->symbol->name); break;
+		case K_DECL_FUNC:   printf("%s()\n", node->symbol->name); break;
+		case K_CALL_FUNC:   printf("%s()\n", node->symbol->name); break;
 		case K_INIT_PARAMS: printf("<init-params>\n");            break;
 		case K_PARAMS:      printf("<params>\n");                 break;
 		case K_STATEMENTS:  printf("<statements>\n");             break;

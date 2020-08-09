@@ -24,6 +24,8 @@ static char *reg8_list[REG_LIST_SIZE] =
 extern FILE   *output_file;
 extern Vector *string_list;
 
+static int push_offset;
+
 static int alloc_reg()
 {
 	for (int i = 0; i < REG_LIST_SIZE - 2; ++i)
@@ -72,7 +74,10 @@ int cg_ret_all_reg(int *buf_frl)
 	int reg = alloc_reg();
 
 	if (reg == STACK)
+	{
 		fprintf(output_file, "\tpushq %%rax\n");
+		push_offset += 8;
+	}
 	else
 		fprintf(output_file, "\tmovq %%rax, %s\n", reg64_list[reg]);
 
@@ -85,11 +90,13 @@ static void pop_value(int *reg1, int *reg2)
 	{
 		fprintf(output_file, "\tpopq %%rcx\n");
 		*reg2 = RCX;
+		push_offset -= 8;
 	}
 	if (*reg1 == STACK)
 	{
 		fprintf(output_file, "\tpopq %%rbx\n");
 		*reg1 = RBX;
+		push_offset -= 8;
 	}
 }
 
@@ -99,6 +106,7 @@ static void push_value(int *reg1)
 	{
 		fprintf(output_file, "\tpushq %%rbx\n");
 		*reg1 = STACK;
+		push_offset += 8;
 	}
 }
 
@@ -131,6 +139,8 @@ void cg_start_func(char *name, int size)
 
 	if (size != 0)
 		fprintf(output_file, "\tsubq $%i, %%rsp\n", size);
+
+	push_offset = 0;
 }
 
 void cg_end_func(int label, int size)
@@ -185,9 +195,9 @@ void cg_print_str(int number)
 	fprintf(output_file, "\tcall printf\n");
 }
 
-void cg_input(char *pointer)
+void cg_input(char *pointer, int offset)
 {
-	fprintf(output_file, "\tleaq %s, %%rsi\n", pointer);
+	fprintf(output_file, "\tleaq %i(%s), %%rsi\n", offset + push_offset, pointer);
 	fprintf(output_file, "\tmovq $.io_int, %%rdi\n");
 	fprintf(output_file, "\txor %%rax, %%rax\n");
 	fprintf(output_file, "\tcall scanf\n");
@@ -320,34 +330,40 @@ int cg_load(int value)
 	int reg = alloc_reg();
 
 	if (reg == STACK)
+	{
 		fprintf(output_file, "\tpushq $%i\n", value);
+		push_offset += 8;
+	}
 	else
 		fprintf(output_file, "\tmovq $%i, %s\n", value, reg64_list[reg]);
 
 	return reg;
 }
 
-int cg_load_gsym(char *pointer)
+int cg_load_gsym(char *pointer, int offset)
 {
 	int reg = alloc_reg();
 
 	if (reg == STACK)
-		fprintf(output_file, "\tpushq %s\n", pointer);
+	{
+		fprintf(output_file, "\tpushq %i(%s)\n", offset + push_offset, pointer);
+		push_offset += 8;
+	}
 	else
-		fprintf(output_file, "\tmovq %s, %s\n", pointer, reg64_list[reg]);
+		fprintf(output_file, "\tmovq %i(%s), %s\n", offset + push_offset, pointer, reg64_list[reg]);
 
 	return reg;
 }
 
-int cg_store_gsym(int reg, char *pointer)
+int cg_store_gsym(int reg, char *pointer, int offset)
 {
-	fprintf(output_file, "\tmovq %s, %s\n", reg64_list[reg], pointer);
+	fprintf(output_file, "\tmovq %s, %i(%s)\n", reg64_list[reg], offset + push_offset, pointer);
 	return reg;
 }
 
-void cg_uninit_var(char *pointer)
+void cg_uninit_var(char *pointer, int offset)
 {
-	fprintf(output_file, "\tmovq $0, %s\n", pointer);
+	fprintf(output_file, "\tmovq $0, %i(%s)\n", offset, pointer + push_offset);
 }
 
 void cg_func_call(char *name)
@@ -358,6 +374,7 @@ void cg_func_call(char *name)
 void cg_push_stack(int reg)
 {
 	fprintf(output_file, "\tpushq %s\n", reg64_list[reg]);
+	push_offset += 8;
 	free_reg(reg);
 }
 
@@ -367,5 +384,6 @@ void cg_pop_stack()
 
 	pop_value(&reg, NULL);
 	fprintf(output_file, "\tpopq %s\n", reg64_list[reg]);
+	push_offset -= 8;
 	free_reg(reg);
 }

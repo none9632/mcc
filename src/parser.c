@@ -122,16 +122,16 @@ static Node *factor()
 	{
 		Symbol *symbol = find_symbol(token);
 
-		if (symbol->type == S_FUNC)
+		if (symbol->type == S_VAR)
+			node = new_node(K_VAR);
+		else
 		{
 			token = expect_tok('(');
-			node  = new_node(K_FUNC);
+			node  = new_node(K_CALL_FUNC);
 			if (token->type != ')' && token->type != TK_EOF)
 				node->rhs = params(symbol->value);
 			expect_tok(')');
 		}
-		else
-			node = new_node(K_VAR);
 
 		node->symbol = symbol;
 	}
@@ -712,15 +712,17 @@ static Node *init_params(int *num_params)
 
 static Node *parse_func()
 {
-	Node   *node   = new_node(K_FUNC);
+	Node   *node   = new_node(K_DEFIN_FUNC);
 	Token  *token  = expect_tok(TK_INT);
 	Symbol *symbol = find(symbol_table, token->str);
 
 	if (symbol == NULL)
 	{
-		symbol       = new_symbol(S_FUNC);
+		symbol       = new_symbol(S_DEFIN_FUNC);
 		symbol->name = token->str;
 	}
+	else if (symbol->type == S_DECL_FUNC)
+		error(token->line, token->column, "redefinition of '%s'", token->str);
 
 	node->symbol    = symbol;
 	size_local_vars = 0;
@@ -729,7 +731,6 @@ static Node *parse_func()
 	symbol_table = new_table(symbol_table);
 
 	expect_tok(TK_IDENT);
-
 	token = expect_tok('(');
 
 	if (token->type == TK_INT)
@@ -740,7 +741,11 @@ static Node *parse_func()
 	token = expect_tok(')');
 
 	if (token->type == '{')
-		node->rhs = statements();
+	{
+		symbol->type = S_DECL_FUNC;
+		node->kind   = K_DECL_FUNC;
+		node->rhs    = statements();
+	}
 	else
 	{
 		node->rhs = new_node(K_NONE);
