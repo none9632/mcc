@@ -10,8 +10,7 @@
 enum
 {
 	S_VAR,
-	S_DEFIN_FUNC,
-	S_DECL_FUNC,
+	S_FUNC,
 };
 
 typedef struct symbol

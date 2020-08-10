@@ -133,20 +133,19 @@ static void gen_init_vars(Vector *node_list)
 	for (int i = 0; i < node_list->length; ++i, ++var_offset)
 	{
 		Node *buf_node = node_list->data[i];
-		char *str      = "%rsp";
 
 		if (buf_node->kind == K_VAR)
 		{
-			buf_node->symbol->pointer = str;
+			buf_node->symbol->pointer = "%rsp";
 			buf_node->symbol->value   = var_offset * 8;
-			cg_uninit_var(str, buf_node->symbol->value);
+			cg_uninit_var("%rsp", buf_node->symbol->value);
 		}
 		else
 		{
-			buf_node->u.lhs->symbol->pointer = str;
+			buf_node->u.lhs->symbol->pointer = "%rsp";
 			buf_node->u.lhs->symbol->value   = var_offset * 8;
 			int reg = gen_expr(buf_node->rhs);
-			cg_store_gsym(reg, str, buf_node->u.lhs->symbol->value);
+			cg_store_gsym(reg, "%rsp", buf_node->u.lhs->symbol->value);
 			free_reg(reg);
 		}
 	}
@@ -271,7 +270,6 @@ static void gen_for(Vector *node_list)
 static void gen_return(Node *node)
 {
 	int reg = gen_expr(node->rhs);
-
 	cg_ret_func(reg, ret_label);
 }
 
@@ -323,17 +321,16 @@ static void gen_init_params(Vector *node_list)
 	for (int i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
-		char *str      = "%rbp";
 
-		buf_node->symbol->pointer = str;
+		buf_node->symbol->pointer = "%rbp";
 		buf_node->symbol->value   = (i + 2) * 8;
 	}
 }
 
 static void gen_func(Node *node)
 {
-	ret_label   = get_label();
-	var_offset      = 0;
+	ret_label  = get_label();
+	var_offset = 0;
 
 	cg_start_func(node->symbol->name, node->value);
 
@@ -354,7 +351,7 @@ static void gen_prog(Vector *node_list)
 
 		switch (buf_node->kind)
 		{
-			case K_DECL_FUNC:
+			case K_FUNC:
 				gen_func(buf_node);
 				break;
 		}

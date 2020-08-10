@@ -1,4 +1,4 @@
-<program>   ::= { <func_decl> | <func_proto> }
+<program>   ::= { <func_decl> }
 
 ! ===================================================================
 ! Function  Declaration
@@ -6,9 +6,6 @@
 
 <func_decl>        ::= <type> <id> '(' <init_params> ')' <statements>
                      | <type> <id> '(' ')' <statements>
-
-<func_proto>       ::= <type> <id> '(' <init_params> ')' ';'
-                     | <type> <id> '(' ')' ';'
 
 <init_params>      ::= <type> <id> ',' <init_params>
                      | <type> <id>

@@ -77,28 +77,21 @@ static int is_assignment_op()
 
 static Node *params(int num_params)
 {
-	Node  *node  = new_node(K_PARAMS);
-	Token *token = NULL;
-
+	Node *node = new_node(K_PARAMS);
 	node->u.node_list = new_vector();
 
 	do
 	{
-		if (num_params == 0)
-		{
-			token = tokens->data[count_tk];
-			--num_params;
+		--num_params;
+		if (num_params < 0)
 			break;
-		}
 
 		Node *buf_node = expr();
 		vec_push(node->u.node_list, buf_node);
-		--num_params;
 	}
 	while (check_tok(','));
 
-	if (token == NULL)
-		token = tokens->data[count_tk];
+	Token *token = tokens->data[count_tk];
 
 	if (num_params < 0)
 		error(token->line, token->column, "too many arguments to function call");
@@ -712,23 +705,19 @@ static Node *init_params(int *num_params)
 
 static Node *parse_func()
 {
-	Node   *node   = new_node(K_DEFIN_FUNC);
+	Node   *node   = new_node(K_FUNC);
 	Token  *token  = expect_tok(TK_INT);
 	Symbol *symbol = find(symbol_table, token->str);
 
-	if (symbol == NULL)
-	{
-		symbol       = new_symbol(S_DEFIN_FUNC);
-		symbol->name = token->str;
-	}
-	else if (symbol->type == S_DECL_FUNC)
-		error(token->line, token->column, "redefinition of '%s'", token->str);
+	if (symbol != NULL)
+		error(token->line, token->column, "redefinition of '%s'", symbol->name);
 
-	node->symbol    = symbol;
-	size_local_vars = 0;
+	symbol       = new_symbol(S_FUNC);
+	symbol->name = token->str;
+	node->symbol = symbol;
 
 	vec_push(symbol_table->symbols, symbol);
-	symbol_table = new_table(symbol_table);
+	symbol_table    = new_table(symbol_table);
 
 	expect_tok(TK_IDENT);
 	token = expect_tok('(');
@@ -738,24 +727,15 @@ static Node *parse_func()
 	else
 		node->u.lhs = new_node(K_NONE);
 
-	token = expect_tok(')');
+	expect_tok(')');
 
-	if (token->type == '{')
-	{
-		symbol->type = S_DECL_FUNC;
-		node->kind   = K_DECL_FUNC;
-		node->rhs    = statements();
-	}
-	else
-	{
-		node->rhs = new_node(K_NONE);
-		expect_tok(';');
-	}
+	size_local_vars = 0;
+	node->rhs       = statements();
 
 	if (size_local_vars % 16 != 0)
 		size_local_vars = (size_local_vars / 16 + 1) * 16;
+	node->value = size_local_vars;
 
-	node->value  = size_local_vars;
 	symbol_table = symbol_table->prev;
 
 	return node;
