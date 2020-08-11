@@ -23,9 +23,8 @@ void cg_jmp        (int label);
 void cg_push_stack (int reg);
 void cg_pop_stack  ();
 
-void cg_print_int (int reg);
-void cg_print_str (int number);
-void cg_input     (char *pointer, int offset);
+void cg_print (int value, int length);
+void cg_input (char *pointer, int offset);
 
 int  cg_load_gsym  (char *pointer, int offset);
 int  cg_store_gsym (int reg, char *pointer, int offset);

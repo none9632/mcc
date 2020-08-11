@@ -44,10 +44,7 @@ static int gen_func_call(Node *node)
 	for (int i = 0; i < num_params; ++i)
 		cg_pop_stack();
 
-	int ret_val = cg_ret_all_reg(buf_frl);
-	free(buf_frl);
-
-	return ret_val;
+	return cg_ret_all_reg(buf_frl);
 }
 
 static int gen_assign_stmt(Node *node)
@@ -130,7 +127,7 @@ static int gen_expr(Node *node)
 
 static void gen_init_vars(Vector *node_list)
 {
-	for (int i = 0; i < node_list->length; ++i, ++var_offset)
+	for (size_t i = 0; i < node_list->length; ++i, ++var_offset)
 	{
 		Node *buf_node = node_list->data[i];
 
@@ -153,27 +150,20 @@ static void gen_init_vars(Vector *node_list)
 
 static void gen_print(Vector *node_list)
 {
-	for (int i = 0; i < node_list->length; ++i)
+	for (size_t i = node_list->length - 1; i > 0; --i)
 	{
 		Node *buf_node = node_list->data[i];
-		int   reg;
-
-		switch (buf_node->kind)
-		{
-			case K_EXPR:
-				reg = gen_expr(buf_node->rhs);
-				cg_print_int(reg);
-				break;
-			case K_STRING:
-				cg_print_str(buf_node->value);
-				break;
-		}
+		int   reg      = gen_expr(buf_node->rhs);
+		cg_push_stack(reg);
 	}
+
+	Node *str = node_list->data[0];
+	cg_print(str->value, node_list->length - 1);
 }
 
 static void gen_input(Vector *node_list)
 {
-	for (int i = 0; i < node_list->length; ++i)
+	for (size_t i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
 		cg_input(buf_node->symbol->pointer, buf_node->symbol->value);
@@ -275,7 +265,7 @@ static void gen_return(Node *node)
 
 static void gen_statements(Vector *node_list)
 {
-	for (int i = 0; i < node_list->length; ++i)
+	for (size_t i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
 		int   reg;
@@ -318,7 +308,7 @@ static void gen_statements(Vector *node_list)
 
 static void gen_init_params(Vector *node_list)
 {
-	for (int i = 0; i < node_list->length; ++i)
+	for (size_t i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
 
@@ -345,7 +335,7 @@ static void gen_func(Node *node)
 
 static void gen_prog(Vector *node_list)
 {
-	for (int i = 0; i < node_list->length; ++i)
+	for (size_t i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
 

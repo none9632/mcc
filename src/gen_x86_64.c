@@ -1,6 +1,7 @@
 #include "../include/gen_x86_64.h"
 
 #define REG_LIST_SIZE 10
+#define PRINT_REG_SIZE 5
 #define STACK (-1)
 #define RBX 8
 #define RCX 9
@@ -19,6 +20,11 @@ static char *reg8_list[REG_LIST_SIZE] =
 	"%r11b", "%r12b", "%r13b",
 	"%r14b", "%r15b", "%bl",
 	"%cl"
+};
+static char *print_reg[PRINT_REG_SIZE] =
+{
+	"%rsi", "%rdx", "%rcx",
+	"%r8",  "%r9"
 };
 
 extern FILE   *output_file;
@@ -72,7 +78,6 @@ int cg_ret_all_reg(int *buf_frl)
 	}
 
 	int reg = alloc_reg();
-
 	if (reg == STACK)
 	{
 		fprintf(output_file, "\tpushq %%rax\n");
@@ -80,6 +85,8 @@ int cg_ret_all_reg(int *buf_frl)
 	}
 	else
 		fprintf(output_file, "\tmovq %%rax, %s\n", reg64_list[reg]);
+
+	free(buf_frl);
 
 	return reg;
 }
@@ -114,10 +121,8 @@ static void cg_str_data()
 {
 	for (int i = 0; i < string_list->length; ++i)
 	{
-		char *str = string_list->data[i];
-
 		fprintf(output_file, ".LC%i:\n", i);
-		fprintf(output_file,"\t.string \"%s\"\n", str);
+		fprintf(output_file,"\t.string \"%s\"\n", string_list->data[i]);
 	}
 }
 
@@ -179,20 +184,28 @@ void cg_jmp(int label)
 	fprintf(output_file, "\tjmp .L%i\n", label);
 }
 
-void cg_print_int(int reg)
+void cg_print(int value, int length)
 {
-	fprintf(output_file, "\tmovq %s, %%rsi\n", reg64_list[reg]);
-	fprintf(output_file, "\tleaq .io_int, %%rdi\n");
-	fprintf(output_file, "\txor %%rax, %%rax\n");
-	fprintf(output_file, "\tcall printf\n");
-	free_reg(reg);
-}
+	int buffer = (length - PRINT_REG_SIZE) * 8;
+	if (buffer > 0)
+		length = PRINT_REG_SIZE;
 
-void cg_print_str(int number)
-{
-	fprintf(output_file, "\tmovq $.LC%i, %%rdi\n", number);
+	for (size_t i = 0; i < length; ++i)
+	{
+		fprintf(output_file, "\tpopq %%rax\n");
+		fprintf(output_file, "\tmovq %%rax, %s\n", print_reg[i]);
+		push_offset -= 8;
+	}
+
+	fprintf(output_file, "\tmovq $.LC%i, %%rdi\n", value);
 	fprintf(output_file, "\txor %%rax, %%rax\n");
 	fprintf(output_file, "\tcall printf\n");
+
+	if (buffer > 0)
+	{
+		fprintf(output_file, "\taddq $%i, %%rsp\n", buffer);
+		push_offset -= buffer;
+	}
 }
 
 void cg_input(char *pointer, int offset)

@@ -36,8 +36,7 @@
                      | 'if' '(' <expr> ')' <statements> 'else' <statements>
 
 <print>            ::= 'print' '(' <output_list> ')' ';'
-<output_list>      ::= <output> { ',' <output> }
-<output>           ::= <string> | <expr>
+<output_list>      ::= <string> { ',' <expr> }
 
 <input>            ::= 'input' '(' <input_list> ')' ';'
 <input_list>       ::= <id> { ',' <id> }

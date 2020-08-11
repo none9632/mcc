@@ -520,12 +520,23 @@ static Node *parse_print()
 {
 	++count_tk;
 
-	Node *node = new_node(K_PRINT);
+	Node  *node  = new_node(K_PRINT);
+	Token *token = expect_tok('(');
+
+	if (token->type != TK_STR)
+		error(token->line, token->column, "expected string argument");
+
 	node->u.node_list = new_vector();
 
-	expect_tok('(');
+	Node  *string = new_node(K_STRING);
+	string->value = string_list->length;
 
-	do
+	vec_push(string_list, token->str);
+	vec_push(node->u.node_list, string);
+
+	++count_tk;
+
+	while (check_tok(','))
 	{
 		if (check_tok(TK_IDENT) ||
 			check_tok(TK_NUM)   ||
@@ -536,17 +547,7 @@ static Node *parse_print()
 			--count_tk;
 			vec_push(node->u.node_list, primary_expr());
 		}
-		else if (check_tok(TK_STR))
-		{
-			Token *token  = tokens->data[count_tk - 1];
-			Node  *string = new_node(K_STRING);
-			string->value = string_list->length;
-
-			vec_push(string_list, token->str);
-			vec_push(node->u.node_list, string);
-		}
 	}
-	while (check_tok(','));
 
 	expect_tok(')');
 	expect_tok(';');
