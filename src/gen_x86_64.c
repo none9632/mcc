@@ -117,20 +117,15 @@ static void push_value(int *reg1)
 	}
 }
 
-static void cg_str_data()
+void cg_start_prog()
 {
+	fprintf(output_file, ".io_int:\n");
+	fprintf(output_file, "\t.string \"%%li\"\n");
 	for (int i = 0; i < string_list->length; ++i)
 	{
 		fprintf(output_file, ".LC%i:\n", i);
 		fprintf(output_file,"\t.string \"%s\"\n", string_list->data[i]);
 	}
-}
-
-void cg_start_prog()
-{
-	fprintf(output_file, ".io_int:\n");
-	fprintf(output_file, "\t.string \"%%li\"\n");
-	cg_str_data();
 
 	fprintf(output_file, ".globl main\n");
 	fprintf(output_file, "\n");

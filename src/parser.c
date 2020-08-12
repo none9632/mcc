@@ -65,6 +65,15 @@ static Symbol *find_symbol(Token *token)
 	return symbol;
 }
 
+static int is_expr()
+{
+	return (check_tok(TK_IDENT) ||
+			check_tok(TK_NUM)   ||
+			check_tok('(')      ||
+			check_tok('+')      ||
+			check_tok('-')      );
+}
+
 static int is_assignment_op()
 {
 	return (check_tok(TK_PLUSA)  ||
@@ -528,9 +537,8 @@ static Node *parse_print()
 
 	node->u.node_list = new_vector();
 
-	Node  *string = new_node(K_STRING);
+	Node *string = new_node(K_STRING);
 	string->value = string_list->length;
-
 	vec_push(string_list, token->str);
 	vec_push(node->u.node_list, string);
 
@@ -538,11 +546,7 @@ static Node *parse_print()
 
 	while (check_tok(','))
 	{
-		if (check_tok(TK_IDENT) ||
-			check_tok(TK_NUM)   ||
-			check_tok('(')      ||
-			check_tok('-')      ||
-			check_tok('+')      )
+		if (is_expr())
 		{
 			--count_tk;
 			vec_push(node->u.node_list, primary_expr());
@@ -589,11 +593,7 @@ static Node *parse_ret_stmt()
 
 	Node *node = new_node(K_RETURN);
 
-	if (check_tok(TK_IDENT) ||
-		check_tok(TK_NUM)   ||
-		check_tok('(')      ||
-		check_tok('-')      ||
-		check_tok('+')      )
+	if (is_expr())
 	{
 		--count_tk;
 		node->rhs = expr();
@@ -646,7 +646,7 @@ static Node *statement()
 			++count_tk;
 			break;
 		default:
-			error(token->line, token->column, "syntax error");
+			error(token->line, token->column, "wrong statement");
 			break;
 	}
 
