@@ -7,7 +7,7 @@
 
 void free_reg        (int reg);
 int *cg_save_all_reg ();
-int  cg_ret_all_reg  (int *buf_frl);
+void cg_ret_all_reg  (int *buf_frl);
 
 void cg_start_prog ();
 
@@ -15,6 +15,7 @@ void cg_start_func (char *name, int size);
 void cg_end_func   (int label, int size);
 void cg_ret_func   (int reg, int label);
 void cg_func_call  (char *name);
+int  cg_ret_value  ();
 
 void cg_label      (int label);
 void cg_condit_jmp (int reg, int label);

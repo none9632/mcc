@@ -31,7 +31,7 @@ static Token *expect_tok(int type)
 				if (token->str != NULL)
 					error(token->line, token->column, "unknown type name '%s'", token->str);
 				else
-					error(token->line, token->column, "expected parameter declarator", token->str);
+					error(token->line, token->column, "expected parameter declarator");
 				break;
 			default:
 				error(token->line, token->column, "expected '%c' character", type);
@@ -63,15 +63,6 @@ static Symbol *find_symbol(Token *token)
 		error(token->line, token->column, "'%s' is undeclared", token->str);
 
 	return symbol;
-}
-
-static int is_expr()
-{
-	return (check_tok(TK_IDENT) ||
-			check_tok(TK_NUM)   ||
-			check_tok('(')      ||
-			check_tok('+')      ||
-			check_tok('-')      );
 }
 
 static int is_assignment_op()
@@ -402,7 +393,7 @@ static Node *parse_init_vars()
 
 		symbol->name     = token->str;
 		var->symbol      = symbol;
-		size_local_vars += 8;
+		size_local_vars += 4;
 
 		vec_push(symbol_table->symbols, symbol);
 
@@ -545,13 +536,7 @@ static Node *parse_print()
 	++count_tk;
 
 	while (check_tok(','))
-	{
-		if (is_expr())
-		{
-			--count_tk;
-			vec_push(node->u.node_list, primary_expr());
-		}
-	}
+		vec_push(node->u.node_list, primary_expr());
 
 	expect_tok(')');
 	expect_tok(';');
@@ -592,12 +577,7 @@ static Node *parse_ret_stmt()
 	++count_tk;
 
 	Node *node = new_node(K_RETURN);
-
-	if (is_expr())
-	{
-		--count_tk;
-		node->rhs = expr();
-	}
+	node->rhs = expr();
 
 	expect_tok(';');
 
@@ -691,8 +671,8 @@ static Node *init_params(int *num_params)
 
 		expect_tok(TK_IDENT);
 
-		symbol->name    = token->str;
-		var->symbol     = symbol;
+		symbol->name = token->str;
+		var->symbol  = symbol;
 
 		vec_push(symbol_table->symbols, symbol);
 		vec_push(node->u.node_list, var);

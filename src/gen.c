@@ -35,7 +35,7 @@ static int gen_func_call(Node *node)
 	for (int i = num_params - 1; i >= 0; --i)
 	{
 		Node *buf_node = params->u.node_list->data[i];
-		int reg = gen_expr(buf_node);
+		int   reg      = gen_expr(buf_node);
 		cg_push_stack(reg);
 	}
 
@@ -44,7 +44,8 @@ static int gen_func_call(Node *node)
 	for (int i = 0; i < num_params; ++i)
 		cg_pop_stack();
 
-	return cg_ret_all_reg(buf_frl);
+	cg_ret_all_reg(buf_frl);
+	return cg_ret_value();
 }
 
 static int gen_assign_stmt(Node *node)
@@ -134,13 +135,13 @@ static void gen_init_vars(Vector *node_list)
 		if (buf_node->kind == K_VAR)
 		{
 			buf_node->symbol->pointer = "%rsp";
-			buf_node->symbol->value   = var_offset * 8;
+			buf_node->symbol->value   = var_offset * 4;
 			cg_uninit_var("%rsp", buf_node->symbol->value);
 		}
 		else
 		{
 			buf_node->u.lhs->symbol->pointer = "%rsp";
-			buf_node->u.lhs->symbol->value   = var_offset * 8;
+			buf_node->u.lhs->symbol->value   = var_offset * 4;
 			int reg = gen_expr(buf_node->rhs);
 			cg_store_gsym(reg, "%rsp", buf_node->u.lhs->symbol->value);
 			free_reg(reg);

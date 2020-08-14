@@ -14,6 +14,13 @@ static char *reg64_list[REG_LIST_SIZE] =
 	"%r14", "%r15", "%rbx",
 	"%rcx"
 };
+static char *reg32_list[REG_LIST_SIZE] =
+{
+	"%r8d",  "%r9d",  "%r10d",
+	"%r11d", "%r12d", "%r13d",
+	"%r14d", "%r15d", "%ebx",
+	"%ecx"
+};
 static char *reg8_list[REG_LIST_SIZE] =
 {
 	"%r8b",  "%r9b",  "%r10b",
@@ -68,7 +75,7 @@ int *cg_save_all_reg()
 	return buf_frl;
 }
 
-int cg_ret_all_reg(int *buf_frl)
+void cg_ret_all_reg(int *buf_frl)
 {
 	for (int i = REG_LIST_SIZE - 3; i >= 0; --i)
 	{
@@ -77,18 +84,7 @@ int cg_ret_all_reg(int *buf_frl)
 			fprintf(output_file, "\tpopq %s\n", reg64_list[i]);
 	}
 
-	int reg = alloc_reg();
-	if (reg == STACK)
-	{
-		fprintf(output_file, "\tpushq %%rax\n");
-		push_offset += 8;
-	}
-	else
-		fprintf(output_file, "\tmovq %%rax, %s\n", reg64_list[reg]);
-
 	free(buf_frl);
-
-	return reg;
 }
 
 static void pop_value(int *reg1, int *reg2)
@@ -120,7 +116,7 @@ static void push_value(int *reg1)
 void cg_start_prog()
 {
 	fprintf(output_file, ".io_int:\n");
-	fprintf(output_file, "\t.string \"%%li\"\n");
+	fprintf(output_file, "\t.string \"%%i\"\n");
 	for (int i = 0; i < string_list->length; ++i)
 	{
 		fprintf(output_file, ".LC%i:\n", i);
@@ -157,7 +153,7 @@ void cg_end_func(int label, int size)
 
 void cg_ret_func(int reg, int label)
 {
-	fprintf(output_file, "\tmovq %s, %%rax\n", reg64_list[reg]);
+	fprintf(output_file, "\tmovl %s, %%eax\n", reg32_list[reg]);
 	fprintf(output_file, "\tjmp .L%i\n", label);
 	free_reg(reg);
 }
@@ -169,7 +165,7 @@ void cg_label(int label)
 
 void cg_condit_jmp(int reg, int label)
 {
-	fprintf(output_file, "\tcmpq $0, %s\n", reg64_list[reg]);
+	fprintf(output_file, "\tcmpl $0, %s\n", reg32_list[reg]);
 	fprintf(output_file, "\tje .L%i\n", label);
 	free_reg(reg);
 }
@@ -215,14 +211,14 @@ int cg_or(int reg1, int reg2, int label1, int label2)
 {
 	pop_value(&reg1, &reg2);
 
-	fprintf(output_file, "\tcmpq $0, %s\n", reg64_list[reg1]);
+	fprintf(output_file, "\tcmpl $0, %s\n", reg32_list[reg1]);
 	fprintf(output_file, "\tjne .L%i\n", label1);
-	fprintf(output_file, "\tcmpq $0, %s\n", reg64_list[reg2]);
+	fprintf(output_file, "\tcmpl $0, %s\n", reg32_list[reg2]);
 	fprintf(output_file, "\tjne .L%i\n", label1);
-	fprintf(output_file, "\tmovq $0, %s\n", reg64_list[reg1]);
+	fprintf(output_file, "\tmovl $0, %s\n", reg32_list[reg1]);
 	fprintf(output_file, "\tjmp .L%i\n", label2);
 	fprintf(output_file, ".L%i:\n", label1);
-	fprintf(output_file, "\tmovq $1, %s\n", reg64_list[reg1]);
+	fprintf(output_file, "\tmovl $1, %s\n", reg32_list[reg1]);
 	fprintf(output_file, ".L%i:\n", label2);
 
 	free_reg(reg2);
@@ -234,14 +230,14 @@ int cg_and(int reg1, int reg2, int label1, int label2)
 {
 	pop_value(&reg1, &reg2);
 
-	fprintf(output_file, "\tcmpq $0, %s\n", reg64_list[reg1]);
+	fprintf(output_file, "\tcmpl $0, %s\n", reg32_list[reg1]);
 	fprintf(output_file, "\tje .L%i\n", label1);
-	fprintf(output_file, "\tcmpq $0, %s\n", reg64_list[reg2]);
+	fprintf(output_file, "\tcmpl $0, %s\n", reg32_list[reg2]);
 	fprintf(output_file, "\tje .L%i\n", label1);
-	fprintf(output_file, "\tmovq $1, %s\n", reg64_list[reg1]);
+	fprintf(output_file, "\tmovl $1, %s\n", reg32_list[reg1]);
 	fprintf(output_file, "\tjmp .L%i\n", label2);
 	fprintf(output_file, ".L%i:\n", label1);
-	fprintf(output_file, "\tmovq $0, %s\n", reg64_list[reg1]);
+	fprintf(output_file, "\tmovl $0, %s\n", reg32_list[reg1]);
 	fprintf(output_file, ".L%i:\n", label2);
 
 	free_reg(reg2);
@@ -253,9 +249,9 @@ int cg_compare(int reg1, int reg2, char *how)
 {
 	pop_value(&reg1, &reg2);
 
-	fprintf(output_file, "\tcmpq %s, %s\n", reg64_list[reg2], reg64_list[reg1]);
+	fprintf(output_file, "\tcmpl %s, %s\n", reg32_list[reg2], reg32_list[reg1]);
 	fprintf(output_file, "\t%s %s\n", how, reg8_list[reg1]);
-	fprintf(output_file, "\tandq $255,%s\n", reg64_list[reg1]);
+	fprintf(output_file, "\tandl $255, %s\n", reg32_list[reg1]);
 
 	free_reg(reg2);
 	push_value(&reg1);
@@ -266,7 +262,7 @@ int cg_add(int reg1, int reg2)
 {
 	pop_value(&reg1, &reg2);
 
-	fprintf(output_file, "\taddq %s, %s\n", reg64_list[reg2], reg64_list[reg1]);
+	fprintf(output_file, "\taddl %s, %s\n", reg32_list[reg2], reg32_list[reg1]);
 
 	free_reg(reg2);
 	push_value(&reg1);
@@ -277,7 +273,7 @@ int cg_sub(int reg1, int reg2)
 {
 	pop_value(&reg1, &reg2);
 
-	fprintf(output_file, "\tsubq %s, %s\n", reg64_list[reg2], reg64_list[reg1]);
+	fprintf(output_file, "\tsubl %s, %s\n", reg32_list[reg2], reg32_list[reg1]);
 
 	free_reg(reg2);
 	push_value(&reg1);
@@ -288,7 +284,7 @@ int cg_mult(int reg1, int reg2)
 {
 	pop_value(&reg1, &reg2);
 
-	fprintf(output_file, "\timulq %s, %s\n", reg64_list[reg2], reg64_list[reg1]);
+	fprintf(output_file, "\timull %s, %s\n", reg32_list[reg2], reg32_list[reg1]);
 
 	free_reg(reg2);
 	push_value(&reg1);
@@ -299,10 +295,10 @@ int cg_div(int reg1, int reg2)
 {
 	pop_value(&reg1, &reg2);
 
-	fprintf(output_file, "\tmovq %s, %%rax\n", reg64_list[reg1]);
+	fprintf(output_file, "\tmovl %s, %%eax\n", reg32_list[reg1]);
 	fprintf(output_file, "\tcqo\n");
-	fprintf(output_file, "\tidivq %s\n", reg64_list[reg2]);
-	fprintf(output_file, "\tmovq %%rax, %s\n", reg64_list[reg1]);
+	fprintf(output_file, "\tidivl %s\n", reg32_list[reg2]);
+	fprintf(output_file, "\tmovl %%eax, %s\n", reg32_list[reg1]);
 
 	free_reg(reg2);
 	push_value(&reg1);
@@ -313,10 +309,10 @@ int cg_mod(int reg1, int reg2)
 {
 	pop_value(&reg1, &reg2);
 
-	fprintf(output_file, "\tmovq %s, %%rax\n", reg64_list[reg1]);
+	fprintf(output_file, "\tmovl %s, %%eax\n", reg32_list[reg1]);
 	fprintf(output_file, "\tcqo\n");
-	fprintf(output_file, "\tidivq %s\n", reg64_list[reg2]);
-	fprintf(output_file, "\tmovq %%rdx, %s\n", reg64_list[reg1]);
+	fprintf(output_file, "\tidivl %s\n", reg32_list[reg2]);
+	fprintf(output_file, "\tmovl %%edx, %s\n", reg32_list[reg1]);
 
 	free_reg(reg2);
 	push_value(&reg1);
@@ -327,7 +323,7 @@ int cg_neg(int reg1)
 {
 	pop_value(&reg1, NULL);
 
-	fprintf(output_file, "\tnegq %s\n", reg64_list[reg1]);
+	fprintf(output_file, "\tnegl %s\n", reg32_list[reg1]);
 
 	push_value(&reg1);
 	return reg1;
@@ -343,7 +339,7 @@ int cg_load(int value)
 		push_offset += 8;
 	}
 	else
-		fprintf(output_file, "\tmovq $%i, %s\n", value, reg64_list[reg]);
+		fprintf(output_file, "\tmovl $%i, %s\n", value, reg32_list[reg]);
 
 	return reg;
 }
@@ -358,25 +354,40 @@ int cg_load_gsym(char *pointer, int offset)
 		push_offset += 8;
 	}
 	else
-		fprintf(output_file, "\tmovq %i(%s), %s\n", offset + push_offset, pointer, reg64_list[reg]);
+		fprintf(output_file, "\tmovl %i(%s), %s\n", offset + push_offset, pointer, reg32_list[reg]);
 
 	return reg;
 }
 
 int cg_store_gsym(int reg, char *pointer, int offset)
 {
-	fprintf(output_file, "\tmovq %s, %i(%s)\n", reg64_list[reg], offset + push_offset, pointer);
+	fprintf(output_file, "\tmovl %s, %i(%s)\n", reg32_list[reg], offset + push_offset, pointer);
 	return reg;
 }
 
 void cg_uninit_var(char *pointer, int offset)
 {
-	fprintf(output_file, "\tmovq $0, %i(%s)\n", offset, pointer + push_offset);
+	fprintf(output_file, "\tmovl $0, %i(%s)\n", offset, pointer + push_offset);
 }
 
 void cg_func_call(char *name)
 {
 	fprintf(output_file, "\tcall %s\n", name);
+}
+
+int cg_ret_value()
+{
+	int reg = alloc_reg();
+
+	if (reg == STACK)
+	{
+		fprintf(output_file, "\tpushq %%rax\n");
+		push_offset += 8;
+	}
+	else
+		fprintf(output_file, "\tmovl %%eax, %s\n", reg32_list[reg]);
+
+	return reg;
 }
 
 void cg_push_stack(int reg)
@@ -388,10 +399,6 @@ void cg_push_stack(int reg)
 
 void cg_pop_stack()
 {
-	int reg = alloc_reg();
-
-	pop_value(&reg, NULL);
-	fprintf(output_file, "\tpopq %s\n", reg64_list[reg]);
+	fprintf(output_file, "\tpopq %%rdx\n");
 	push_offset -= 8;
-	free_reg(reg);
 }

@@ -65,8 +65,7 @@ typedef struct node
 	{
 		struct node *lhs; // left-hand side
 		Vector *node_list;
-	}
-	u;
+	}u;
 
 	struct node *rhs; // right-hand side
 }
