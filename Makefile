@@ -1,7 +1,7 @@
 TARGET := myCompiler
 
 CC     := clang
-CCFLAG := -Wall
+CCFLAG := -Wall -I ./include
 
 OBJ_PATH := obj
 SRC_PATH := src

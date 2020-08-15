@@ -1,4 +1,4 @@
-#include "../include/gen_x86_64.h"
+#include "gen_x86_64.h"
 
 #define REG_LIST_SIZE 10
 #define PRINT_REG_SIZE 5

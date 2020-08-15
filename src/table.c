@@ -1,4 +1,4 @@
-#include "../include/table.h"
+#include "table.h"
 
 Table *new_table(Table *prev)
 {
@@ -13,14 +13,14 @@ Table *new_table(Table *prev)
 	return table;
 }
 
-Symbol *new_symbol(int type)
+Symbol *new_symbol(int type, char *name)
 {
 	Symbol *symbol = malloc(sizeof(Symbol));
 
 	if (symbol == NULL)
 		func_error();
 
-	symbol->name    = NULL;
+	symbol->name    = name;
 	symbol->pointer = NULL;
 	symbol->type    = type;
 	symbol->value   = 0;

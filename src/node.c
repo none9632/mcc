@@ -1,4 +1,4 @@
-#include "../include/node.h"
+#include "node.h"
 
 static char *prefix;
 

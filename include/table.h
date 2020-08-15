@@ -18,7 +18,7 @@ typedef struct symbol
 	char *name;
 	char *pointer;
 	int type;
-	int value;
+	int value;          // used for counting the number of parameters in the function
 }
 Symbol;
 
@@ -30,7 +30,7 @@ typedef struct table
 Table;
 
 Table  *new_table  (Table *prev);
-Symbol *new_symbol (int type);
+Symbol *new_symbol (int type, char *name);
 Symbol *find       (Table *table, char *name);
 Symbol *find_all   (Table *table, char *name);
 

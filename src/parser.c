@@ -1,4 +1,4 @@
-#include "../include/parser.h"
+#include "parser.h"
 
 static Vector *tokens;
 Vector        *string_list;
@@ -382,11 +382,11 @@ static Node *parse_init_vars()
 
 	do
 	{
-		Symbol *symbol = new_symbol(S_VAR);
 		Token  *token  = tokens->data[count_tk];
-		Node   *var    = new_node(K_VAR);
-
 		expect_tok(TK_IDENT);
+
+		Symbol *symbol = new_symbol(S_VAR, token->str);
+		Node   *var    = new_node(K_VAR);
 
 		if (find(symbol_table, token->str) != NULL)
 			error(token->line, token->column, "redefinition of '%s'", token->str);
@@ -666,13 +666,12 @@ static Node *init_params(int *num_params)
 	do
 	{
 		Token  *token  = expect_tok(TK_INT);
-		Symbol *symbol = new_symbol(S_VAR);
-		Node   *var    = new_node(K_VAR);
-
 		expect_tok(TK_IDENT);
 
-		symbol->name = token->str;
-		var->symbol  = symbol;
+		Symbol *symbol = new_symbol(S_VAR, token->str);
+		Node   *var    = new_node(K_VAR);
+
+		var->symbol = symbol;
 
 		vec_push(symbol_table->symbols, symbol);
 		vec_push(node->u.node_list, var);
@@ -686,21 +685,21 @@ static Node *init_params(int *num_params)
 
 static Node *parse_func()
 {
-	Node   *node   = new_node(K_FUNC);
 	Token  *token  = expect_tok(TK_INT);
+	expect_tok(TK_IDENT);
+
+	Node   *node   = new_node(K_FUNC);
 	Symbol *symbol = find(symbol_table, token->str);
 
 	if (symbol != NULL)
 		error(token->line, token->column, "redefinition of '%s'", symbol->name);
 
-	symbol       = new_symbol(S_FUNC);
-	symbol->name = token->str;
+	symbol       = new_symbol(S_FUNC, token->str);
 	node->symbol = symbol;
 
 	vec_push(symbol_table->symbols, symbol);
 	symbol_table    = new_table(symbol_table);
 
-	expect_tok(TK_IDENT);
 	token = expect_tok('(');
 
 	if (token->type == TK_INT)

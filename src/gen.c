@@ -1,4 +1,4 @@
-#include "../include/gen.h"
+#include "gen.h"
 
 FILE *output_file;
 int   var_offset;

@@ -1,4 +1,4 @@
-#include "../include/lexer.h"
+#include "lexer.h"
 
 #define KEYWORDS_SIZE 10
 #define SYMBOL_KEYWORDS_SIZE 25

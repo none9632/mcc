@@ -19,45 +19,52 @@
 ! Statements
 ! ===================================================================
 
-<statements>       ::= '{' { <statement> } '}'
+<statements>      ::= '{' { <statement> } '}'
 
-<statement>        ::= <if_else>
-                     | <print>
-                     | <input>
-                     | <while_loop>
-                     | <do_while_loop>
-                     | <for_loop>
-                     | <init_vars_stmt>
-                     | <expr_stmt>
-                     | <ret_stmt>
-                     | ';'
+<statement>       ::= <if_else>
+                    | <print>
+                    | <input>
+                    | <while_loop>
+                    | <do_while_loop>
+                    | <for_loop>
+                    | <init_vars_stmt>
+                    | <expr_stmt>
+                    | <ret_stmt>
+                    | ';'
 
-<if_else>          ::= 'if' '(' <expr> ')' <statements>
-                     | 'if' '(' <expr> ')' <statements> 'else' <statements>
+<if_else>         ::= 'if' '(' <expr> ')' <statements>
+                    | 'if' '(' <expr> ')' <statements> 'else' <statements>
 
-<print>            ::= 'print' '(' <output_list> ')' ';'
-<output_list>      ::= <string> { ',' <expr> }
+<print>           ::= 'print' '(' <output_list> ')' ';'
+<output_list>     ::= <string> { ',' <expr> }
 
-<input>            ::= 'input' '(' <input_list> ')' ';'
-<input_list>       ::= <id> { ',' <id> }
+<input>           ::= 'input' '(' <input_list> ')' ';'
+<input_list>      ::= <id> { ',' <id> }
 
-<while_loop>       ::= 'while' '(' <expr> ')' <statements>
+<while_loop>      ::= 'while' '(' <expr> ')' <statements>
 
-<do_while_loop>    ::= 'do' <statements> 'while' '(' <expr> ')' ';'
+<do_while_loop>   ::= 'do' <statements> 'while' '(' <expr> ')' ';'
 
-<for_loop>         ::= 'for' '(' [ <expr> ] ';' [ <expr> ] ';' [ <expr> ] ')' <statements>
-                     | 'for' '(' [ <init_vars> ] ';' [ <expr> ] ';' [ <expr> ] ')' <statements>
+<for_loop>        ::= 'for' '(' [ <expr> ] ';' [ <expr> ] ';' [ <expr> ] ')' <statements>
+                    | 'for' '(' [ <init_vars> ] ';' [ <expr> ] ';' [ <expr> ] ')' <statements>
+
+<expr_stmt>       ::= <expr> ';'
+
+<ret_stmt>        ::= 'return' <expr> ';'
+                    | 'return' ';'
+
+! ===================================================================
+! Variable Declaration
+! ===================================================================
 
 <init_vars_stmt>   ::= <init_vars> ';'
+
 <init_vars>        ::= <type> <var> { ',' <var> }
+
 <var>              ::= <id> '=' <expr>
                      | <id>
+
 <type>             ::= 'int'
-
-<expr_stmt>        ::= <expr> ';'
-
-<ret_stmt>         ::= 'return' <expr> ';'
-                     | 'return' ';'
 
 ! ===================================================================
 ! Expression
