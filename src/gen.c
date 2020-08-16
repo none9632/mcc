@@ -85,40 +85,23 @@ static int gen_expr(Node *node)
 
 		switch (node->kind)
 		{
-			case K_OR:
-				return cg_or(reg1, reg2, get_label(), get_label());
-			case K_AND:
-				return cg_and(reg1, reg2, get_label(), get_label());
-			case K_EQUAL:
-				return cg_compare(reg1, reg2, "sete");
-			case K_NOT_EQUAL:
-				return cg_compare(reg1, reg2, "setne");
-			case K_MORE:
-				return cg_compare(reg1, reg2, "setg");
-			case K_LESS:
-				return cg_compare(reg1, reg2, "setl");
-			case K_MOREEQ:
-				return cg_compare(reg1, reg2, "setge");
-			case K_LESSEQ:
-				return cg_compare(reg1, reg2, "setle");
-			case K_ADD:
-				return cg_add(reg1, reg2);
-			case K_SUB:
-				return cg_sub(reg1, reg2);
-			case K_MULT:
-				return cg_mult(reg1, reg2);
-			case K_DIV:
-				return cg_div(reg1, reg2);
-			case K_MOD:
-				return cg_mod(reg1, reg2);
-			case K_NEG:
-				return cg_neg(reg2);
-			case K_NUM:
-				return cg_load(node->value);
-			case K_VAR:
-				return cg_load_gsym(node->symbol->pointer, node->symbol->value);
-			default:
-				error(0, 0, "unknown ast kind");
+			case K_OR:        return cg_or(reg1, reg2, get_label(), get_label());
+			case K_AND:       return cg_and(reg1, reg2, get_label(), get_label());
+			case K_EQUAL:     return cg_compare(reg1, reg2, "sete");
+			case K_NOT_EQUAL: return cg_compare(reg1, reg2, "setne");
+			case K_MORE:      return cg_compare(reg1, reg2, "setg");
+			case K_LESS:      return cg_compare(reg1, reg2, "setl");
+			case K_MOREEQ:    return cg_compare(reg1, reg2, "setge");
+			case K_LESSEQ:    return cg_compare(reg1, reg2, "setle");
+			case K_ADD:       return cg_add(reg1, reg2);
+			case K_SUB:       return cg_sub(reg1, reg2);
+			case K_MULT:      return cg_mult(reg1, reg2);
+			case K_DIV:       return cg_div(reg1, reg2);
+			case K_MOD:       return cg_mod(reg1, reg2);
+			case K_NEG:       return cg_neg(reg2);
+			case K_NUM:       return cg_load(node->value);
+			case K_VAR:       return cg_load_gsym(node->symbol->pointer, node->symbol->value);
+			default:          error(0, 0, "unknown ast kind");
 		}
 	}
 
@@ -136,12 +119,14 @@ static void gen_init_vars(Vector *node_list)
 		{
 			buf_node->symbol->pointer = "%rsp";
 			buf_node->symbol->value   = var_offset * 4;
+
 			cg_uninit_var("%rsp", buf_node->symbol->value);
 		}
 		else
 		{
 			buf_node->u.lhs->symbol->pointer = "%rsp";
 			buf_node->u.lhs->symbol->value   = var_offset * 4;
+
 			int reg = gen_expr(buf_node->rhs);
 			cg_store_gsym(reg, "%rsp", buf_node->u.lhs->symbol->value);
 			free_reg(reg);
@@ -151,11 +136,16 @@ static void gen_init_vars(Vector *node_list)
 
 static void gen_print(Vector *node_list)
 {
-	for (size_t i = node_list->length - 1; i > 0; --i)
+	for (int i = node_list->length - 1; i > 0; --i)
 	{
 		Node *buf_node = node_list->data[i];
-		int   reg      = gen_expr(buf_node->rhs);
-		cg_push_stack(reg);
+		int   reg1     = gen_expr(buf_node->rhs);
+		int   reg2     = 11 - i;
+
+		if (i - 1 < PRINT_REG_SIZE)
+			cg_arg_print(reg1, reg2);
+		else
+			cg_push_stack(reg1);
 	}
 
 	Node *str = node_list->data[0];
@@ -269,40 +259,19 @@ static void gen_statements(Vector *node_list)
 	for (size_t i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
-		int   reg;
+
 		switch (buf_node->kind)
 		{
-			case K_INIT_VARS:
-				gen_init_vars(buf_node->u.node_list);
-				break;
-			case K_EXPR:
-				reg = gen_expr(buf_node->rhs);
-				free_reg(reg);
-				break;
-			case K_PRINT:
-				gen_print(buf_node->u.node_list);
-				break;
-			case K_INPUT:
-				gen_input(buf_node->u.node_list);
-				break;
-			case K_IF_ELSE:
-				gen_if_else(buf_node);
-				break;
-			case K_IF:
-				gen_if(buf_node);
-				break;
-			case K_WHILE:
-				gen_while(buf_node);
-				break;
-			case K_DO_WHILE:
-				gen_do_while(buf_node);
-				break;
-			case K_FOR:
-				gen_for(buf_node->u.node_list);
-				break;
-			case K_RETURN:
-				gen_return(buf_node);
-				break;
+			case K_INIT_VARS: gen_init_vars(buf_node->u.node_list); break;
+			case K_EXPR:      free_reg(gen_expr(buf_node->rhs));    break;
+			case K_PRINT:     gen_print(buf_node->u.node_list);     break;
+			case K_INPUT:     gen_input(buf_node->u.node_list);     break;
+			case K_IF_ELSE:   gen_if_else(buf_node);                break;
+			case K_IF:        gen_if(buf_node);                     break;
+			case K_WHILE:     gen_while(buf_node);                  break;
+			case K_DO_WHILE:  gen_do_while(buf_node);               break;
+			case K_FOR:       gen_for(buf_node->u.node_list);       break;
+			case K_RETURN:    gen_return(buf_node);                 break;
 		}
 	}
 }

@@ -1,6 +1,6 @@
 #include "node.h"
 
-static char *prefix;
+static char *prefix = NULL;
 
 extern Vector *string_list;
 
@@ -11,11 +11,11 @@ Node *new_node(int kind)
 	if (node == NULL)
 		func_error();
 
-	node->kind      = kind;
-	node->value     = 0;
-	node->symbol    = NULL;
-	node->u.lhs     = NULL;
-	node->rhs       = NULL;
+	node->kind   = kind;
+	node->value  = 0;
+	node->symbol = NULL;
+	node->u.lhs  = NULL;
+	node->rhs    = NULL;
 
 	return node;
 }
@@ -140,8 +140,6 @@ static void print_node(Node *node, int prefix_len, int is_left)
 
 void start_print_node(Node *node)
 {
-	prefix = NULL;
-
 	print_kind(node);
 
 	int i = 0;

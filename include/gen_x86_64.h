@@ -5,6 +5,8 @@
 
 #include "vector.h"
 
+#define PRINT_REG_SIZE 5
+
 void free_reg        (int reg);
 int *cg_save_all_reg ();
 void cg_ret_all_reg  (int *buf_frl);
@@ -24,8 +26,9 @@ void cg_jmp        (int label);
 void cg_push_stack (int reg);
 void cg_pop_stack  ();
 
-void cg_print (int value, int length);
-void cg_input (char *pointer, int offset);
+void cg_arg_print (int reg1, int reg2);
+void cg_print     (int value, int length);
+void cg_input     (char *pointer, int offset);
 
 int  cg_load_gsym  (char *pointer, int offset);
 int  cg_store_gsym (int reg, char *pointer, int offset);

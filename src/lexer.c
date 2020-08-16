@@ -86,7 +86,7 @@ static int search_keyword(char *str)
 {
 	for (int i = 0; i < KEYWORDS_SIZE; ++i)
 	{
-		if (strcmp(keywords[i].data, str) == 0)
+		if (!strcmp(keywords[i].data, str))
 			return keywords[i].type;
 	}
 
