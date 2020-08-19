@@ -6,13 +6,13 @@
 typedef struct keyword
 {
 	char *data;
-	int type;
-	int length;
+	u_int8_t type;
+	u_int8_t length;
 }
 Keyword;
 
-static int   line   = 1;
-static int   column = 1;
+static uint line = 1;
+static uint column = 1;
 static char *p_str;
 
 static const Keyword keywords[KEYWORDS_SIZE] =
@@ -33,15 +33,15 @@ static const Keyword symbol_keywords[SYMBOL_KEYWORDS_SIZE] =
 	{",",  ',',      1}
 };
 
-static Token *new_token(int type)
+static Token *new_token(u_int8_t type)
 {
 	Token *token = malloc(sizeof(Token));
 
 	if (token == NULL)
 		func_error();
 
-	token->type   = type;
-	token->line   = line;
+	token->type = type;
+	token->line = line;
 	token->column = column;
 
 	return token;
@@ -53,14 +53,33 @@ static void next_char()
 	++p_str;
 }
 
+static u_int8_t search_keyword(char *str)
+{
+	for (u_int8_t i = 0; i < KEYWORDS_SIZE; ++i)
+	{
+		if (!strcmp(keywords[i].data, str))
+			return keywords[i].type;
+	}
+
+	return TK_IDENT;
+}
+
+static int8_t search_symbol_keyword()
+{
+	for (u_int8_t i = 0; i < SYMBOL_KEYWORDS_SIZE; ++i)
+	{
+		if (!strncmp(symbol_keywords[i].data, p_str, symbol_keywords[i].length))
+			return i;
+	}
+	return -1;
+}
+
 static char *read_file(FILE *file)
 {
-	char  *text;
-	char   buffer[4096];
-	size_t count_read, length;
-
-	text   = NULL;
-	length = 1;
+	char *text = NULL;
+	char buffer[4096];
+	uint count_read;
+	size_t length = 1;
 
 	while ((count_read = fread(buffer, sizeof(char), 4096, file)) != 0)
 	{
@@ -82,30 +101,9 @@ static char *read_file(FILE *file)
 	return text;
 }
 
-static int search_keyword(char *str)
-{
-	for (int i = 0; i < KEYWORDS_SIZE; ++i)
-	{
-		if (!strcmp(keywords[i].data, str))
-			return keywords[i].type;
-	}
-
-	return TK_IDENT;
-}
-
-static int search_symbol_keyword()
-{
-	for (int i = 0; i < SYMBOL_KEYWORDS_SIZE; ++i)
-	{
-		if (!strncmp(symbol_keywords[i].data, p_str, symbol_keywords[i].length))
-			return i;
-	}
-	return -1;
-}
-
 static void read_ident(Token *token)
 {
-	char  *buf_p  = p_str;
+	char *buf_p = p_str;
 	size_t length = 1;                 // 1 need for '\0' symbol in the end of string
 
 	while (isalnum(*p_str) || *p_str == '_')
@@ -121,7 +119,7 @@ static void read_ident(Token *token)
 
 	memcpy(token->str, buf_p, length - 1);
 	token->str[length - 1] = '\0';
-	token->type            = search_keyword(token->str);
+	token->type = search_keyword(token->str);
 }
 
 static void read_num(Token *token)
@@ -137,9 +135,9 @@ static void read_num(Token *token)
 
 static void read_str(Token *token)
 {
-	char  *buf_p      = ++p_str;
-	size_t length     = 1;            // 1 need for '\0' symbol in the end of string
-	int    buf_column = column++;
+	char *buf_p = ++p_str;
+	int buf_column = column++;
+	size_t length = 1;            // 1 need for '\0' symbol in the end of string
 
 	while (*p_str != '\"' && *p_str != '\0' && *p_str != '\n')
 	{
@@ -203,7 +201,7 @@ static void read_comment()
 static Vector *scan()
 {
 	Vector *tokens = new_vector();
-	int     buffer;
+	int8_t buffer;
 
 	while (*p_str != '\0')
 	{
@@ -230,7 +228,7 @@ static Vector *scan()
 		{
 			Token *token = new_token(symbol_keywords[buffer].type);
 
-			p_str  += symbol_keywords[buffer].length;
+			p_str += symbol_keywords[buffer].length;
 			column += symbol_keywords[buffer].length;
 
 			vec_push(tokens, token);
@@ -280,11 +278,10 @@ Vector *lexer(char *file_name)
 	if (file == NULL)
 		func_error();
 
-	char   *text   = (p_str = read_file(file));
+	char *text = (p_str = read_file(file));
 	Vector *tokens = scan();
 
 	fclose(file);
 	free(text);
-
 	return tokens;
 }

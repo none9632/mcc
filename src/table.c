@@ -8,29 +8,31 @@ Table *new_table(Table *prev)
 		func_error();
 
 	table->symbols = new_vector();
-	table->prev    = prev;
+	table->prev = prev;
 
 	return table;
 }
 
-Symbol *new_symbol(int type, char *name)
+Symbol *new_symbol(int8_t type, char *name, Table *sym_tab)
 {
 	Symbol *symbol = malloc(sizeof(Symbol));
 
 	if (symbol == NULL)
 		func_error();
 
-	symbol->name    = name;
+	symbol->name = name;
 	symbol->pointer = NULL;
-	symbol->type    = type;
-	symbol->value   = 0;
+	symbol->type = type;
+	symbol->value = 0;
+
+	vec_push(sym_tab->symbols, symbol);
 
 	return symbol;
 }
 
 Symbol *find(Table *table, char *name)
 {
-	for (int i = 0; i < table->symbols->length; ++i)
+	for (uint i = 0; i < table->symbols->length; ++i)
 	{
 		Symbol *symbol = table->symbols->data[i];
 		if (!strcmp(name, symbol->name))
@@ -44,7 +46,7 @@ Symbol *find_all(Table *table, char *name)
 {
 	while (table != NULL)
 	{
-		for (int i = 0; i < table->symbols->length; ++i)
+		for (uint i = 0; i < table->symbols->length; ++i)
 		{
 			Symbol *symbol = table->symbols->data[i];
 			if (!strcmp(name, symbol->name))

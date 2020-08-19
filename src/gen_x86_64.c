@@ -13,7 +13,7 @@ typedef struct reg
 	char *reg8;
 	char *reg32;
 	char *reg64;
-	int is_free;
+	int8_t is_free;
 }
 Reg;
 
@@ -37,11 +37,11 @@ static Reg reg_list[REG_LIST_SIZE] =
 extern FILE   *output_file;
 extern Vector *string_list;
 
-static int push_offset;
+static uint push_offset;
 
-static int alloc_reg()
+static int8_t alloc_reg()
 {
-	for (int i = 0; i < REG_LIST_SIZE - 5; ++i)
+	for (u_int8_t i = 0; i < REG_LIST_SIZE - 5; ++i)
 	{
 		if (reg_list[i].is_free == FREE)
 		{
@@ -53,16 +53,20 @@ static int alloc_reg()
 	return STACK;
 }
 
-void free_reg(int reg)
+void free_reg(int8_t reg)
 {
 	reg_list[reg].is_free = FREE;
 }
 
-int *cg_save_all_reg()
+int8_t *cg_save_all_reg()
 {
-	int *buf_frl = malloc(sizeof(int) * (REG_LIST_SIZE - 2));
+	/*
+	 * Buffer list of free registers. Since the values of the rbx and rdi
+	 * registers do not need to be saved, the size of the array is REG_LIST_SIZE - 2.
+	 */
+	int8_t *buf_frl = malloc(sizeof(u_int8_t) * (REG_LIST_SIZE - 2));
 
-	for (int i = 0; i < REG_LIST_SIZE - 2; ++i)
+	for (int8_t i = 0; i < REG_LIST_SIZE - 2; ++i)
 	{
 		buf_frl[i] = reg_list[i].is_free;
 		if (reg_list[i].is_free == BUSY)
@@ -75,9 +79,9 @@ int *cg_save_all_reg()
 	return buf_frl;
 }
 
-void cg_ret_all_reg(int *buf_frl)
+void cg_ret_all_reg(int8_t *buf_frl)
 {
-	for (int i = REG_LIST_SIZE - 3; i >= 0; --i)
+	for (int8_t i = REG_LIST_SIZE - 3; i >= 0; --i)
 	{
 		reg_list[i].is_free = buf_frl[i];
 		if (reg_list[i].is_free == BUSY)
@@ -87,7 +91,7 @@ void cg_ret_all_reg(int *buf_frl)
 	free(buf_frl);
 }
 
-static void pop_value(int *reg1, int *reg2)
+static void pop_value(int8_t *reg1, int8_t *reg2)
 {
 	if (reg2 != NULL && *reg2 == STACK)
 	{
@@ -103,7 +107,7 @@ static void pop_value(int *reg1, int *reg2)
 	}
 }
 
-static void push_value(int *reg1)
+static void push_value(int8_t *reg1)
 {
 	if (*reg1 == RBX)
 	{
@@ -118,10 +122,10 @@ void cg_start_prog()
 	fprintf(output_file, ".io_int:\n");
 	fprintf(output_file, "\t.string \"%%i\"\n");
 
-	for (int i = 0; i < string_list->length; ++i)
+	for (size_t i = 0; i < string_list->length; ++i)
 	{
-		fprintf(output_file, ".LC%i:\n", i);
-		fprintf(output_file,"\t.string \"%s\"\n", string_list->data[i]);
+		fprintf(output_file, ".LC%li:\n", i);
+		fprintf(output_file,"\t.string \"%s\"\n", (char *)string_list->data[i]);
 	}
 
 	fprintf(output_file, ".globl main\n");
@@ -139,10 +143,10 @@ void cg_start_func(char *name, int size)
 	push_offset = 0;
 }
 
-void cg_end_func(int label, int size)
+void cg_end_func(uint label, int size)
 {
 	fprintf(output_file, "\txor %%rax, %%rax\n");
-	fprintf(output_file, ".L%i:\n", label);
+	fprintf(output_file, ".L%u:\n", label);
 
 	if (size != 0)
 		fprintf(output_file, "\taddq $%i, %%rsp\n", size);
@@ -151,31 +155,31 @@ void cg_end_func(int label, int size)
 	fprintf(output_file, "\tret\n");
 }
 
-void cg_ret_func(int reg, int label)
+void cg_ret_func(int8_t reg, uint label)
 {
 	fprintf(output_file, "\tmovl %s, %%eax\n", reg_list[reg].reg32);
-	fprintf(output_file, "\tjmp .L%i\n", label);
+	fprintf(output_file, "\tjmp .L%u\n", label);
 	free_reg(reg);
 }
 
-void cg_label(int label)
+void cg_label(uint label)
 {
-	fprintf(output_file, ".L%i:\n", label);
+	fprintf(output_file, ".L%u:\n", label);
 }
 
-void cg_condit_jmp(int reg, int label)
+void cg_condit_jmp(int8_t reg, uint label)
 {
 	fprintf(output_file, "\tcmpl $0, %s\n", reg_list[reg].reg32);
-	fprintf(output_file, "\tje .L%i\n", label);
+	fprintf(output_file, "\tje .L%u\n", label);
 	free_reg(reg);
 }
 
-void cg_jmp(int label)
+void cg_jmp(uint label)
 {
-	fprintf(output_file, "\tjmp .L%i\n", label);
+	fprintf(output_file, "\tjmp .L%u\n", label);
 }
 
-void cg_arg_print(int reg1, int reg2)
+void cg_arg_print(int8_t reg1, int8_t reg2)
 {
 	if (reg_list[reg2].is_free == FREE)
 		reg_list[reg2].is_free = BUSY;
@@ -187,32 +191,32 @@ void cg_arg_print(int reg1, int reg2)
 	}
 }
 
-void cg_print(int value, int length)
+void cg_print(size_t value, uint length)
 {
-	fprintf(output_file, "\tmovq $.LC%i, %%rdi\n", value);
+	fprintf(output_file, "\tmovq $.LC%li, %%rdi\n", value);
 	fprintf(output_file, "\txor %%rax, %%rax\n");
 	fprintf(output_file, "\tcall printf\n");
 
-	int size = (length - PRINT_REG_SIZE) * 8;
-	if (size > 0)
+	uint size = (length - PRINT_REG_SIZE) * 8;
+	if (length > PRINT_REG_SIZE)
 	{
-		fprintf(output_file, "\taddq $%i, %%rsp\n", size);
+		fprintf(output_file, "\taddq $%u, %%rsp\n", size);
 		push_offset -= size;
 	}
 
-	for (int i = R9; i < RBX; ++i)
+	for (int8_t i = R9; i < RBX; ++i)
 		reg_list[i].is_free = FREE;
 }
 
-void cg_input(char *pointer, int offset)
+void cg_input(char *pointer, uint offset)
 {
-	fprintf(output_file, "\tleaq %i(%s), %%rsi\n", offset + push_offset, pointer);
+	fprintf(output_file, "\tleaq %u(%s), %%rsi\n", offset + push_offset, pointer);
 	fprintf(output_file, "\tmovq $.io_int, %%rdi\n");
 	fprintf(output_file, "\txor %%rax, %%rax\n");
 	fprintf(output_file, "\tcall scanf\n");
 }
 
-int cg_or(int reg1, int reg2, int label1, int label2)
+int8_t cg_or(int8_t reg1, int8_t reg2, uint label1, uint label2)
 {
 	pop_value(&reg1, &reg2);
 
@@ -231,7 +235,7 @@ int cg_or(int reg1, int reg2, int label1, int label2)
 	return reg1;
 }
 
-int cg_and(int reg1, int reg2, int label1, int label2)
+int8_t cg_and(int8_t reg1, int8_t reg2, uint label1, uint label2)
 {
 	pop_value(&reg1, &reg2);
 
@@ -250,7 +254,7 @@ int cg_and(int reg1, int reg2, int label1, int label2)
 	return reg1;
 }
 
-int cg_compare(int reg1, int reg2, char *how)
+int8_t cg_compare(int8_t reg1, int8_t reg2, char *how)
 {
 	pop_value(&reg1, &reg2);
 
@@ -263,7 +267,7 @@ int cg_compare(int reg1, int reg2, char *how)
 	return reg1;
 }
 
-int cg_add(int reg1, int reg2)
+int8_t cg_add(int8_t reg1, int8_t reg2)
 {
 	pop_value(&reg1, &reg2);
 
@@ -274,7 +278,7 @@ int cg_add(int reg1, int reg2)
 	return reg1;
 }
 
-int cg_sub(int reg1, int reg2)
+int8_t cg_sub(int8_t reg1, int8_t reg2)
 {
 	pop_value(&reg1, &reg2);
 
@@ -285,7 +289,7 @@ int cg_sub(int reg1, int reg2)
 	return reg1;
 }
 
-int cg_mult(int reg1, int reg2)
+int8_t cg_mult(int8_t reg1, int8_t reg2)
 {
 	pop_value(&reg1, &reg2);
 
@@ -296,7 +300,7 @@ int cg_mult(int reg1, int reg2)
 	return reg1;
 }
 
-int cg_div(int reg1, int reg2)
+int8_t cg_div(int8_t reg1, int8_t reg2)
 {
 	pop_value(&reg1, &reg2);
 
@@ -310,7 +314,7 @@ int cg_div(int reg1, int reg2)
 	return reg1;
 }
 
-int cg_mod(int reg1, int reg2)
+int8_t cg_mod(int8_t reg1, int8_t reg2)
 {
 	pop_value(&reg1, &reg2);
 
@@ -324,7 +328,7 @@ int cg_mod(int reg1, int reg2)
 	return reg1;
 }
 
-int cg_neg(int reg1)
+int8_t cg_neg(int8_t reg1)
 {
 	pop_value(&reg1, NULL);
 
@@ -334,9 +338,9 @@ int cg_neg(int reg1)
 	return reg1;
 }
 
-int cg_load(int value)
+int8_t cg_load(int value)
 {
-	int reg = alloc_reg();
+	int8_t reg = alloc_reg();
 
 	if (reg == STACK)
 	{
@@ -344,35 +348,39 @@ int cg_load(int value)
 		push_offset += 8;
 	}
 	else
+	{
 		fprintf(output_file, "\tmovl $%i, %s\n", value, reg_list[reg].reg32);
+	}
 
 	return reg;
 }
 
-int cg_load_gsym(char *pointer, int offset)
+int8_t cg_load_gsym(char *pointer, uint offset)
 {
-	int reg = alloc_reg();
+	int8_t reg = alloc_reg();
 
 	if (reg == STACK)
 	{
-		fprintf(output_file, "\tpushq %i(%s)\n", offset + push_offset, pointer);
+		fprintf(output_file, "\tpushq %u(%s)\n", offset + push_offset, pointer);
 		push_offset += 8;
 	}
 	else
-		fprintf(output_file, "\tmovl %i(%s), %s\n", offset + push_offset, pointer, reg_list[reg].reg32);
+	{
+		fprintf(output_file, "\tmovl %u(%s), %s\n", offset + push_offset, pointer, reg_list[reg].reg32);
+	}
 
 	return reg;
 }
 
-int cg_store_gsym(int reg, char *pointer, int offset)
+int8_t cg_store_gsym(int8_t reg, char *pointer, uint offset)
 {
-	fprintf(output_file, "\tmovl %s, %i(%s)\n", reg_list[reg].reg32, offset + push_offset, pointer);
+	fprintf(output_file, "\tmovl %s, %u(%s)\n", reg_list[reg].reg32, offset + push_offset, pointer);
 	return reg;
 }
 
-void cg_uninit_var(char *pointer, int offset)
+void cg_uninit_var(char *pointer, uint offset)
 {
-	fprintf(output_file, "\tmovl $0, %i(%s)\n", offset, pointer + push_offset);
+	fprintf(output_file, "\tmovl $0, %u(%s)\n", offset, pointer + push_offset);
 }
 
 void cg_func_call(char *name)
@@ -380,9 +388,9 @@ void cg_func_call(char *name)
 	fprintf(output_file, "\tcall %s\n", name);
 }
 
-int cg_ret_value()
+int8_t cg_ret_value()
 {
-	int reg = alloc_reg();
+	int8_t reg = alloc_reg();
 
 	if (reg == STACK)
 	{
@@ -390,12 +398,14 @@ int cg_ret_value()
 		push_offset += 8;
 	}
 	else
+	{
 		fprintf(output_file, "\tmovl %%eax, %s\n", reg_list[reg].reg32);
+	}
 
 	return reg;
 }
 
-void cg_push_stack(int reg)
+void cg_push_stack(int8_t reg)
 {
 	fprintf(output_file, "\tpushq %s\n", reg_list[reg].reg64);
 	push_offset += 8;

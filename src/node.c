@@ -4,18 +4,18 @@ static char *prefix = NULL;
 
 extern Vector *string_list;
 
-Node *new_node(int kind)
+Node *new_node(u_int8_t kind, int value, Symbol *symbol, void *p_union, Node *rhs)
 {
 	Node *node = malloc(sizeof(Node));
 
 	if (node == NULL)
 		func_error();
 
-	node->kind   = kind;
-	node->value  = 0;
-	node->symbol = NULL;
-	node->u.lhs  = NULL;
-	node->rhs    = NULL;
+	node->kind = kind;
+	node->value = value;
+	node->symbol = symbol;
+	node->u.node_list = p_union;
+	node->rhs = rhs;
 
 	return node;
 }
@@ -73,9 +73,9 @@ static void print_kind(Node *node)
 /*
  * The '│' symbol cannot be saved to the pointer so I save '|' and output '│'.
  */
-static void print_prefix(int prefix_len)
+static void print_prefix(uint prefix_len)
 {
-	for (int i = 0; i < prefix_len; i++)
+	for (uint i = 0; i < prefix_len; i++)
 	{
 		if (prefix[i] == '|')
 			printf("│");
@@ -87,7 +87,7 @@ static void print_prefix(int prefix_len)
 /*
  * Adds '|   ' or '    ' to the prefix.
  */
-static void new_prefix(int prefix_len, int is_left)
+static void new_prefix(uint prefix_len, int8_t is_left)
 {
 	prefix = realloc(prefix, prefix_len + 4);
 
@@ -101,7 +101,7 @@ static void new_prefix(int prefix_len, int is_left)
 		prefix[prefix_len] = '|';
 }
 
-static int is_node_list(int kind)
+static int8_t is_node_list(u_int8_t kind)
 {
 	return (kind == K_STATEMENTS  ||
 			kind == K_INIT_PARAMS ||
@@ -112,7 +112,7 @@ static int is_node_list(int kind)
 	        kind == K_INPUT       );
 }
 
-static void print_node(Node *node, int prefix_len, int is_left)
+static void print_node(Node *node, uint prefix_len, int8_t is_left)
 {
 	if (node != NULL)
 	{
@@ -125,7 +125,7 @@ static void print_node(Node *node, int prefix_len, int is_left)
 
 		if (is_node_list(node->kind))
 		{
-			int i = 0;
+			uint i = 0;
 			for (; i < node->u.node_list->length - 1; ++i)
 				print_node(node->u.node_list->data[i], prefix_len, 1);
 			print_node(node->u.node_list->data[i], prefix_len, 0);
@@ -142,7 +142,7 @@ void start_print_node(Node *node)
 {
 	print_kind(node);
 
-	int i = 0;
+	uint i = 0;
 	for (; i < node->u.node_list->length - 1; ++i)
 		print_node(node->u.node_list->data[i], 0, 1);
 	print_node(node->u.node_list->data[i], 0, 0);

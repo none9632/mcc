@@ -8,8 +8,8 @@
 #include "node.h"
 #include "gen.h"
 
-static int   help      = 0;
-static int   print_ast = 0;
+static int8_t help = 0;
+static int8_t print_ast = 0;
 static char *file_name = NULL;
 
 static void usage()
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 		error(0, 0, "no input file");
 
 	Vector *tokens = lexer(file_name);
-	Node   *tree   = parsing(tokens);
+	Node *tree = parsing(tokens);
 
 	if (print_ast == 1)
 		start_print_node(tree);

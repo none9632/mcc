@@ -1,19 +1,20 @@
 #include "gen.h"
 
 FILE *output_file;
-int   var_offset;
-int   ret_label;
-int   label_count;
+uint var_offset;
+uint ret_label;
 
-static void gen_statements (Vector *node_list);
-static int  gen_expr       (Node *node);
+static void   gen_statements (Vector *node_list);
+static int8_t gen_expr       (Node *node);
 
-static int get_label()
+static uint get_label()
 {
+	static uint label_count = 0;
+
 	return label_count++;
 }
 
-static int is_assignment_op(int kind)
+static int8_t is_assignment_op(u_int8_t kind)
 {
 	return (kind == K_ASSIGN ||
 		    kind == K_ADDA   ||
@@ -23,11 +24,11 @@ static int is_assignment_op(int kind)
 		    kind == K_MODA   );
 }
 
-static int gen_func_call(Node *node)
+static int8_t gen_func_call(Node *node)
 {
-	Node *params     = node->rhs;
-	int  *buf_frl    = cg_save_all_reg();
-	int   num_params = 0;
+	Node *params = node->rhs;
+	int8_t *buf_frl = cg_save_all_reg();
+	int num_params = 0;
 
 	if (params != NULL)
 		num_params = params->u.node_list->length;
@@ -35,7 +36,7 @@ static int gen_func_call(Node *node)
 	for (int i = num_params - 1; i >= 0; --i)
 	{
 		Node *buf_node = params->u.node_list->data[i];
-		int   reg      = gen_expr(buf_node);
+		int8_t reg = gen_expr(buf_node);
 		cg_push_stack(reg);
 	}
 
@@ -48,11 +49,11 @@ static int gen_func_call(Node *node)
 	return cg_ret_value();
 }
 
-static int gen_assign_stmt(Node *node)
+static int8_t gen_assign_stmt(Node *node)
 {
-	int reg1, reg2;
 	char *pointer = node->u.lhs->symbol->pointer;
-	int   offset  = node->u.lhs->symbol->value;
+	uint offset = node->u.lhs->symbol->value;
+	int8_t reg1, reg2;
 
 	reg1 = gen_expr(node->rhs);
 	if (node->kind != K_ASSIGN)
@@ -70,7 +71,7 @@ static int gen_assign_stmt(Node *node)
 	return cg_store_gsym(reg1, pointer, offset);
 }
 
-static int gen_expr(Node *node)
+static int8_t gen_expr(Node *node)
 {
 	if (node != NULL)
 	{
@@ -80,8 +81,8 @@ static int gen_expr(Node *node)
 		if (is_assignment_op(node->kind))
 			return gen_assign_stmt(node);
 
-		int reg1 = gen_expr(node->u.lhs);
-		int reg2 = gen_expr(node->rhs);
+		int8_t reg1 = gen_expr(node->u.lhs);
+		int8_t reg2 = gen_expr(node->rhs);
 
 		switch (node->kind)
 		{
@@ -111,23 +112,23 @@ static int gen_expr(Node *node)
 
 static void gen_init_vars(Vector *node_list)
 {
-	for (size_t i = 0; i < node_list->length; ++i, ++var_offset)
+	for (uint i = 0; i < node_list->length; ++i, ++var_offset)
 	{
 		Node *buf_node = node_list->data[i];
 
 		if (buf_node->kind == K_VAR)
 		{
 			buf_node->symbol->pointer = "%rsp";
-			buf_node->symbol->value   = var_offset * 4;
+			buf_node->symbol->value = var_offset * 4;
 
 			cg_uninit_var("%rsp", buf_node->symbol->value);
 		}
 		else
 		{
 			buf_node->u.lhs->symbol->pointer = "%rsp";
-			buf_node->u.lhs->symbol->value   = var_offset * 4;
+			buf_node->u.lhs->symbol->value = var_offset * 4;
 
-			int reg = gen_expr(buf_node->rhs);
+			int8_t reg = gen_expr(buf_node->rhs);
 			cg_store_gsym(reg, "%rsp", buf_node->u.lhs->symbol->value);
 			free_reg(reg);
 		}
@@ -136,11 +137,11 @@ static void gen_init_vars(Vector *node_list)
 
 static void gen_print(Vector *node_list)
 {
-	for (int i = node_list->length - 1; i > 0; --i)
+	for (uint i = node_list->length - 1; i > 0; --i)
 	{
 		Node *buf_node = node_list->data[i];
-		int   reg1     = gen_expr(buf_node->rhs);
-		int   reg2     = 11 - i;
+		int8_t reg1 = gen_expr(buf_node->rhs);
+		int8_t reg2 = 11 - i;
 
 		if (i - 1 < PRINT_REG_SIZE)
 			cg_arg_print(reg1, reg2);
@@ -154,7 +155,7 @@ static void gen_print(Vector *node_list)
 
 static void gen_input(Vector *node_list)
 {
-	for (size_t i = 0; i < node_list->length; ++i)
+	for (uint i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
 		cg_input(buf_node->symbol->pointer, buf_node->symbol->value);
@@ -163,8 +164,8 @@ static void gen_input(Vector *node_list)
 
 static void gen_if(Node *node)
 {
-	int reg   = gen_expr(node->u.lhs);
-	int label = get_label();
+	int8_t reg = gen_expr(node->u.lhs);
+	uint label = get_label();
 
 	cg_condit_jmp(reg, label);
 	gen_statements(node->rhs->u.node_list);
@@ -173,12 +174,12 @@ static void gen_if(Node *node)
 
 static void gen_if_else(Node *node)
 {
-	Node *n_if   = node->u.lhs;
+	Node *n_if = node->u.lhs;
 	Node *n_else = node->rhs;
 
-	int   reg    = gen_expr(n_if->u.lhs);
-	int   label1 = get_label();
-	int   label2 = get_label();
+	int8_t reg = gen_expr(n_if->u.lhs);
+	uint label1 = get_label();
+	uint label2 = get_label();
 
 	cg_condit_jmp(reg, label1);
 	gen_statements(n_if->rhs->u.node_list);
@@ -190,9 +191,9 @@ static void gen_if_else(Node *node)
 
 static void gen_while(Node *node)
 {
-	int label1 = get_label();
-	int label2 = get_label();
-	int reg;
+	uint label1 = get_label();
+	uint label2 = get_label();
+	int8_t reg;
 
 	cg_label(label1);
 	reg = gen_expr(node->u.lhs);
@@ -204,9 +205,9 @@ static void gen_while(Node *node)
 
 static void gen_do_while(Node *node)
 {
-	int label1 = get_label();
-	int label2 = get_label();
-	int reg;
+	uint label1 = get_label();
+	uint label2 = get_label();
+	int8_t reg;
 
 	cg_label(label1);
 	gen_statements(node->u.lhs->u.node_list);
@@ -223,8 +224,8 @@ static void gen_for(Vector *node_list)
 	Node *arg3 = node_list->data[2];
 	Node *stmt = node_list->data[3];
 
-	int label1 = get_label();
-	int label2 = get_label();
+	uint label1 = get_label();
+	uint label2 = get_label();
 
 	if (arg1->kind == K_INIT_VARS)
 		gen_init_vars(arg1->u.node_list);
@@ -235,7 +236,7 @@ static void gen_for(Vector *node_list)
 
 	if (arg2->kind == K_EXPR)
 	{
-		int reg = gen_expr(arg2->rhs);
+		int8_t reg = gen_expr(arg2->rhs);
 		cg_condit_jmp(reg, label2);
 	}
 
@@ -250,13 +251,13 @@ static void gen_for(Vector *node_list)
 
 static void gen_return(Node *node)
 {
-	int reg = gen_expr(node->rhs);
+	int8_t reg = gen_expr(node->rhs);
 	cg_ret_func(reg, ret_label);
 }
 
 static void gen_statements(Vector *node_list)
 {
-	for (size_t i = 0; i < node_list->length; ++i)
+	for (uint i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
 
@@ -278,18 +279,18 @@ static void gen_statements(Vector *node_list)
 
 static void gen_init_params(Vector *node_list)
 {
-	for (size_t i = 0; i < node_list->length; ++i)
+	for (uint i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
 
 		buf_node->symbol->pointer = "%rbp";
-		buf_node->symbol->value   = (i + 2) * 8;
+		buf_node->symbol->value = (i + 2) * 8;
 	}
 }
 
 static void gen_func(Node *node)
 {
-	ret_label  = get_label();
+	ret_label = get_label();
 	var_offset = 0;
 
 	cg_start_func(node->symbol->name, node->value);
@@ -305,7 +306,7 @@ static void gen_func(Node *node)
 
 static void gen_prog(Vector *node_list)
 {
-	for (size_t i = 0; i < node_list->length; ++i)
+	for (uint i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
 
@@ -321,11 +322,12 @@ static void gen_prog(Vector *node_list)
 void gen(Node *tree)
 {
 	output_file = fopen("output.s", "w+");
-	label_count = 0;
 
 	if (output_file == NULL)
 		func_error();
 
 	cg_start_prog();
 	gen_prog(tree->u.node_list);
+
+	fclose(output_file);
 }

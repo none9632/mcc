@@ -41,13 +41,13 @@ enum
 
 typedef struct token
 {
-	int type;
+	u_int8_t type;
 	int value;
 
-	char *str;   // for storage table variable or string literal
+	char *str;   // for storage name variable or string literal
 
-	int line;
-	int column;
+	uint line;
+	uint column;
 }
 Token;
 

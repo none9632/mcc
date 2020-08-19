@@ -1,6 +1,6 @@
 #include "error.h"
 
-void error(int line, int column, char *format, ...)
+void error(uint line, uint column, char *format, ...)
 {
 	va_list arg;
 	va_start(arg, format);
@@ -15,7 +15,7 @@ void error(int line, int column, char *format, ...)
 	{
 		printf("[\033[38;2;255;0;0m");  // for red color
 		printf("ERROR");
-		printf("\e[0m]:%i:%i: ", line, column);
+		printf("\e[0m]:%u:%u: ", line, column);
 	}
 
 	vprintf(format, arg);

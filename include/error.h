@@ -7,7 +7,7 @@
 #include <string.h>
 #include <errno.h>
 
-void error      (int line, int column, char *format, ...);
+void error      (uint line, uint column, char *format, ...);
 void func_error ();
 
 #endif

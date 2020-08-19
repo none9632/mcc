@@ -7,9 +7,9 @@ Vector *new_vector()
 	if (vector == NULL)
 		func_error();
 
-	vector->length   = 0;
+	vector->length = 0;
 	vector->capacity = 16;
-	vector->data     = malloc(sizeof(void *) * vector->capacity);
+	vector->data = malloc(sizeof(void *) * vector->capacity);
 
 	if (vector->data == NULL)
 		func_error();
@@ -22,7 +22,7 @@ void vec_push(Vector *vector, void *elem)
 	if (vector->length + 1 >= vector->capacity)
 	{
 		vector->capacity *= 2;
-		vector->data      = realloc(vector->data, sizeof(void *) * vector->capacity);
+		vector->data = realloc(vector->data, sizeof(void *) * vector->capacity);
 
 		if (vector->data == NULL)
 			func_error();
@@ -32,7 +32,7 @@ void vec_push(Vector *vector, void *elem)
 
 void vec_free(Vector *vector)
 {
-	for (int i = 0; i < vector->length; ++i)
+	for (size_t i = 0; i < vector->length; ++i)
 		free(vector->data[i]);
 	free(vector);
 }

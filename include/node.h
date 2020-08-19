@@ -56,7 +56,7 @@ enum
 
 typedef struct node
 {
-	int kind;
+	u_int8_t kind;
 	int value;
 	Symbol *symbol;
 
@@ -65,13 +65,13 @@ typedef struct node
 	{
 		struct node *lhs; // left-hand side
 		Vector *node_list;
-	}u;
+	} u;
 
 	struct node *rhs; // right-hand side
 }
 Node;
 
+Node *new_node         (u_int8_t kind, int value, Symbol *symbol, void *p_union, Node *rhs);
 void  start_print_node (Node *node);
-Node *new_node         (int kind);
 
 #endif
