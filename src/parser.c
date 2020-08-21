@@ -170,6 +170,29 @@ static Node *factor()
 	return node;
 }
 
+static Node *postfix()
+{
+	Node *node = factor();
+	Token *token = tokens->data[count_tk];
+
+	if (check_tok(TK_INC))
+	{
+		node = make_bin_node(K_POST_INC, NULL, node);
+		node->symbol = node->rhs->symbol;
+		if (node->rhs->kind != K_VAR)
+			error(token->line, token->column, "lvalue required as increment operand");
+	}
+	else if (check_tok(TK_DEC))
+	{
+		node = make_bin_node(K_POST_DEC, NULL, node);
+		node->symbol = node->rhs->symbol;
+		if (node->rhs->kind != K_VAR)
+			error(token->line, token->column, "lvalue required as decrement operand");
+	}
+
+	return node;
+}
+
 static Node *unary()
 {
 	Node *node = NULL;
@@ -185,33 +208,19 @@ static Node *unary()
 	}
 	else if (check_tok(TK_INC))
 	{
-		node = make_bin_node(K_INC, NULL, factor());
+		node = make_bin_node(K_PRE_INC, NULL, postfix());
 		if (node->rhs->kind != K_VAR)
 			error(token->line, token->column, "lvalue required as increment operand");
 	}
 	else if (check_tok(TK_DEC))
 	{
-		node = make_bin_node(K_DEC, NULL, factor());
-
+		node = make_bin_node(K_PRE_DEC, NULL, postfix());
 		if (node->rhs->kind != K_VAR)
 			error(token->line, token->column, "lvalue required as decrement operand");
 	}
 	else
 	{
-		node = factor();
-		token = tokens->data[count_tk];
-		if (check_tok(TK_INC))
-		{
-			node->rhs = make_node(K_INC);
-			if (node->kind != K_VAR)
-				error(token->line, token->column, "lvalue required as increment operand");
-		}
-		else if (check_tok(TK_DEC))
-		{
-			node->rhs = make_node(K_DEC);
-			if (node->kind != K_VAR)
-				error(token->line, token->column, "lvalue required as decrement operand");
-		}
+		node = postfix();
 	}
 
 	return node;

@@ -30,19 +30,22 @@ void cg_arg_print (int8_t reg1, int8_t reg2);
 void cg_print     (size_t value, uint length);
 void cg_input     (char *pointer, uint offset);
 
+int8_t cg_or         (int8_t reg1, int8_t reg2, uint label1, uint label2);
+int8_t cg_and        (int8_t reg1, int8_t reg2, uint label1, uint label2);
+int8_t cg_compare    (int8_t reg1, int8_t reg2, char *how);
+int8_t cg_add        (int8_t reg1, int8_t reg2);
+int8_t cg_sub        (int8_t reg1, int8_t reg2);
+int8_t cg_mult       (int8_t reg1, int8_t reg2);
+int8_t cg_div        (int8_t reg1, int8_t reg2);
+int8_t cg_mod        (int8_t reg1, int8_t reg2);
+int8_t cg_neg        (int8_t reg1);
+int8_t cg_pre_inc    (int8_t reg1, char *pointer, uint offset);
+int8_t cg_pre_dec    (int8_t reg1, char *pointer, uint offset);
+void   cg_post_inc   (char *pointer, uint offset);
+void   cg_post_dec   (char *pointer, uint offset);
+int8_t cg_load       (int value);
 int8_t cg_load_gsym  (char *pointer, uint offset);
 int8_t cg_store_gsym (int8_t reg, char *pointer, uint offset);
 void   cg_uninit_var (char *pointer, uint offset);
-
-int8_t cg_or      (int8_t reg1, int8_t reg2, uint label1, uint label2);
-int8_t cg_and     (int8_t reg1, int8_t reg2, uint label1, uint label2);
-int8_t cg_compare (int8_t reg1, int8_t reg2, char *how);
-int8_t cg_add     (int8_t reg1, int8_t reg2);
-int8_t cg_sub     (int8_t reg1, int8_t reg2);
-int8_t cg_mult    (int8_t reg1, int8_t reg2);
-int8_t cg_div     (int8_t reg1, int8_t reg2);
-int8_t cg_mod     (int8_t reg1, int8_t reg2);
-int8_t cg_neg     (int8_t reg1);
-int8_t cg_load    (int value);
 
 #endif

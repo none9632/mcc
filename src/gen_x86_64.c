@@ -337,6 +337,37 @@ int8_t cg_neg(int8_t reg1)
 	push_value(&reg1);
 	return reg1;
 }
+int8_t cg_pre_inc(int8_t reg1, char *pointer, uint offset)
+{
+	pop_value(&reg1, NULL);
+
+	fprintf(output_file, "\taddl $1, %s\n", reg_list[reg1].reg32);
+	fprintf(output_file, "\taddl $1, %u(%s)\n", offset + push_offset, pointer);
+
+	push_value(&reg1);
+	return reg1;
+}
+
+int8_t cg_pre_dec(int8_t reg1, char *pointer, uint offset)
+{
+	pop_value(&reg1, NULL);
+
+	fprintf(output_file, "\tsubl $1, %s\n", reg_list[reg1].reg32);
+	fprintf(output_file, "\tsubl $1, %u(%s)\n", offset + push_offset, pointer);
+
+	push_value(&reg1);
+	return reg1;
+}
+
+void cg_post_inc(char *pointer, uint offset)
+{
+	fprintf(output_file, "\taddl $1, %u(%s)\n", offset + push_offset, pointer);
+}
+
+void cg_post_dec(char *pointer, uint offset)
+{
+	fprintf(output_file, "\tsubl $1, %u(%s)\n", offset + push_offset, pointer);
+}
 
 int8_t cg_load(int value)
 {

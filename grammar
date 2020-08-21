@@ -96,7 +96,9 @@
                  | '-' <op_unary>
                  | '++' <id>
                  | '--' <id>
-                 | <id> '++'
+                 | <postfix>
+
+<op_postfix>   ::= <id> '++'
                  | <id> '--'
                  | <factor>
 

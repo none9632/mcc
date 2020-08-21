@@ -86,23 +86,50 @@ static int8_t gen_expr(Node *node)
 
 		switch (node->kind)
 		{
-			case K_OR:        return cg_or(reg1, reg2, get_label(), get_label());
-			case K_AND:       return cg_and(reg1, reg2, get_label(), get_label());
-			case K_EQUAL:     return cg_compare(reg1, reg2, "sete");
-			case K_NOT_EQUAL: return cg_compare(reg1, reg2, "setne");
-			case K_MORE:      return cg_compare(reg1, reg2, "setg");
-			case K_LESS:      return cg_compare(reg1, reg2, "setl");
-			case K_MOREEQ:    return cg_compare(reg1, reg2, "setge");
-			case K_LESSEQ:    return cg_compare(reg1, reg2, "setle");
-			case K_ADD:       return cg_add(reg1, reg2);
-			case K_SUB:       return cg_sub(reg1, reg2);
-			case K_MULT:      return cg_mult(reg1, reg2);
-			case K_DIV:       return cg_div(reg1, reg2);
-			case K_MOD:       return cg_mod(reg1, reg2);
-			case K_NEG:       return cg_neg(reg2);
-			case K_NUM:       return cg_load(node->value);
-			case K_VAR:       return cg_load_gsym(node->symbol->pointer, node->symbol->value);
-			default:          error(0, 0, "unknown ast kind");
+			case K_OR:
+				return cg_or(reg1, reg2, get_label(), get_label());
+			case K_AND:
+				return cg_and(reg1, reg2, get_label(), get_label());
+			case K_EQUAL:
+				return cg_compare(reg1, reg2, "sete");
+			case K_NOT_EQUAL:
+				return cg_compare(reg1, reg2, "setne");
+			case K_MORE:
+				return cg_compare(reg1, reg2, "setg");
+			case K_LESS:
+				return cg_compare(reg1, reg2, "setl");
+			case K_MOREEQ:
+				return cg_compare(reg1, reg2, "setge");
+			case K_LESSEQ:
+				return cg_compare(reg1, reg2, "setle");
+			case K_ADD:
+				return cg_add(reg1, reg2);
+			case K_SUB:
+				return cg_sub(reg1, reg2);
+			case K_MULT:
+				return cg_mult(reg1, reg2);
+			case K_DIV:
+				return cg_div(reg1, reg2);
+			case K_MOD:
+				return cg_mod(reg1, reg2);
+			case K_NEG:
+				return cg_neg(reg2);
+			case K_PRE_INC:
+				return cg_pre_inc(reg2, node->rhs->symbol->pointer, node->rhs->symbol->value);
+			case K_PRE_DEC:
+				return cg_pre_dec(reg2, node->rhs->symbol->pointer, node->rhs->symbol->value);
+			case K_POST_INC:
+				cg_post_inc(node->rhs->symbol->pointer, node->rhs->symbol->value);
+				return reg2;
+			case K_POST_DEC:
+				cg_post_dec(node->rhs->symbol->pointer, node->rhs->symbol->value);
+				return reg2;
+			case K_NUM:
+				return cg_load(node->value);
+			case K_VAR:
+				return cg_load_gsym(node->symbol->pointer, node->symbol->value);
+			default:
+				error(0, 0, "unknown ast kind");
 		}
 	}
 
