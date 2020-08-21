@@ -78,6 +78,9 @@ static int check_tok(u_int8_t type)
 
 static Symbol *find_symbol(Token *token)
 {
+	if (token->type != TK_IDENT)
+		error(token->line, token->column, "expected identifier");
+
 	Symbol *symbol = find_all(symbol_table, token->str);
 
 	if (symbol == NULL)
@@ -172,18 +175,43 @@ static Node *unary()
 	Node *node = NULL;
 	Token *token = tokens->data[count_tk];
 
-	if (check_tok('-') ||
-	    check_tok('+') )
+	if (check_tok('+'))
 	{
-		switch (token->type)
-		{
-			case '+': node = unary();                             break;
-			case '-': node = make_bin_node(K_NEG, NULL, unary()); break;
-		}
+		node = unary();
+	}
+	else if (check_tok('-'))
+	{
+		node = make_bin_node(K_NEG, NULL, unary());
+	}
+	else if (check_tok(TK_INC))
+	{
+		node = make_bin_node(K_INC, NULL, factor());
+		if (node->rhs->kind != K_VAR)
+			error(token->line, token->column, "lvalue required as increment operand");
+	}
+	else if (check_tok(TK_DEC))
+	{
+		node = make_bin_node(K_DEC, NULL, factor());
+
+		if (node->rhs->kind != K_VAR)
+			error(token->line, token->column, "lvalue required as decrement operand");
 	}
 	else
 	{
 		node = factor();
+		token = tokens->data[count_tk];
+		if (check_tok(TK_INC))
+		{
+			node->rhs = make_node(K_INC);
+			if (node->kind != K_VAR)
+				error(token->line, token->column, "lvalue required as increment operand");
+		}
+		else if (check_tok(TK_DEC))
+		{
+			node->rhs = make_node(K_DEC);
+			if (node->kind != K_VAR)
+				error(token->line, token->column, "lvalue required as decrement operand");
+		}
 	}
 
 	return node;
@@ -522,9 +550,7 @@ static Node *parse_input()
 
 	do
 	{
-		expect_tok(TK_IDENT);
-
-		Token *token = tokens->data[count_tk - 1];
+		Token *token = tokens->data[count_tk++];
 		Node *buf_node = make_sum_node(K_VAR, find_symbol(token));
 
 		vec_push(node->u.node_list, buf_node);
@@ -560,6 +586,8 @@ static Node *statement()
 		case '(':
 		case '-':
 		case '+':
+		case TK_INC:
+		case TK_DEC:
 			node = parse_expr_stmt();
 			break;
 		case TK_INT:

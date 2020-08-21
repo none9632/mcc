@@ -15,6 +15,8 @@ enum
 	TK_IDENT = 128,  // Identifier
 	TK_NUM,          // Number literal
 	TK_STR,          // String literal
+	TK_INC,          // ++
+	TK_DEC,          // --
 	TK_MOREEQ,       // >=
 	TK_LESSEQ,       // <=
 	TK_EQUAL,        // == 

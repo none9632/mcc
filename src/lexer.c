@@ -1,7 +1,7 @@
 #include "lexer.h"
 
 #define KEYWORDS_SIZE 10
-#define SYMBOL_KEYWORDS_SIZE 25
+#define SYMBOL_KEYWORDS_SIZE 27
 
 typedef struct keyword
 {
@@ -24,13 +24,13 @@ static const Keyword keywords[KEYWORDS_SIZE] =
 
 static const Keyword symbol_keywords[SYMBOL_KEYWORDS_SIZE] =
 {
-	{"+=", TK_PLUSA, 2}, {"-=", TK_MINUSA, 2}, {"*=", TK_MULTA,  2}, {"/=", TK_DIVA,  2},
-	{"%=", TK_MODA,  2}, {"<=", TK_LESSEQ, 2}, {">=", TK_MOREEQ, 2}, {"==", TK_EQUAL, 2},
-	{"!=", TK_NOTEQ, 2}, {"||", TK_OR,     2}, {"&&", TK_AND,    2}, {"+",  '+',      1},
-	{"-",  '-',      1}, {"*",  '*',       1}, {"/",  '/',       1}, {"%",  '%',      1},
-	{"=",  '=',      1}, {"<",  '<',       1}, {">",  '>',       1}, {"(",  '(',      1},
-	{")",  ')',      1}, {"{",  '{',       1}, {"}",  '}',       1}, {";",  ';',      1},
-	{",",  ',',      1}
+	{"++", TK_INC,    2}, {"--", TK_DEC,   2}, {"+=", TK_PLUSA, 2}, {"-=", TK_MINUSA, 2},
+	{"*=", TK_MULTA,  2}, {"/=", TK_DIVA,  2}, {"%=", TK_MODA,  2}, {"<=", TK_LESSEQ, 2},
+	{">=", TK_MOREEQ, 2}, {"==", TK_EQUAL, 2}, {"!=", TK_NOTEQ, 2}, {"||", TK_OR,     2},
+	{"&&", TK_AND,    2}, {"+",  '+',      1}, {"-",  '-',      1}, {"*",  '*',       1},
+	{"/",  '/',       1}, {"%",  '%',      1}, {"=",  '=',      1}, {"<",  '<',       1},
+	{">",  '>',       1}, {"(",  '(',      1}, {")",  ')',      1}, {"{",  '{',       1},
+	{"}",  '}',       1}, {";",  ';',      1}, {",",  ',',      1}
 };
 
 static Token *new_token(u_int8_t type)

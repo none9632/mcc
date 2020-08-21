@@ -41,6 +41,12 @@ static void print_kind(Node *node)
 		case K_RETURN:      printf("<return>\n");                 break;
 		case K_INIT_VARS:   printf("<init-vars>\n");              break;
 		case K_EXPR:        printf("<expr>\n");                   break;
+		case K_ADDA:        printf("+=\n");                       break;
+		case K_SUBA:        printf("-=\n");                       break;
+		case K_MULTA:       printf("*=\n");                       break;
+		case K_DIVA:        printf("/=\n");                       break;
+		case K_MODA:        printf("%%=\n");                      break;
+		case K_ASSIGN:      printf("=\n");                        break;
 		case K_OR:          printf("||\n");                       break;
 		case K_AND:         printf("&&\n");                       break;
 		case K_EQUAL:       printf("==\n");                       break;
@@ -55,14 +61,10 @@ static void print_kind(Node *node)
 		case K_DIV:         printf("/\n");                        break;
 		case K_MOD:         printf("%%\n");                       break;
 		case K_NEG:         printf("-\n");                        break;
+		case K_INC:         printf("++ \n");                      break;
+		case K_DEC:         printf("--\n");                       break;
 		case K_VAR:         printf("%s\n", node->symbol->name);   break;
 		case K_NUM:         printf("%i\n", node->value);          break;
-		case K_ADDA:        printf("+=\n");                       break;
-		case K_SUBA:        printf("-=\n");                       break;
-		case K_MULTA:       printf("*=\n");                       break;
-		case K_DIVA:        printf("/=\n");                       break;
-		case K_MODA:        printf("%%=\n");                      break;
-		case K_ASSIGN:      printf("=\n");                        break;
 		case K_NONE:        printf("<none>\n");                   break;
 		case K_STRING:
 			printf("\"%s\"\n", (char *)string_list->data[node->value]);

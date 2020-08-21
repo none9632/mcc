@@ -94,6 +94,10 @@
 
 <op_unary>     ::= '+' <op_unary>
                  | '-' <op_unary>
+                 | '++' <id>
+                 | '--' <id>
+                 | <id> '++'
+                 | <id> '--'
                  | <factor>
 
 <factor>       ::= <integer>
