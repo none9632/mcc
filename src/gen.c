@@ -129,7 +129,7 @@ static int8_t gen_expr(Node *node)
 			case K_VAR:
 				return cg_load_gsym(node->symbol->pointer, node->symbol->value);
 			default:
-				error(0, 0, "unknown ast kind");
+				error(NULL, "unknown ast kind");
 		}
 	}
 
@@ -167,7 +167,7 @@ static void gen_print(Vector *node_list)
 	for (uint i = node_list->length - 1; i > 0; --i)
 	{
 		Node *buf_node = node_list->data[i];
-		int8_t reg1 = gen_expr(buf_node->rhs);
+		int8_t reg1 = gen_expr(buf_node);
 		int8_t reg2 = 11 - i;
 
 		if (i - 1 < PRINT_REG_SIZE)

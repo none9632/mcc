@@ -2,6 +2,8 @@
 #define GEN_X86_64_H
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "vector.h"
 

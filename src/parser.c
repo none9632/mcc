@@ -36,26 +36,22 @@ static Token *expect_tok(u_int8_t type)
 
 	if (token->type != type)
 	{
-		// To display the line and column correctly
-		if (token->type == TK_EOF)
-			token = tokens->data[count_tk - 1];
-
 		switch (type)
 		{
 			case TK_IDENT:
-				error(token->line, token->column, "expected identifier");
+				error(token, "expected identifier");
 				break;
 			case TK_WHILE:
-				error(token->line, token->column, "expected 'while'");
+				error(token, "expected 'while'");
 				break;
 			case TK_INT:
-				error(token->line, token->column, "expected type specifier");
+				error(token, "expected type specifier");
 				break;
 			case TK_STR:
-				error(token->line, token->column, "expected string argument");
+				error(token, "expected string argument");
 				break;
 			default:
-				error(token->line, token->column, "expected '%c' character", type);
+				error(token, "expected '%c' character", type);
 				break;
 		}
 	}
@@ -79,12 +75,12 @@ static int check_tok(u_int8_t type)
 static Symbol *find_symbol(Token *token)
 {
 	if (token->type != TK_IDENT)
-		error(token->line, token->column, "expected identifier");
+		error(token, "expected identifier");
 
 	Symbol *symbol = find_all(symbol_table, token->str);
 
 	if (symbol == NULL)
-		error(token->line, token->column, "'%s' is undeclared", token->str);
+		error(token, "'%s' is undeclared", token->str);
 
 	return symbol;
 }
@@ -93,7 +89,7 @@ static void is_redefinition(Token *token)
 {
 	expect_tok(TK_IDENT);
 	if (find(symbol_table, token->str) != NULL)
-		error(token->line, token->column, "redefinition of '%s'", token->str);
+		error(token, "redefinition of '%s'", token->str);
 }
 
 static int8_t is_assignment_op()
@@ -123,9 +119,9 @@ static Node *params(int num_params)
 	Token *token = tokens->data[count_tk];
 
 	if (num_params < 0)
-		error(token->line, token->column, "too many arguments to function call");
+		error(token, "too many arguments to function call");
 	else if (num_params > 0)
-		error(token->line, token->column, "too few arguments to function call");
+		error(token, "too few arguments to function call");
 
 	return node;
 }
@@ -164,7 +160,7 @@ static Node *factor()
 	}
 	else
 	{
-		error(token->line, token->column, "expected expression");
+		error(token, "expected expression");
 	}
 
 	return node;
@@ -180,14 +176,14 @@ static Node *postfix()
 		node = make_bin_node(K_POST_INC, NULL, node);
 		node->symbol = node->rhs->symbol;
 		if (node->rhs->kind != K_VAR)
-			error(token->line, token->column, "lvalue required as increment operand");
+			error(token, "lvalue required as increment operand");
 	}
 	else if (check_tok(TK_DEC))
 	{
 		node = make_bin_node(K_POST_DEC, NULL, node);
 		node->symbol = node->rhs->symbol;
 		if (node->rhs->kind != K_VAR)
-			error(token->line, token->column, "lvalue required as decrement operand");
+			error(token, "lvalue required as decrement operand");
 	}
 
 	return node;
@@ -210,13 +206,13 @@ static Node *unary()
 	{
 		node = make_bin_node(K_PRE_INC, NULL, postfix());
 		if (node->rhs->kind != K_VAR)
-			error(token->line, token->column, "lvalue required as increment operand");
+			error(token, "lvalue required as increment operand");
 	}
 	else if (check_tok(TK_DEC))
 	{
 		node = make_bin_node(K_PRE_DEC, NULL, postfix());
 		if (node->rhs->kind != K_VAR)
-			error(token->line, token->column, "lvalue required as decrement operand");
+			error(token, "lvalue required as decrement operand");
 	}
 	else
 	{
@@ -380,8 +376,7 @@ static Node *expr()
 	if (is_assignment_op())
 	{
 		Token *token = tokens->data[count_tk - 1];
-		error(token->line, token->column,
-			  "lvalue required as left operand of assignment");
+		error(token, "lvalue required as left operand of assignment");
 	}
 
 	return node;
@@ -541,7 +536,7 @@ static Node *parse_print()
 	vec_push(node->u.node_list, string);
 
 	while (check_tok(','))
-		vec_push(node->u.node_list, primary_expr());
+		vec_push(node->u.node_list, expr());
 
 	expect_tok(')');
 	expect_tok(';');
@@ -627,7 +622,7 @@ static Node *statement()
 			++count_tk;
 			break;
 		default:
-			error(token->line, token->column, "wrong statement");
+			error(token, "wrong statement");
 			break;
 	}
 

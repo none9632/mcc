@@ -7,7 +7,9 @@
 #include <string.h>
 #include <errno.h>
 
-void error      (uint line, uint column, char *format, ...);
+#include "lexer.h"
+
+void error      (Token *token, char *format, ...);
 void func_error ();
 
 #endif

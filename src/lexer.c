@@ -1,6 +1,7 @@
 #include "lexer.h"
+#include "error.h"
 
-#define KEYWORDS_SIZE 10
+#define KEYWORDS_SIZE 9
 #define SYMBOL_KEYWORDS_SIZE 27
 
 typedef struct keyword
@@ -11,15 +12,17 @@ typedef struct keyword
 }
 Keyword;
 
-static uint line = 1;
-static uint column = 1;
-static char *p_str;
+static FILE *input_file;
+static uint line = 0;
+static uint column = 0;
+static char *p_str = NULL;
+static char *source_line = NULL;
 
 static const Keyword keywords[KEYWORDS_SIZE] =
 {
-	{"if",    TK_IF,     2}, {"else",   TK_ELSE,   4}, {"do",   TK_DO,    2}, {"while", TK_WHILE,  5},
-	{"for",   TK_FOR,    3}, {"return", TK_RETURN, 6}, {"void", TK_VOID,  4}, {"int",   TK_INT,    3},
-	{"input", TK_INPUT,  5}, {"print",  TK_PRINT,  5}
+	{"if",    TK_IF,    2}, {"else",   TK_ELSE,   4}, {"do",  TK_DO,  2}, {"while", TK_WHILE, 5},
+	{"for",   TK_FOR,   3}, {"return", TK_RETURN, 6}, {"int", TK_INT, 3}, {"input", TK_INPUT, 5},
+	{"print", TK_PRINT, 5}
 };
 
 static const Keyword symbol_keywords[SYMBOL_KEYWORDS_SIZE] =
@@ -41,10 +44,69 @@ static Token *new_token(u_int8_t type)
 		func_error();
 
 	token->type = type;
+	token->source_line = source_line;
 	token->line = line;
 	token->column = column;
 
 	return token;
+}
+
+static Token *make_error_token()
+{
+	Token *token = new_token(TK_EOF);
+
+	token->source_line = source_line;
+	token->line = line;
+	token->column = column;
+
+	return token;
+}
+
+static void new_source_line()
+{
+	int length = 0;
+	int capacity = 8;
+	char ch;
+	source_line = malloc(sizeof(char) * capacity);
+
+	if (source_line == NULL)
+		func_error();
+
+	do
+	{
+		ch = fgetc(input_file);
+
+		if (length + 1 >= capacity)
+		{
+			capacity *= 2;
+			source_line = realloc(source_line, sizeof(char) * capacity);
+
+			if (source_line == NULL)
+				func_error();
+		}
+
+		source_line[length++] = ch;
+	}
+	while (ch != '\n' && ch != EOF);
+
+	if (ch == EOF)
+	{
+		++length;
+		if (length >= capacity)
+		{
+			capacity *= 2;
+			source_line = realloc(source_line, sizeof(char) * capacity);
+
+			if (source_line == NULL)
+				func_error();
+		}
+	}
+
+	source_line[length - 1] = '\0';
+
+	p_str = source_line;
+	++line;
+	column = 1;
 }
 
 static void next_char()
@@ -74,37 +136,10 @@ static int8_t search_symbol_keyword()
 	return -1;
 }
 
-static char *read_file(FILE *file)
-{
-	char *text = NULL;
-	char buffer[4096];
-	uint count_read;
-	size_t length = 1;
-
-	while ((count_read = fread(buffer, sizeof(char), 4096, file)) != 0)
-	{
-		text = realloc(text, length + count_read);
-
-		if (text == NULL)
-			func_error();
-
-		memcpy(text + length - 1, buffer, count_read);
-
-		length += count_read;
-	}
-
-	if (!feof(file))
-		func_error();
-
-	text[length - 1] = '\0';
-
-	return text;
-}
-
 static void read_ident(Token *token)
 {
 	char *buf_p = p_str;
-	size_t length = 1;                 // 1 need for '\0' symbol in the end of string
+	uint length = 0;
 
 	while (isalnum(*p_str) || *p_str == '_')
 	{
@@ -112,13 +147,14 @@ static void read_ident(Token *token)
 		next_char();
 	}
 
-	token->str = malloc(sizeof(char) * length);
+	// + 1 need for '\0' symbol in the end of string
+	token->str = malloc(sizeof(char) * (length + 1));
 
 	if (token->str == NULL)
 		func_error();
 
-	memcpy(token->str, buf_p, length - 1);
-	token->str[length - 1] = '\0';
+	memcpy(token->str, buf_p, length);
+	token->str[length] = '\0';
 	token->type = search_keyword(token->str);
 }
 
@@ -137,9 +173,9 @@ static void read_str(Token *token)
 {
 	char *buf_p = ++p_str;
 	int buf_column = column++;
-	size_t length = 1;            // 1 need for '\0' symbol in the end of string
+	uint length = 0;
 
-	while (*p_str != '\"' && *p_str != '\0' && *p_str != '\n')
+	while (*p_str != '\"' && *p_str != EOF && *p_str != '\0')
 	{
 		if (*p_str == '\\' && *(p_str + 1) == '\"')
 		{
@@ -151,38 +187,44 @@ static void read_str(Token *token)
 	}
 
 	if (*p_str != '\"')
-		error(line, buf_column, "missing terminating '\"' character");
+	{
+		/*
+		 * Replaces the end of file character with a space.
+		 * It is necessary to correctly output the error message
+		 */
+		if (*p_str == EOF)
+			*p_str = ' ';
+
+		token = make_error_token();
+		token->column = buf_column;
+		error(token, "missing terminating '\"' character");
+	}
 
 	next_char();
 
-	token->str = malloc(sizeof(char) * length);
+	// + 1 need for '\0' symbol in the end of string
+	token->str = malloc(sizeof(char) * (length + 1));
 
 	if (token->str == NULL)
 		func_error();
 
-	memcpy(token->str, buf_p, length - 1);
-	token->str[length - 1] = '\0';
+	memcpy(token->str, buf_p, length);
+	token->str[length] = '\0';
 }
 
 static void read_comment()
 {
 	if (!strncmp(p_str, "//", 2))
 	{
-		while (*p_str != '\0' && *p_str != '\n')
-			++p_str;
-		++p_str;
-		++line;
-		column = 1;
+		new_source_line();
 	}
 	else
 	{
-		while (*p_str != '\0')
+		while (*p_str != EOF)
 		{
-			if (*p_str == '\n')
-			{
-				++line;
-				column = 0;
-			}
+			if (*p_str == '\0')
+				new_source_line();
+
 			if (*p_str == '*' && *(p_str + 1) == '/')
 			{
 				next_char();
@@ -191,8 +233,16 @@ static void read_comment()
 			next_char();
 		}
 
-		if (*p_str == '\0')
-			error(line, --column, "expected '*/' characters");
+		if (*p_str == EOF)
+		{
+			/*
+			 * Replaces the end of file character with a space.
+			 * It is necessary to correctly output the error message
+			 */
+			*p_str = ' ';
+
+			error(make_error_token(), "expected '*/' characters");
+		}
 
 		next_char();
 	}
@@ -203,20 +253,17 @@ static Vector *scan()
 	Vector *tokens = new_vector();
 	int8_t buffer;
 
-	while (*p_str != '\0')
+	while (*p_str != EOF)
 	{
+		// New line
+		if (*p_str == '\0')
+			new_source_line();
+
 		// Whitespace
-		if (isspace(*p_str))
+		else if (isspace(*p_str))
 		{
 			while (isspace(*p_str))
-			{
-				if (*p_str == '\n')
-				{
-					column = 0;
-					++line;
-				}
 				next_char();
-			}
 		}
 
 		// Comment
@@ -263,8 +310,14 @@ static Vector *scan()
 
 		// Unknown character
 		else
-			error(line, column, "unknown character");
+			error(make_error_token(), "unknown character");
 	}
+
+	/*
+	 * Replaces the end of file character with a space.
+	 * It is necessary to correctly output the error message
+	 */
+	source_line[column - 1] = ' ';
 
 	vec_push(tokens, new_token(TK_EOF));
 
@@ -273,15 +326,15 @@ static Vector *scan()
 
 Vector *lexer(char *file_name)
 {
-	FILE *file = fopen(file_name, "r+");
+	input_file = fopen(file_name, "r+");
 
-	if (file == NULL)
+	if (input_file == NULL)
 		func_error();
 
-	char *text = (p_str = read_file(file));
+	new_source_line();
+
 	Vector *tokens = scan();
 
-	fclose(file);
-	free(text);
+	fclose(input_file);
 	return tokens;
 }

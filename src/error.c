@@ -1,25 +1,40 @@
 #include "error.h"
 
-void error(uint line, uint column, char *format, ...)
+void error(Token *token, char *format, ...)
 {
+	const char *red = "\033[38;2;255;0;0m";
+	const char *end = "\e[0m";
+
 	va_list arg;
 	va_start(arg, format);
 
-	if (line == 0)
+	if (token == NULL)
 	{
-		printf("[\033[38;2;255;0;0m");  // for red color
-		printf("ERROR");
-		printf("\e[0m]: ");
+		printf("[%sERROR%s] ", red, end);
+		vprintf(format, arg);
+		printf("\n");
 	}
 	else
 	{
-		printf("[\033[38;2;255;0;0m");  // for red color
-		printf("ERROR");
-		printf("\e[0m]:%u:%u: ", line, column);
-	}
+		printf("[%sERROR%s]", red, end);
+		printf(":%u:%u: ", token->line, token->column);
+		vprintf(format, arg);
+		printf("\n");
 
-	vprintf(format, arg);
-	printf("\n");
+		printf("%s\n", token->source_line);
+
+		for (int i = 0; token->source_line[i] != '\0'; ++i)
+		{
+			if (i + 1 == token->column)
+				printf("^");
+			else if (token->source_line[i] == '\t')
+				printf("\t");
+			else
+				printf(" ");
+		}
+
+		printf("\n");
+	}
 
 	exit(EXIT_FAILURE);
 }
@@ -27,5 +42,5 @@ void error(uint line, uint column, char *format, ...)
 void func_error()
 {
 	char *error_buf = strerror(errno);
-	error(0, 0, error_buf);
+	error(NULL, error_buf);
 }

@@ -2,6 +2,7 @@
 #define PARSER_H
 
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "vector.h"
 #include "table.h"

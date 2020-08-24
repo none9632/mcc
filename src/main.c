@@ -35,14 +35,14 @@ static void parse_options(int argc, char **argv)
 			else if (!strcmp(opt, "--print-ast"))
 				print_ast = 1;
 			else
-				error(0, 0, "invalid option");
+				error(NULL, "invalid option");
 		}
 		else
 		{
 			if (file_name == NULL)
 				file_name = opt;
 			else
-				error(0, 0, "invalid input");
+				error(NULL, "invalid input");
 		}
 	}
 }
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 		usage();
 
 	if (file_name == NULL)
-		error(0, 0, "no input file");
+		error(NULL, "no input file");
 
 	Vector *tokens = lexer(file_name);
 	Node *tree = parsing(tokens);

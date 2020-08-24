@@ -1,13 +1,13 @@
 #ifndef LEXER_H
 #define LEXER_H
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <malloc.h>
 #include <string.h>
 
 #include "vector.h"
-#include "error.h"
 
 // list of token types
 enum
@@ -37,7 +37,6 @@ enum
 	TK_PRINT,        // "print"
 	TK_INPUT,        // "input"
 	TK_INT,          // "int"
-	TK_VOID,         // "void"
 	TK_EOF           // End of file
 };
 
@@ -46,7 +45,8 @@ typedef struct token
 	u_int8_t type;
 	int value;
 
-	char *str;   // for storage name variable or string literal
+	char *str;             // for storage name variable or string literal
+	char *source_line;     // used for displaying an error message
 
 	uint line;
 	uint column;

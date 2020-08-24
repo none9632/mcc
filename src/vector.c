@@ -1,4 +1,5 @@
 #include "vector.h"
+#include "error.h"
 
 Vector *new_vector()
 {
