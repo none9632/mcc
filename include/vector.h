@@ -1,9 +1,6 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
-#include <stddef.h>
-#include <malloc.h>
-
 typedef struct vector
 {
 	void **data;

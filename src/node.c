@@ -1,3 +1,9 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "vector.h"
+#include "table.h"
+#include "error.h"
 #include "node.h"
 
 static char *prefix = NULL;

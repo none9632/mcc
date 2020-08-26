@@ -1,3 +1,5 @@
+#include <malloc.h>
+
 #include "vector.h"
 #include "error.h"
 

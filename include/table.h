@@ -1,9 +1,8 @@
 #ifndef TABLE_H
 #define TABLE_H
 
-#include <string.h>
+#include <stdlib.h>
 
-#include "error.h"
 #include "vector.h"
 
 // list of symbols types

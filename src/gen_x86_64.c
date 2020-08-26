@@ -1,3 +1,8 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "vector.h"
 #include "gen_x86_64.h"
 
 #define REG_LIST_SIZE 13

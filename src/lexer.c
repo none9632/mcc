@@ -1,3 +1,10 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <malloc.h>
+#include <string.h>
+
+#include "vector.h"
 #include "lexer.h"
 #include "error.h"
 

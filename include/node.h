@@ -1,12 +1,10 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "vector.h"
 #include "table.h"
-#include "error.h"
 
 // list of node types
 enum

@@ -1,4 +1,10 @@
-#include "parser.h"
+#include <stdio.h>
+
+#include "vector.h"
+#include "table.h"
+#include "lexer.h"
+#include "error.h"
+#include "node.h"
 
 Vector *string_list;
 

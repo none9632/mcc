@@ -1,4 +1,9 @@
-#include "gen.h"
+#include <stdio.h>
+
+#include "gen_x86_64.h"
+#include "node.h"
+#include "error.h"
+#include "vector.h"
 
 FILE *output_file;
 uint var_offset;
