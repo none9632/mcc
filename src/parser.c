@@ -732,6 +732,6 @@ Node *parsing(Vector *_tokens)
 
 	Node *tree = parse_prog();
 
-	vec_free(tokens);
+	free_tokens(tokens);
 	return tree;
 }

@@ -51,6 +51,7 @@ static Token *new_token(u_int8_t type)
 		func_error();
 
 	token->type = type;
+	token->str = NULL;
 	token->source_line = source_line;
 	token->line = line;
 	token->column = column;
@@ -163,6 +164,9 @@ static void read_ident(Token *token)
 	memcpy(token->str, buf_p, length);
 	token->str[length] = '\0';
 	token->type = search_keyword(token->str);
+
+	if (token->type != TK_IDENT)
+		free(token->str);
 }
 
 static void read_num(Token *token)
@@ -344,4 +348,23 @@ Vector *lexer(char *file_name)
 
 	fclose(input_file);
 	return tokens;
+}
+
+void free_tokens(Vector *tokens)
+{
+	uint buf_line = 0;
+
+	for (size_t i = 0; i < tokens->length; ++i)
+	{
+		Token *token = tokens->data[i];
+
+		if (token->line > buf_line)
+		{
+			free(token->source_line);
+			buf_line = token->line;
+		}
+
+		free(token);
+	}
+	free(tokens);
 }

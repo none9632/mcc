@@ -152,8 +152,6 @@ static void gen_init_vars(Vector *node_list)
 		{
 			buf_node->symbol->pointer = "%rsp";
 			buf_node->symbol->value = var_offset * 4;
-
-			cg_uninit_var("%rsp", buf_node->symbol->value);
 		}
 		else
 		{

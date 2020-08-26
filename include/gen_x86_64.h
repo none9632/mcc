@@ -44,6 +44,5 @@ void   cg_post_dec   (char *pointer, uint offset);
 int8_t cg_load       (int value);
 int8_t cg_load_gsym  (char *pointer, uint offset);
 int8_t cg_store_gsym (int8_t reg, char *pointer, uint offset);
-void   cg_uninit_var (char *pointer, uint offset);
 
 #endif

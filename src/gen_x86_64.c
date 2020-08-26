@@ -414,11 +414,6 @@ int8_t cg_store_gsym(int8_t reg, char *pointer, uint offset)
 	return reg;
 }
 
-void cg_uninit_var(char *pointer, uint offset)
-{
-	fprintf(output_file, "\tmovl $0, %u(%s)\n", offset, pointer + push_offset);
-}
-
 void cg_func_call(char *name)
 {
 	fprintf(output_file, "\tcall %s\n", name);
