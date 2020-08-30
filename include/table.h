@@ -8,8 +8,9 @@
 // list of symbols types
 enum
 {
+	S_GVAR,
 	S_VAR,
-	S_FUNC,
+	S_FUNC
 };
 
 typedef struct symbol

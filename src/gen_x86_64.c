@@ -55,6 +55,7 @@ static int8_t alloc_reg()
 		}
 	}
 
+	push_offset += 8;
 	return STACK;
 }
 
@@ -133,7 +134,38 @@ void cg_start_prog()
 		fprintf(output_file,"\t.string \"%s\"\n", (char *)string_list->data[i]);
 	}
 
-	fprintf(output_file, ".globl main\n");
+	fprintf(output_file, ".global _start\n");
+	fprintf(output_file, "\n");
+	fprintf(output_file, "_start:\n");
+}
+
+void cg_end_start()
+{
+	fprintf(output_file, "\tcall main\n");
+	fprintf(output_file, "\tcall exit\n");
+}
+
+void cg_init_gvar(char *name)
+{
+	fprintf(output_file, "\t.comm %s, 4, 4\n", name);
+}
+
+int8_t cg_store_gvar(int8_t reg, char *name)
+{
+	fprintf(output_file, "\tmovl %s, %s\n", reg_list[reg].reg32, name);
+	return reg;
+}
+
+int8_t cg_load_gvar(char *name)
+{
+	int8_t reg = alloc_reg();
+
+	if (reg == STACK)
+		fprintf(output_file, "\tpushq %s\n", name);
+	else
+		fprintf(output_file, "\tmovl %s, %s\n", name, reg_list[reg].reg32);
+
+	return reg;
 }
 
 void cg_start_func(char *name, int size)
@@ -374,41 +406,31 @@ void cg_post_dec(char *pointer, uint offset)
 	fprintf(output_file, "\tsubl $1, %u(%s)\n", offset + push_offset, pointer);
 }
 
-int8_t cg_load(int value)
+int8_t cg_load_num(int value)
 {
 	int8_t reg = alloc_reg();
 
 	if (reg == STACK)
-	{
 		fprintf(output_file, "\tpushq $%i\n", value);
-		push_offset += 8;
-	}
 	else
-	{
 		fprintf(output_file, "\tmovl $%i, %s\n", value, reg_list[reg].reg32);
-	}
 
 	return reg;
 }
 
-int8_t cg_load_gsym(char *pointer, uint offset)
+int8_t cg_load_var(char *pointer, uint offset)
 {
 	int8_t reg = alloc_reg();
 
 	if (reg == STACK)
-	{
 		fprintf(output_file, "\tpushq %u(%s)\n", offset + push_offset, pointer);
-		push_offset += 8;
-	}
 	else
-	{
 		fprintf(output_file, "\tmovl %u(%s), %s\n", offset + push_offset, pointer, reg_list[reg].reg32);
-	}
 
 	return reg;
 }
 
-int8_t cg_store_gsym(int8_t reg, char *pointer, uint offset)
+int8_t cg_store_var(int8_t reg, char *pointer, uint offset)
 {
 	fprintf(output_file, "\tmovl %s, %u(%s)\n", reg_list[reg].reg32, offset + push_offset, pointer);
 	return reg;
@@ -424,14 +446,9 @@ int8_t cg_ret_value()
 	int8_t reg = alloc_reg();
 
 	if (reg == STACK)
-	{
 		fprintf(output_file, "\tpushq %%rax\n");
-		push_offset += 8;
-	}
 	else
-	{
 		fprintf(output_file, "\tmovl %%eax, %s\n", reg_list[reg].reg32);
-	}
 
 	return reg;
 }

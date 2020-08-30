@@ -57,12 +57,18 @@ static int8_t gen_func_call(Node *node)
 static int8_t gen_assign_stmt(Node *node)
 {
 	char *pointer = node->u.lhs->symbol->pointer;
+	char *name = node->u.lhs->symbol->name;
 	uint offset = node->u.lhs->symbol->value;
 	int8_t reg1, reg2;
 
 	reg1 = gen_expr(node->rhs);
 	if (node->kind != K_ASSIGN)
-		reg2 = cg_load_gsym(pointer, offset);
+	{
+		if (node->u.lhs->kind == K_GVAR)
+			reg2 = cg_load_gvar(name);
+		else
+			reg2 = cg_load_var(pointer, offset);
+	}
 
 	switch (node->kind)
 	{
@@ -73,7 +79,10 @@ static int8_t gen_assign_stmt(Node *node)
 		case K_MODA:  reg1 = cg_mod(reg2, reg1);  break;
 	}
 
-	return cg_store_gsym(reg1, pointer, offset);
+	if (node->u.lhs->kind == K_GVAR)
+		return cg_store_gvar(reg1, name);
+	else
+		return cg_store_var(reg1, pointer, offset);
 }
 
 static int8_t gen_expr(Node *node)
@@ -130,9 +139,11 @@ static int8_t gen_expr(Node *node)
 				cg_post_dec(node->rhs->symbol->pointer, node->rhs->symbol->value);
 				return reg2;
 			case K_NUM:
-				return cg_load(node->value);
+				return cg_load_num(node->value);
 			case K_VAR:
-				return cg_load_gsym(node->symbol->pointer, node->symbol->value);
+				return cg_load_var(node->symbol->pointer, node->symbol->value);
+			case K_GVAR:
+				return cg_load_gvar(node->symbol->name);
 			default:
 				error(NULL, "unknown ast kind");
 		}
@@ -159,7 +170,7 @@ static void gen_init_vars(Vector *node_list)
 			buf_node->u.lhs->symbol->value = var_offset * 4;
 
 			int8_t reg = gen_expr(buf_node->rhs);
-			cg_store_gsym(reg, "%rsp", buf_node->u.lhs->symbol->value);
+			cg_store_var(reg, "%rsp", buf_node->u.lhs->symbol->value);
 			free_reg(reg);
 		}
 	}
@@ -334,18 +345,44 @@ static void gen_func(Node *node)
 	cg_end_func(ret_label, node->value);
 }
 
+static void gen_init_gvars(Vector *node_list)
+{
+	for (uint i = 0; i < node_list->length; ++i, ++var_offset)
+	{
+		Node *buf_node = node_list->data[i];
+
+		if (buf_node->kind == K_GVAR)
+		{
+			cg_init_gvar(buf_node->symbol->name);
+		}
+		else
+		{
+			int8_t reg = gen_expr(buf_node->rhs);
+			cg_init_gvar(buf_node->u.lhs->symbol->name);
+			cg_store_gvar(reg, buf_node->u.lhs->symbol->name);
+			free_reg(reg);
+		}
+	}
+}
+
 static void gen_prog(Vector *node_list)
 {
 	for (uint i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
 
-		switch (buf_node->kind)
-		{
-			case K_FUNC:
-				gen_func(buf_node);
-				break;
-		}
+		if (buf_node->kind == K_INIT_VARS)
+			gen_init_gvars(buf_node->u.node_list);
+	}
+
+	cg_end_start();
+
+	for (uint i = 0; i < node_list->length; ++i)
+	{
+		Node *buf_node = node_list->data[i];
+
+		if (buf_node->kind == K_FUNC)
+			gen_func(buf_node);
 	}
 }
 

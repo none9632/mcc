@@ -46,6 +46,8 @@ static void print_kind(Node *node)
 		case K_FOR:         printf("<for>\n");                    break;
 		case K_RETURN:      printf("<return>\n");                 break;
 		case K_INIT_VARS:   printf("<init-vars>\n");              break;
+		case K_GVAR:        printf("%s\n", node->symbol->name);   break;
+		case K_VAR:         printf("%s\n", node->symbol->name);   break;
 		case K_EXPR:        printf("<expr>\n");                   break;
 		case K_ADDA:        printf("+=\n");                       break;
 		case K_SUBA:        printf("-=\n");                       break;
@@ -71,7 +73,6 @@ static void print_kind(Node *node)
 		case K_POST_INC:    printf("<post_inc>\n");               break;
 		case K_PRE_DEC:     printf("<pre_dec>\n");                break;
 		case K_POST_DEC:    printf("<post_dec>\n");               break;
-		case K_VAR:         printf("%s\n", node->symbol->name);   break;
 		case K_NUM:         printf("%i\n", node->value);          break;
 		case K_NONE:        printf("<none>\n");                   break;
 		case K_STRING:

@@ -6,6 +6,9 @@
 #include "error.h"
 #include "node.h"
 
+#define GLOBAL_MODE 0
+#define LOCAL_MODE 1
+
 Vector *string_list;
 
 static Vector *tokens;
@@ -149,6 +152,10 @@ static Node *factor()
 		if (symbol->type == S_VAR)
 		{
 			node = make_sum_node(K_VAR, symbol);
+		}
+		else if (symbol->type == S_GVAR)
+		{
+			node = make_sum_node(K_GVAR, symbol);
 		}
 		else
 		{
@@ -363,7 +370,11 @@ static Node *assign()
 			case '=':       node = make_node(K_ASSIGN); break;
 		}
 
-		node->u.lhs = make_sum_node(K_VAR, symbol);
+		if (symbol->type == S_GVAR)
+			node->u.lhs = make_sum_node(K_GVAR, symbol);
+		else
+			node->u.lhs = make_sum_node(K_VAR, symbol);
+
 		node->rhs = assign();
 	}
 	else
@@ -403,7 +414,7 @@ static Node *parse_expr_stmt()
 	return node;
 }
 
-static Node *parse_init_vars()
+static Node *parse_init_vars(int8_t mode)
 {
 	++count_tk;
 
@@ -414,8 +425,8 @@ static Node *parse_init_vars()
 		Token *token = tokens->data[count_tk];
 		is_redefinition(token);
 
-		Symbol *symbol = new_symbol(S_VAR, token->str, symbol_table);
-		Node *var = make_sum_node(K_VAR, symbol);
+		Symbol *symbol = new_symbol(S_GVAR + mode, token->str, symbol_table);
+		Node *var = make_sum_node(K_GVAR + mode, symbol);
 
 		size_local_vars += 4;
 
@@ -429,9 +440,9 @@ static Node *parse_init_vars()
 	return node;
 }
 
-static Node *parse_vars_stmt()
+static Node *parse_vars_stmt(int8_t mode)
 {
-	Node *node = parse_init_vars();
+	Node *node = parse_init_vars(mode);
 
 	expect_tok(';');
 	return node;
@@ -497,7 +508,7 @@ static Node *parse_for()
 	symbol_table = new_table(symbol_table);
 
 	if (token->type == TK_INT)
-		vec_push(node->u.node_list, parse_init_vars());
+		vec_push(node->u.node_list, parse_init_vars(LOCAL_MODE));
 	else if (token->type != ';' && token->type != TK_EOF)
 		vec_push(node->u.node_list, primary_expr());
 	else
@@ -601,7 +612,7 @@ static Node *statement()
 			node = parse_expr_stmt();
 			break;
 		case TK_INT:
-			node = parse_vars_stmt();
+			node = parse_vars_stmt(LOCAL_MODE);
 			break;
 		case TK_IF:
 			node = parse_if_else();
@@ -716,7 +727,21 @@ static Node *parse_prog()
 
 	while (token->type != TK_EOF)
 	{
-		vec_push(node->u.node_list, parse_func());
+		/*
+		 * In this case it checks whether the token we want to check exists.
+		 * int <name> (
+		 *            ^
+		 * If it is not exist, it does not matter what is called parse_func()
+		 * or parse_vars_stmt(), the result is the same in both cases.
+		 */
+		if (count_tk + 2 < tokens->length - 1)
+			token = tokens->data[count_tk + 2];
+
+		if (token->type == '(')
+			vec_push(node->u.node_list, parse_func());
+		else
+			vec_push(node->u.node_list, parse_vars_stmt(GLOBAL_MODE));
+
 		token = tokens->data[count_tk];
 	}
 
