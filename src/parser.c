@@ -103,12 +103,14 @@ static void is_redefinition(Token *token)
 
 static int8_t is_assignment_op()
 {
-	return (check_tok(TK_PLUSA)  ||
-		    check_tok(TK_MINUSA) ||
-		    check_tok(TK_MULTA)  ||
-		    check_tok(TK_DIVA)   ||
-		    check_tok(TK_MODA)   ||
-		    check_tok('=')       );
+	Token *token = tokens->data[count_tk];
+
+	return (token->type == TK_PLUSA  ||
+		    token->type == TK_MINUSA ||
+			token->type == TK_MULTA  ||
+			token->type == TK_DIVA   ||
+			token->type == TK_MODA   ||
+			token->type == '='       );
 }
 
 static Node *params(int num_params)
@@ -358,7 +360,7 @@ static Node *assign()
 	if (token->type == TK_IDENT && is_assignment_op())
 	{
 		Symbol *symbol = find_symbol(token);
-		token = tokens->data[count_tk - 1];
+		token = tokens->data[count_tk++];
 
 		switch (token->type)
 		{
@@ -392,7 +394,7 @@ static Node *expr()
 
 	if (is_assignment_op())
 	{
-		Token *token = tokens->data[count_tk - 1];
+		Token *token = tokens->data[count_tk];
 		error(token, "lvalue required as left operand of assignment");
 	}
 

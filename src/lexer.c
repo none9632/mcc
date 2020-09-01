@@ -59,17 +59,6 @@ static Token *new_token(u_int8_t type)
 	return token;
 }
 
-static Token *make_error_token()
-{
-	Token *token = new_token(TK_EOF);
-
-	token->source_line = source_line;
-	token->line = line;
-	token->column = column;
-
-	return token;
-}
-
 static void new_source_line()
 {
 	int length = 0;
@@ -206,7 +195,7 @@ static void read_str(Token *token)
 		if (*p_str == EOF)
 			*p_str = ' ';
 
-		token = make_error_token();
+		token = new_token(TK_EOF);
 		token->column = buf_column;
 		error(token, "missing terminating '\"' character");
 	}
@@ -252,7 +241,7 @@ static void read_comment()
 			 */
 			*p_str = ' ';
 
-			error(make_error_token(), "expected '*/' characters");
+			error(new_token(TK_EOF), "expected '*/' characters");
 		}
 
 		next_char();
@@ -275,21 +264,6 @@ static Vector *scan()
 		{
 			while (isspace(*p_str))
 				next_char();
-		}
-
-		// Comment
-		else if (!strncmp(p_str, "/*", 2) || !strncmp(p_str, "//", 2))
-			read_comment();
-
-		// Symbol keywords
-		else if ((buffer = search_symbol_keyword()) != -1)
-		{
-			Token *token = new_token(symbol_keywords[buffer].type);
-
-			p_str += symbol_keywords[buffer].length;
-			column += symbol_keywords[buffer].length;
-
-			vec_push(tokens, token);
 		}
 
 		// Identifier or keyword
@@ -319,9 +293,24 @@ static Vector *scan()
 			vec_push(tokens, token);
 		}
 
+		// Comment
+		else if (!strncmp(p_str, "/*", 2) || !strncmp(p_str, "//", 2))
+			read_comment();
+
+		// Symbol keywords
+		else if ((buffer = search_symbol_keyword()) != -1)
+		{
+			Token *token = new_token(symbol_keywords[buffer].type);
+
+			p_str += symbol_keywords[buffer].length;
+			column += symbol_keywords[buffer].length;
+
+			vec_push(tokens, token);
+		}
+
 		// Unknown character
 		else
-			error(make_error_token(), "unknown character");
+			error(new_token(TK_EOF), "unknown character");
 	}
 
 	/*
