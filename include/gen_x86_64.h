@@ -3,7 +3,8 @@
 
 #include <stdlib.h>
 
-#define PRINT_REG_SIZE 5
+#define GLOBAL_MODE 1
+#define LOCAL_MODE 0
 
 void    free_reg        (int8_t reg);
 int8_t *cg_save_all_reg ();
@@ -31,7 +32,7 @@ void cg_pop_stack  ();
 
 void cg_arg_print (int8_t reg1, int8_t reg2);
 void cg_print     (size_t value, uint length);
-void cg_input     (char *pointer, uint offset);
+void cg_input     (char *pointer, uint offset, int8_t mode);
 
 int8_t cg_or        (int8_t reg1, int8_t reg2, uint label1, uint label2);
 int8_t cg_and       (int8_t reg1, int8_t reg2, uint label1, uint label2);

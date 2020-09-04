@@ -184,10 +184,7 @@ static void gen_print(Vector *node_list)
 		int8_t reg1 = gen_expr(buf_node);
 		int8_t reg2 = 11 - i;
 
-		if (i - 1 < PRINT_REG_SIZE)
-			cg_arg_print(reg1, reg2);
-		else
-			cg_push_stack(reg1);
+		cg_arg_print(reg1, reg2);
 	}
 
 	Node *str = node_list->data[0];
@@ -199,7 +196,10 @@ static void gen_input(Vector *node_list)
 	for (uint i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
-		cg_input(buf_node->symbol->pointer, buf_node->symbol->value);
+		if (buf_node->kind == K_GVAR)
+			cg_input(buf_node->symbol->name, 0, GLOBAL_MODE);
+		else
+			cg_input(buf_node->symbol->pointer, buf_node->symbol->value, LOCAL_MODE);
 	}
 }
 
@@ -347,7 +347,7 @@ static void gen_func(Node *node)
 
 static void gen_init_gvars(Vector *node_list)
 {
-	for (uint i = 0; i < node_list->length; ++i, ++var_offset)
+	for (uint i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
 

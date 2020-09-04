@@ -6,8 +6,10 @@
 #include "gen_x86_64.h"
 
 #define REG_LIST_SIZE 13
+#define PRINT_REG_SIZE 5
 #define FREE 0
 #define BUSY 1
+
 #define STACK (-1)
 #define R9 6
 #define RBX 11
@@ -218,14 +220,14 @@ void cg_jmp(uint label)
 
 void cg_arg_print(int8_t reg1, int8_t reg2)
 {
-	if (reg_list[reg2].is_free == FREE)
-		reg_list[reg2].is_free = BUSY;
+	reg_list[reg2].is_free = BUSY;
 
-	if (strcmp(reg_list[reg1].reg64, reg_list[reg2].reg64))
-	{
+	if (10 - reg2 < PRINT_REG_SIZE)
 		fprintf(output_file, "\tmovq %s, %s\n", reg_list[reg1].reg64, reg_list[reg2].reg64);
-		free_reg(reg1);
-	}
+	else
+		fprintf(output_file, "\tpushq %s\n", reg_list[reg1].reg64);
+
+	free_reg(reg1);
 }
 
 void cg_print(size_t value, uint length)
@@ -245,9 +247,13 @@ void cg_print(size_t value, uint length)
 		reg_list[i].is_free = FREE;
 }
 
-void cg_input(char *pointer, uint offset)
+void cg_input(char *pointer, uint offset, int8_t mode)
 {
-	fprintf(output_file, "\tleaq %u(%s), %%rsi\n", offset + push_offset, pointer);
+	if (mode == GLOBAL_MODE)
+		fprintf(output_file, "\tleaq %s, %%rsi\n", pointer);
+	else
+		fprintf(output_file, "\tleaq %u(%s), %%rsi\n", offset + push_offset, pointer);
+
 	fprintf(output_file, "\tmovq $.io_int, %%rdi\n");
 	fprintf(output_file, "\txor %%rax, %%rax\n");
 	fprintf(output_file, "\tcall scanf\n");

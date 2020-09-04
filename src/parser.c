@@ -574,7 +574,13 @@ static Node *parse_input()
 	do
 	{
 		Token *token = tokens->data[count_tk++];
-		Node *buf_node = make_sum_node(K_VAR, find_symbol(token));
+		Symbol *symbol = find_symbol(token);
+		Node *buf_node;
+
+		if (symbol->type == S_GVAR)
+			buf_node = make_sum_node(K_GVAR, symbol);
+		else
+			buf_node = make_sum_node(K_VAR, symbol);
 
 		vec_push(node->u.node_list, buf_node);
 	}
