@@ -30,7 +30,7 @@ void cg_jmp        (uint label);
 void cg_push_stack (int8_t reg);
 void cg_pop_stack  ();
 
-void cg_arg_print (int8_t reg1, int8_t reg2);
+void cg_arg_print (int8_t reg1, uint index);
 void cg_print     (size_t value, uint length);
 void cg_input     (char *pointer, uint offset, int8_t mode);
 

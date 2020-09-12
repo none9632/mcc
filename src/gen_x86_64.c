@@ -6,7 +6,7 @@
 #include "gen_x86_64.h"
 
 #define REG_LIST_SIZE 13
-#define PRINT_REG_SIZE 5
+#define NUM_PRINT_REG 5
 #define FREE 0
 #define BUSY 1
 
@@ -218,14 +218,19 @@ void cg_jmp(uint label)
 	fprintf(output_file, "\tjmp .L%u\n", label);
 }
 
-void cg_arg_print(int8_t reg1, int8_t reg2)
+void cg_arg_print(int8_t reg1, uint index)
 {
-	reg_list[reg2].is_free = BUSY;
-
-	if (10 - reg2 < PRINT_REG_SIZE)
+	if (index <= NUM_PRINT_REG)
+	{
+		int8_t reg2 = RBX - index;
+		reg_list[reg2].is_free = BUSY;
 		fprintf(output_file, "\tmovq %s, %s\n", reg_list[reg1].reg64, reg_list[reg2].reg64);
+	}
 	else
+	{
 		fprintf(output_file, "\tpushq %s\n", reg_list[reg1].reg64);
+		push_offset += 8;
+	}
 
 	free_reg(reg1);
 }
@@ -236,8 +241,8 @@ void cg_print(size_t value, uint length)
 	fprintf(output_file, "\txor %%rax, %%rax\n");
 	fprintf(output_file, "\tcall printf\n");
 
-	uint size = (length - PRINT_REG_SIZE) * 8;
-	if (length > PRINT_REG_SIZE)
+	uint size = (length - NUM_PRINT_REG) * 8;
+	if (length > NUM_PRINT_REG)
 	{
 		fprintf(output_file, "\taddq $%u, %%rsp\n", size);
 		push_offset -= size;

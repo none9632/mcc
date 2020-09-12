@@ -182,9 +182,8 @@ static void gen_print(Vector *node_list)
 	{
 		Node *buf_node = node_list->data[i];
 		int8_t reg1 = gen_expr(buf_node);
-		int8_t reg2 = 11 - i;
 
-		cg_arg_print(reg1, reg2);
+		cg_arg_print(reg1, i);
 	}
 
 	Node *str = node_list->data[0];
@@ -196,6 +195,7 @@ static void gen_input(Vector *node_list)
 	for (uint i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
+
 		if (buf_node->kind == K_GVAR)
 			cg_input(buf_node->symbol->name, 0, GLOBAL_MODE);
 		else
