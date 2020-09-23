@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 
 #include "gen_x86_64.h"
@@ -104,6 +105,12 @@ static int8_t gen_expr(Node *node)
 				return cg_or(reg1, reg2, get_label(), get_label());
 			case K_AND:
 				return cg_and(reg1, reg2, get_label(), get_label());
+			case K_BIT_OR:
+				return cg_bit_or(reg1, reg2);
+			case K_BIT_XOR:
+				return cg_bit_xor(reg1, reg2);
+			case K_BIT_AND:
+				return cg_bit_and(reg1, reg2);
 			case K_EQUAL:
 				return cg_compare(reg1, reg2, "sete");
 			case K_NOT_EQUAL:

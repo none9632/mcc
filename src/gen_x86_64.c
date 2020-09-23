@@ -302,6 +302,39 @@ int8_t cg_and(int8_t reg1, int8_t reg2, uint label1, uint label2)
 	return reg1;
 }
 
+int8_t cg_bit_or(int8_t reg1, int8_t reg2)
+{
+	pop_value(&reg1, &reg2);
+
+	fprintf(output_file, "\torl %s, %s\n", reg_list[reg2].reg32, reg_list[reg1].reg32);
+
+	free_reg(reg2);
+	push_value(&reg1);
+	return reg1;
+}
+
+int8_t cg_bit_xor(int8_t reg1, int8_t reg2)
+{
+	pop_value(&reg1, &reg2);
+
+	fprintf(output_file, "\txorl %s, %s\n", reg_list[reg2].reg32, reg_list[reg1].reg32);
+
+	free_reg(reg2);
+	push_value(&reg1);
+	return reg1;
+}
+
+int8_t cg_bit_and(int8_t reg1, int8_t reg2)
+{
+	pop_value(&reg1, &reg2);
+
+	fprintf(output_file, "\tandl %s, %s\n", reg_list[reg2].reg32, reg_list[reg1].reg32);
+
+	free_reg(reg2);
+	push_value(&reg1);
+	return reg1;
+}
+
 int8_t cg_compare(int8_t reg1, int8_t reg2, char *how)
 {
 	pop_value(&reg1, &reg2);

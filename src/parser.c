@@ -332,9 +332,39 @@ static Node *equality_op()
 	return node;
 }
 
-static Node *and()
+static Node *bit_and()
 {
 	Node *node = equality_op();
+
+	while (check_tok('&'))
+		node = make_bin_node(K_BIT_AND, node, equality_op());
+
+	return node;
+}
+
+static Node *bit_xor()
+{
+	Node *node = bit_and();
+
+	while (check_tok('^'))
+		node = make_bin_node(K_BIT_XOR, node, bit_and());
+
+	return node;
+}
+
+static Node *bit_or()
+{
+	Node *node = bit_xor();
+
+	while (check_tok('|'))
+		node = make_bin_node(K_BIT_OR, node, bit_xor());
+
+	return node;
+}
+
+static Node *and()
+{
+	Node *node = bit_or();
 
 	while (check_tok(TK_AND))
 		node = make_bin_node(K_AND, node, equality_op());

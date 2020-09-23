@@ -36,6 +36,9 @@ void cg_input     (char *pointer, uint offset, int8_t mode);
 
 int8_t cg_or        (int8_t reg1, int8_t reg2, uint label1, uint label2);
 int8_t cg_and       (int8_t reg1, int8_t reg2, uint label1, uint label2);
+int8_t cg_bit_or    (int8_t reg1, int8_t reg2);
+int8_t cg_bit_xor   (int8_t reg1, int8_t reg2);
+int8_t cg_bit_and   (int8_t reg1, int8_t reg2);
 int8_t cg_compare   (int8_t reg1, int8_t reg2, char *how);
 int8_t cg_add       (int8_t reg1, int8_t reg2);
 int8_t cg_sub       (int8_t reg1, int8_t reg2);
