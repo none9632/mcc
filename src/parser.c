@@ -105,12 +105,15 @@ static int8_t is_assignment_op()
 {
 	Token *token = tokens->data[count_tk];
 
-	return (token->type == TK_PLUSA  ||
-		    token->type == TK_MINUSA ||
-			token->type == TK_MULTA  ||
-			token->type == TK_DIVA   ||
-			token->type == TK_MODA   ||
-			token->type == '='       );
+	return (token->type == TK_PLUSA    ||
+		    token->type == TK_MINUSA   ||
+			token->type == TK_MULTA    ||
+			token->type == TK_DIVA     ||
+			token->type == TK_MODA     ||
+			token->type == TK_BIT_ANDA ||
+			token->type == TK_BIT_XORA ||
+			token->type == TK_BIT_ORA  ||
+			token->type == '='         );
 }
 
 static Node *params(int num_params)
@@ -394,12 +397,15 @@ static Node *assign()
 
 		switch (token->type)
 		{
-			case TK_PLUSA:  node = make_node(K_ADDA);   break;
-			case TK_MINUSA: node = make_node(K_SUBA);   break;
-			case TK_MULTA:  node = make_node(K_MULTA);  break;
-			case TK_DIVA:   node = make_node(K_DIVA);   break;
-			case TK_MODA:   node = make_node(K_MODA);   break;
-			case '=':       node = make_node(K_ASSIGN); break;
+			case TK_PLUSA:    node = make_node(K_ADDA);     break;
+			case TK_MINUSA:   node = make_node(K_SUBA);     break;
+			case TK_MULTA:    node = make_node(K_MULTA);    break;
+			case TK_DIVA:     node = make_node(K_DIVA);     break;
+			case TK_MODA:     node = make_node(K_MODA);     break;
+			case TK_BIT_ANDA: node = make_node(K_BIT_ANDA); break;
+			case TK_BIT_XORA: node = make_node(K_BIT_XORA); break;
+			case TK_BIT_ORA:  node = make_node(K_BIT_ORA);  break;
+			case '=':         node = make_node(K_ASSIGN);   break;
 		}
 
 		if (symbol->type == S_GVAR)

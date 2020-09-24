@@ -55,6 +55,9 @@ enum
 	K_MULTA,
 	K_DIVA,
 	K_MODA,
+	K_BIT_ANDA,
+	K_BIT_XORA,
+	K_BIT_ORA,
 	K_ASSIGN,
 	K_STRING,
 	K_NONE

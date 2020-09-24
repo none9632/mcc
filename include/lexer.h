@@ -17,13 +17,16 @@ enum
 	TK_LESSEQ,       // <=
 	TK_EQUAL,        // == 
 	TK_NOTEQ,        // !=
+	TK_OR,           // ||
+	TK_AND,          // &&
 	TK_MULTA,        // *=
 	TK_DIVA,         // /=
 	TK_PLUSA,        // +=
 	TK_MINUSA,       // -=
 	TK_MODA,         // %=
-	TK_OR,           // ||
-	TK_AND,          // &&
+	TK_BIT_ANDA,     // &=
+	TK_BIT_XORA,     // ^=
+	TK_BIT_ORA,      // |=
 	TK_IF,           // "if"
 	TK_ELSE,         // "else"
 	TK_WHILE,        // "while"

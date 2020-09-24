@@ -22,12 +22,15 @@ static uint get_label()
 
 static int8_t is_assignment_op(u_int8_t kind)
 {
-	return (kind == K_ASSIGN ||
-		    kind == K_ADDA   ||
-		    kind == K_SUBA   ||
-		    kind == K_MULTA  ||
-		    kind == K_DIVA   ||
-		    kind == K_MODA   );
+	return (kind == K_ASSIGN   ||
+		    kind == K_ADDA     ||
+		    kind == K_SUBA     ||
+		    kind == K_MULTA    ||
+		    kind == K_DIVA     ||
+		    kind == K_MODA     ||
+			kind == K_BIT_ANDA ||
+			kind == K_BIT_XORA ||
+			kind == K_BIT_ORA  );
 }
 
 static int8_t gen_func_call(Node *node)
@@ -73,11 +76,14 @@ static int8_t gen_assign_stmt(Node *node)
 
 	switch (node->kind)
 	{
-		case K_ADDA:  reg1 = cg_add(reg1, reg2);  break;
-		case K_SUBA:  reg1 = cg_sub(reg2, reg1);  break;
-		case K_MULTA: reg1 = cg_mult(reg1, reg2); break;
-		case K_DIVA:  reg1 = cg_div(reg2, reg1);  break;
-		case K_MODA:  reg1 = cg_mod(reg2, reg1);  break;
+		case K_ADDA:     reg1 = cg_add(reg1, reg2);     break;
+		case K_SUBA:     reg1 = cg_sub(reg2, reg1);     break;
+		case K_MULTA:    reg1 = cg_mult(reg1, reg2);    break;
+		case K_DIVA:     reg1 = cg_div(reg2, reg1);     break;
+		case K_MODA:     reg1 = cg_mod(reg2, reg1);     break;
+		case K_BIT_ANDA: reg1 = cg_bit_and(reg2, reg1); break;
+		case K_BIT_XORA: reg1 = cg_bit_xor(reg2, reg1); break;
+		case K_BIT_ORA:  reg1 = cg_bit_or(reg2, reg1);  break;
 	}
 
 	if (node->u.lhs->kind == K_GVAR)

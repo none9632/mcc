@@ -57,6 +57,9 @@ static void print_kind(Node *node)
 		case K_ASSIGN:      printf("=\n");                        break;
 		case K_OR:          printf("||\n");                       break;
 		case K_AND:         printf("&&\n");                       break;
+		case K_BIT_OR:      printf("|\n");                        break;
+		case K_BIT_XOR:     printf("^n");                         break;
+		case K_BIT_AND:     printf("&n");                         break;
 		case K_EQUAL:       printf("==\n");                       break;
 		case K_NOT_EQUAL:   printf("!=\n");                       break;
 		case K_MOREEQ:      printf(">=\n");                       break;
