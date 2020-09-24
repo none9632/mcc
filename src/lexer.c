@@ -27,9 +27,9 @@ static char *source_line = NULL;
 
 static const Keyword keywords[KEYWORDS_SIZE] =
 {
-	{"if",    TK_IF,    2}, {"else",   TK_ELSE,   4}, {"do",  TK_DO,  2}, {"while", TK_WHILE, 5},
-	{"for",   TK_FOR,   3}, {"return", TK_RETURN, 6}, {"int", TK_INT, 3}, {"input", TK_INPUT, 5},
-	{"print", TK_PRINT, 5}
+	{"if",     TK_IF,     2}, {"else",   TK_ELSE,   4}, {"do",  TK_DO,  2}, {"while", TK_WHILE, 5},
+	{"for",    TK_FOR,    3}, {"return", TK_RETURN, 6}, {"int", TK_INT, 3}, {"scanf", TK_SCANF, 5},
+	{"printf", TK_PRINTF, 6}
 };
 
 static const Keyword symbol_keywords[SYMBOL_KEYWORDS_SIZE] =

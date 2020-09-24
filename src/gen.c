@@ -189,30 +189,30 @@ static void gen_init_vars(Vector *node_list)
 	}
 }
 
-static void gen_print(Vector *node_list)
+static void gen_printf(Vector *node_list)
 {
 	for (uint i = node_list->length - 1; i > 0; --i)
 	{
 		Node *buf_node = node_list->data[i];
 		int8_t reg1 = gen_expr(buf_node);
 
-		cg_arg_print(reg1, i);
+		cg_arg_printf(reg1, i);
 	}
 
 	Node *str = node_list->data[0];
-	cg_print(str->value, node_list->length - 1);
+	cg_printf(str->value, node_list->length - 1);
 }
 
-static void gen_input(Vector *node_list)
+static void gen_scanf(Vector *node_list)
 {
 	for (uint i = 0; i < node_list->length; ++i)
 	{
 		Node *buf_node = node_list->data[i];
 
 		if (buf_node->kind == K_GVAR)
-			cg_input(buf_node->symbol->name, 0, GLOBAL_MODE);
+			cg_scanf(buf_node->symbol->name, 0, GLOBAL_MODE);
 		else
-			cg_input(buf_node->symbol->pointer, buf_node->symbol->value, LOCAL_MODE);
+			cg_scanf(buf_node->symbol->pointer, buf_node->symbol->value, LOCAL_MODE);
 	}
 }
 
@@ -319,8 +319,8 @@ static void gen_statements(Vector *node_list)
 		{
 			case K_INIT_VARS: gen_init_vars(buf_node->u.node_list); break;
 			case K_EXPR:      free_reg(gen_expr(buf_node->rhs));    break;
-			case K_PRINT:     gen_print(buf_node->u.node_list);     break;
-			case K_INPUT:     gen_input(buf_node->u.node_list);     break;
+			case K_PRINTF:    gen_printf(buf_node->u.node_list);    break;
+			case K_SCANF:     gen_scanf(buf_node->u.node_list);     break;
 			case K_IF_ELSE:   gen_if_else(buf_node);                break;
 			case K_IF:        gen_if(buf_node);                     break;
 			case K_WHILE:     gen_while(buf_node);                  break;

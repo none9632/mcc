@@ -575,11 +575,11 @@ static Node *parse_for()
 	return node;
 }
 
-static Node *parse_print()
+static Node *parse_printf()
 {
 	++count_tk;
 
-	Node *node = make_list_node(K_PRINT);
+	Node *node = make_list_node(K_PRINTF);
 	Token *token = expect_tok('(');
 
 	expect_tok(TK_STR);
@@ -599,11 +599,11 @@ static Node *parse_print()
 	return node;
 }
 
-static Node *parse_input()
+static Node *parse_scanf()
 {
 	++count_tk;
 
-	Node *node = make_list_node(K_INPUT);
+	Node *node = make_list_node(K_SCANF);
 
 	expect_tok('(');
 
@@ -670,11 +670,11 @@ static Node *statement()
 		case TK_FOR:
 			node = parse_for();
 			break;
-		case TK_PRINT:
-			node = parse_print();
+		case TK_PRINTF:
+			node = parse_printf();
 			break;
-		case TK_INPUT:
-			node = parse_input();
+		case TK_SCANF:
+			node = parse_scanf();
 			break;
 		case TK_RETURN:
 			node = parse_ret_stmt();

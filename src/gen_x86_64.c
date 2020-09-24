@@ -218,7 +218,7 @@ void cg_jmp(uint label)
 	fprintf(output_file, "\tjmp .L%u\n", label);
 }
 
-void cg_arg_print(int8_t reg1, uint index)
+void cg_arg_printf(int8_t reg1, uint index)
 {
 	if (index <= NUM_PRINT_REG)
 	{
@@ -235,7 +235,7 @@ void cg_arg_print(int8_t reg1, uint index)
 	free_reg(reg1);
 }
 
-void cg_print(size_t value, uint length)
+void cg_printf(size_t value, uint length)
 {
 	fprintf(output_file, "\tmovq $.LC%li, %%rdi\n", value);
 	fprintf(output_file, "\txor %%rax, %%rax\n");
@@ -252,7 +252,7 @@ void cg_print(size_t value, uint length)
 		reg_list[i].is_free = FREE;
 }
 
-void cg_input(char *pointer, uint offset, int8_t mode)
+void cg_scanf(char *pointer, uint offset, int8_t mode)
 {
 	if (mode == GLOBAL_MODE)
 		fprintf(output_file, "\tleaq %s, %%rsi\n", pointer);

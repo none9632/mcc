@@ -39,8 +39,8 @@ static void print_kind(Node *node)
 		case K_IF_ELSE:     printf("<if-else>\n");                break;
 		case K_IF:          printf("<if>\n");                     break;
 		case K_ELSE:        printf("<else>\n");                   break;
-		case K_PRINT:       printf("<print>\n");                  break;
-		case K_INPUT:       printf("<input>\n");                  break;
+		case K_PRINTF:      printf("<printf>\n");                 break;
+		case K_SCANF:       printf("<scanf>\n");                  break;
 		case K_WHILE:       printf("<while>\n");                  break;
 		case K_DO_WHILE:    printf("<do-while>\n");               break;
 		case K_FOR:         printf("<for>\n");                    break;
@@ -54,6 +54,9 @@ static void print_kind(Node *node)
 		case K_MULTA:       printf("*=\n");                       break;
 		case K_DIVA:        printf("/=\n");                       break;
 		case K_MODA:        printf("%%=\n");                      break;
+		case K_BIT_ANDA:    printf("&=\n");                       break;
+		case K_BIT_XORA:    printf("^=\n");                       break;
+		case K_BIT_ORA:     printf("|=n");                        break;
 		case K_ASSIGN:      printf("=\n");                        break;
 		case K_OR:          printf("||\n");                       break;
 		case K_AND:         printf("&&\n");                       break;
@@ -122,8 +125,8 @@ static int8_t is_node_list(u_int8_t kind)
 			kind == K_PARAMS      ||
 			kind == K_INIT_VARS   ||
 	        kind == K_FOR         ||
-	        kind == K_PRINT       ||
-	        kind == K_INPUT       );
+	        kind == K_PRINTF      ||
+	        kind == K_SCANF       );
 }
 
 static void print_node(Node *node, uint prefix_len, int8_t is_left)
