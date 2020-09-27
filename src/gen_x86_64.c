@@ -12,6 +12,7 @@
 
 #define STACK (-1)
 #define R9 6
+#define RCX 8
 #define RBX 11
 #define RDI 12
 
@@ -48,7 +49,7 @@ static uint push_offset;
 
 static int8_t alloc_reg()
 {
-	for (u_int8_t i = 0; i < REG_LIST_SIZE - 5; ++i)
+	for (u_int8_t i = 0; i < REG_LIST_SIZE - NUM_PRINT_REG; ++i)
 	{
 		if (reg_list[i].is_free == FREE)
 		{
@@ -342,6 +343,42 @@ int8_t cg_compare(int8_t reg1, int8_t reg2, char *how)
 	fprintf(output_file, "\tcmpl %s, %s\n", reg_list[reg2].reg32, reg_list[reg1].reg32);
 	fprintf(output_file, "\t%s %s\n", how, reg_list[reg1].reg8);
 	fprintf(output_file, "\tandl $255, %s\n", reg_list[reg1].reg32);
+
+	free_reg(reg2);
+	push_value(&reg1);
+	return reg1;
+}
+
+int8_t cg_left_shift(int8_t reg1, int8_t reg2)
+{
+	pop_value(&reg1, &reg2);
+
+	if (reg_list[RCX].is_free == BUSY)
+		fprintf(output_file, "\tpushq %s\n", reg_list[RCX].reg64);
+
+	fprintf(output_file, "\tmovl %s, %s\n", reg_list[reg2].reg32, reg_list[RCX].reg32);
+	fprintf(output_file, "\tshll %s, %s\n", reg_list[RCX].reg8, reg_list[reg1].reg32);
+
+	if (reg_list[RCX].is_free == BUSY)
+		fprintf(output_file, "\tpopq %s\n", reg_list[RCX].reg64);
+
+	free_reg(reg2);
+	push_value(&reg1);
+	return reg1;
+}
+
+int8_t cg_right_shift(int8_t reg1, int8_t reg2)
+{
+	pop_value(&reg1, &reg2);
+
+	if (reg_list[RCX].is_free == BUSY)
+		fprintf(output_file, "\tpushq %s\n", reg_list[RCX].reg64);
+
+	fprintf(output_file, "\tmovl %s, %s\n", reg_list[reg2].reg32, reg_list[RCX].reg32);
+	fprintf(output_file, "\tshrl %s, %s\n", reg_list[RCX].reg8, reg_list[reg1].reg32);
+
+	if (reg_list[RCX].is_free == BUSY)
+		fprintf(output_file, "\tpopq %s\n", reg_list[RCX].reg64);
 
 	free_reg(reg2);
 	push_value(&reg1);

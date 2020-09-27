@@ -13,6 +13,8 @@ enum
 	TK_STR,          // String literal
 	TK_INC,          // ++
 	TK_DEC,          // --
+	TK_LEFT_SHIFT,   // <<
+	TK_RIGHT_SHIFT,  // >>
 	TK_MOREEQ,       // >=
 	TK_LESSEQ,       // <=
 	TK_EQUAL,        // == 
@@ -27,6 +29,8 @@ enum
 	TK_BIT_ANDA,     // &=
 	TK_BIT_XORA,     // ^=
 	TK_BIT_ORA,      // |=
+	TK_LEFT_SHIFTA,  // <<=
+	TK_RIGHT_SHIFTA, // >>=
 	TK_IF,           // "if"
 	TK_ELSE,         // "else"
 	TK_WHILE,        // "while"

@@ -22,15 +22,17 @@ static uint get_label()
 
 static int8_t is_assignment_op(u_int8_t kind)
 {
-	return (kind == K_ASSIGN   ||
-		    kind == K_ADDA     ||
-		    kind == K_SUBA     ||
-		    kind == K_MULTA    ||
-		    kind == K_DIVA     ||
-		    kind == K_MODA     ||
-			kind == K_BIT_ANDA ||
-			kind == K_BIT_XORA ||
-			kind == K_BIT_ORA  );
+	return (kind == K_ASSIGN       ||
+		    kind == K_ADDA         ||
+		    kind == K_SUBA         ||
+		    kind == K_MULTA        ||
+		    kind == K_DIVA         ||
+		    kind == K_MODA         ||
+			kind == K_BIT_ANDA     ||
+			kind == K_BIT_XORA     ||
+			kind == K_BIT_ORA      ||
+			kind == K_LEFT_SHIFTA  ||
+			kind == K_RIGHT_SHIFTA );
 }
 
 static int8_t gen_func_call(Node *node)
@@ -76,14 +78,16 @@ static int8_t gen_assign_stmt(Node *node)
 
 	switch (node->kind)
 	{
-		case K_ADDA:     reg1 = cg_add(reg1, reg2);     break;
-		case K_SUBA:     reg1 = cg_sub(reg2, reg1);     break;
-		case K_MULTA:    reg1 = cg_mult(reg1, reg2);    break;
-		case K_DIVA:     reg1 = cg_div(reg2, reg1);     break;
-		case K_MODA:     reg1 = cg_mod(reg2, reg1);     break;
-		case K_BIT_ANDA: reg1 = cg_bit_and(reg2, reg1); break;
-		case K_BIT_XORA: reg1 = cg_bit_xor(reg2, reg1); break;
-		case K_BIT_ORA:  reg1 = cg_bit_or(reg2, reg1);  break;
+		case K_ADDA:         reg1 = cg_add(reg1, reg2);         break;
+		case K_SUBA:         reg1 = cg_sub(reg2, reg1);         break;
+		case K_MULTA:        reg1 = cg_mult(reg1, reg2);        break;
+		case K_DIVA:         reg1 = cg_div(reg2, reg1);         break;
+		case K_MODA:         reg1 = cg_mod(reg2, reg1);         break;
+		case K_BIT_ANDA:     reg1 = cg_bit_and(reg2, reg1);     break;
+		case K_BIT_XORA:     reg1 = cg_bit_xor(reg2, reg1);     break;
+		case K_BIT_ORA:      reg1 = cg_bit_or(reg2, reg1);      break;
+		case K_LEFT_SHIFTA:  reg1 = cg_left_shift(reg2, reg1);  break;
+		case K_RIGHT_SHIFTA: reg1 = cg_right_shift(reg2, reg1); break;
 	}
 
 	if (node->u.lhs->kind == K_GVAR)
@@ -129,6 +133,10 @@ static int8_t gen_expr(Node *node)
 				return cg_compare(reg1, reg2, "setge");
 			case K_LESSEQ:
 				return cg_compare(reg1, reg2, "setle");
+			case K_LEFT_SHIFT:
+				return cg_left_shift(reg1, reg2);
+			case K_RIGHT_SHIFT:
+				return cg_right_shift(reg1, reg2);
 			case K_ADD:
 				return cg_add(reg1, reg2);
 			case K_SUB:
