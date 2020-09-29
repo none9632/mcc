@@ -455,6 +455,17 @@ int8_t cg_neg(int8_t reg1)
 	push_value(&reg1);
 	return reg1;
 }
+
+int8_t cg_address(int8_t reg1, char *pointer, uint offset)
+{
+	pop_value(&reg1, NULL);
+
+	fprintf(output_file, "\tleaq %i(%s), %s\n", offset + push_offset, pointer, reg_list[reg1].reg64);
+
+	push_value(&reg1);
+	return reg1;
+}
+
 int8_t cg_pre_inc(int8_t reg1, char *pointer, uint offset)
 {
 	pop_value(&reg1, NULL);

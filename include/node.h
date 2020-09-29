@@ -49,6 +49,7 @@ enum
 	K_NEG,
 	K_PRE_INC,
 	K_PRE_DEC,
+	K_ADDRESS,
 	K_POST_INC,
 	K_POST_DEC,
 	K_NUM,

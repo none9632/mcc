@@ -79,6 +79,7 @@ static void print_kind(Node *node)
 		case K_DIV:          printf("/\n");                        break;
 		case K_MOD:          printf("%%\n");                       break;
 		case K_NEG:          printf("-\n");                        break;
+		case K_ADDRESS:      printf("&\n");                        break;
 		case K_PRE_INC:      printf("<pre_inc>\n");                break;
 		case K_POST_INC:     printf("<post_inc>\n");               break;
 		case K_PRE_DEC:      printf("<pre_dec>\n");                break;

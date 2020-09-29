@@ -149,6 +149,8 @@ static int8_t gen_expr(Node *node)
 				return cg_mod(reg1, reg2);
 			case K_NEG:
 				return cg_neg(reg2);
+			case K_ADDRESS:
+				return cg_address(reg2, node->rhs->symbol->pointer, node->rhs->symbol->value);
 			case K_PRE_INC:
 				return cg_pre_inc(reg2, node->rhs->symbol->pointer, node->rhs->symbol->value);
 			case K_PRE_DEC:
@@ -374,10 +376,16 @@ static void gen_init_gvars(Vector *node_list)
 
 		if (buf_node->kind == K_GVAR)
 		{
+			buf_node->symbol->pointer = buf_node->symbol->name;
+			buf_node->symbol->value = 0;
+
 			cg_init_gvar(buf_node->symbol->name);
 		}
 		else
 		{
+			buf_node->u.lhs->symbol->pointer = buf_node->u.lhs->symbol->name;
+			buf_node->u.lhs->symbol->value = 0;
+
 			int8_t reg = gen_expr(buf_node->rhs);
 			cg_init_gvar(buf_node->u.lhs->symbol->name);
 			cg_store_gvar(reg, buf_node->u.lhs->symbol->name);

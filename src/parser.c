@@ -222,16 +222,22 @@ static Node *unary()
 	{
 		node = make_bin_node(K_NEG, NULL, unary());
 	}
+	else if (check_tok('&'))
+	{
+		node = make_bin_node(K_ADDRESS, NULL, unary());
+		if (node->rhs->kind != K_VAR && node->rhs->kind != K_GVAR)
+			error(token, "lvalue required as unary '&' operand");
+	}
 	else if (check_tok(TK_INC))
 	{
 		node = make_bin_node(K_PRE_INC, NULL, postfix());
-		if (node->rhs->kind != K_VAR)
+		if (node->rhs->kind != K_VAR && node->rhs->kind != K_GVAR)
 			error(token, "lvalue required as increment operand");
 	}
 	else if (check_tok(TK_DEC))
 	{
 		node = make_bin_node(K_PRE_DEC, NULL, postfix());
-		if (node->rhs->kind != K_VAR)
+		if (node->rhs->kind != K_VAR && node->rhs->kind != K_GVAR)
 			error(token, "lvalue required as decrement operand");
 	}
 	else
