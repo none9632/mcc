@@ -224,9 +224,17 @@ static Node *unary()
 	}
 	else if (check_tok('&'))
 	{
-		node = make_bin_node(K_ADDRESS, NULL, unary());
+		node = make_bin_node(K_ADDRESS, NULL, postfix());
 		if (node->rhs->kind != K_VAR && node->rhs->kind != K_GVAR)
 			error(token, "lvalue required as unary '&' operand");
+	}
+	else if (check_tok('!'))
+	{
+		node = make_bin_node(K_LOG_NOT, NULL, unary());
+	}
+	else if (check_tok('~'))
+	{
+		node = make_bin_node(K_BIT_NOT, NULL, unary());
 	}
 	else if (check_tok(TK_INC))
 	{
@@ -258,7 +266,6 @@ static Node *mult()
 		   check_tok('%') )
 	{
 		node = make_bin_node(K_NONE, node, unary());
-
 		switch (token->type)
 		{
 			case '*': node->kind = K_MULT; break;

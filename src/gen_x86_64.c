@@ -466,6 +466,27 @@ int8_t cg_address(int8_t reg1, char *pointer, uint offset)
 	return reg1;
 }
 
+int8_t cg_bit_not(int8_t reg1)
+{
+	pop_value(&reg1, NULL);
+
+	fprintf(output_file, "\tnotl %s\n", reg_list[reg1].reg32);
+
+	push_value(&reg1);
+	return reg1;
+}
+
+int8_t cg_log_not(int8_t reg1)
+{
+	pop_value(&reg1, NULL);
+
+	fprintf(output_file, "\tcmpl $0, %s\n", reg_list[reg1].reg32);
+	fprintf(output_file, "\tsete %s\n", reg_list[reg1].reg8);
+
+	push_value(&reg1);
+	return reg1;
+}
+
 int8_t cg_pre_inc(int8_t reg1, char *pointer, uint offset)
 {
 	pop_value(&reg1, NULL);

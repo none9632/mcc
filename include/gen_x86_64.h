@@ -49,6 +49,8 @@ int8_t cg_div         (int8_t reg1, int8_t reg2);
 int8_t cg_mod         (int8_t reg1, int8_t reg2);
 int8_t cg_neg         (int8_t reg1);
 int8_t cg_address     (int8_t reg1, char *pointer, uint offset);
+int8_t cg_log_not     (int8_t reg1);
+int8_t cg_bit_not     (int8_t reg1);
 int8_t cg_pre_inc     (int8_t reg1, char *pointer, uint offset);
 int8_t cg_pre_dec     (int8_t reg1, char *pointer, uint offset);
 void   cg_post_inc    (char *pointer, uint offset);

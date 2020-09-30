@@ -151,6 +151,10 @@ static int8_t gen_expr(Node *node)
 				return cg_neg(reg2);
 			case K_ADDRESS:
 				return cg_address(reg2, node->rhs->symbol->pointer, node->rhs->symbol->value);
+			case K_LOG_NOT:
+				return cg_log_not(reg2);
+			case K_BIT_NOT:
+				return cg_bit_not(reg2);
 			case K_PRE_INC:
 				return cg_pre_inc(reg2, node->rhs->symbol->pointer, node->rhs->symbol->value);
 			case K_PRE_DEC:
