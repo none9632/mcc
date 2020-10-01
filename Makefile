@@ -1,7 +1,7 @@
-TARGET := myCompiler
+TARGET := mcc
 
 CC     := clang
-CCFLAG := -Wall -I ./include
+CCFLAG := -Wall -g3 -I ./include
 
 OBJ_PATH := obj
 SRC_PATH := src

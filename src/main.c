@@ -15,7 +15,7 @@ static char *file_name = NULL;
 
 static void usage()
 {
-	printf("Usage: myCompiler [options] <file>");
+	printf("Usage: mcc [options] <file>");
 	printf("\nOptions:\n");
 	printf("    --help          display this information\n");
 	printf("    --print-ast     display AST\n");
