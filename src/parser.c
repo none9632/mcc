@@ -1,10 +1,10 @@
 #include <stdio.h>
 
-#include "vector.h"
-#include "table.h"
-#include "lexer.h"
-#include "error.h"
-#include "node.h"
+#include "../include/vector.h"
+#include "../include/table.h"
+#include "../include/lexer.h"
+#include "../include/error.h"
+#include "../include/node.h"
 
 #define GLOBAL_MODE 0
 #define LOCAL_MODE 1
@@ -195,14 +195,14 @@ static Node *postfix()
 	{
 		node = make_bin_node(K_POST_INC, NULL, node);
 		node->symbol = node->rhs->symbol;
-		if (node->rhs->kind != K_VAR)
+		if (node->rhs->kind != K_VAR && node->rhs->kind != K_GVAR)
 			error(token, "lvalue required as increment operand");
 	}
 	else if (check_tok(TK_DEC))
 	{
 		node = make_bin_node(K_POST_DEC, NULL, node);
 		node->symbol = node->rhs->symbol;
-		if (node->rhs->kind != K_VAR)
+		if (node->rhs->kind != K_VAR && node->rhs->kind != K_GVAR)
 			error(token, "lvalue required as decrement operand");
 	}
 

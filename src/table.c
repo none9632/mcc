@@ -1,8 +1,8 @@
 #include <string.h>
 
-#include "error.h"
-#include "vector.h"
-#include "table.h"
+#include "../include/error.h"
+#include "../include/vector.h"
+#include "../include/table.h"
 
 Table *new_table(Table *prev)
 {

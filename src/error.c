@@ -4,7 +4,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "lexer.h"
+#include "../include/lexer.h"
 
 void error(Token *token, char *format, ...)
 {

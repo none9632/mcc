@@ -1,7 +1,7 @@
 #include <malloc.h>
 
-#include "vector.h"
-#include "error.h"
+#include "../include/vector.h"
+#include "../include/error.h"
 
 Vector *new_vector()
 {

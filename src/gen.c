@@ -1,10 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "gen_x86_64.h"
-#include "node.h"
-#include "error.h"
-#include "vector.h"
+#include "../include/gen_x86_64.h"
+#include "../include/node.h"
+#include "../include/error.h"
+#include "../include/vector.h"
 
 FILE *output_file;
 uint var_offset;

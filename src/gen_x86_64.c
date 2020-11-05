@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "vector.h"
-#include "gen_x86_64.h"
+#include "../include/vector.h"
+#include "../include/gen_x86_64.h"
 
 #define REG_LIST_SIZE 13
 #define NUM_PRINT_REG 5
