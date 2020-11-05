@@ -35,10 +35,10 @@
 <if_else>         ::= 'if' '(' <expr> ')' <statements>
                     | 'if' '(' <expr> ')' <statements> 'else' <statements>
 
-<printf>          ::= 'print' '(' <output_list> ')' ';'
+<printf>          ::= 'printf' '(' <output_list> ')' ';'
 <output_list>     ::= <string> { ',' <expr> }
 
-<scanf>           ::= 'input' '(' <input_list> ')' ';'
+<scanf>           ::= 'scanf' '(' <input_list> ')' ';'
 <input_list>      ::= <id> { ',' <id> }
 
 <while_loop>      ::= 'while' '(' <expr> ')' <statements>
@@ -51,7 +51,6 @@
 <expr_stmt>       ::= <expr> ';'
 
 <ret_stmt>        ::= 'return' <expr> ';'
-                    | 'return' ';'
 
 ! ===================================================================
 ! Variable Declaration
@@ -72,21 +71,34 @@
 
 <expr>         ::= <assign>
 
-<op_assign>    ::= <id> '='  <op_assign>
-                 | <id> '+=' <op_assign>
-                 | <id> '-=' <op_assign>
-                 | <id> '*=' <op_assign>
-                 | <id> '/=' <op_assign>
-                 | <id> '%=' <op_assign>
+<op_assign>    ::= <id> '='   <op_assign>
+                 | <id> '+='  <op_assign>
+                 | <id> '-='  <op_assign>
+                 | <id> '*='  <op_assign>
+                 | <id> '/='  <op_assign>
+                 | <id> '%='  <op_assign>
+                 | <id> '&='  <op_assign>
+                 | <id> '^='  <op_assign>
+                 | <id> '|='  <op_assign>
+                 | <id> '<<=' <op_assign>
+                 | <id> '>>=' <op_assign>
                  | <op_or>
 
 <op_or>        ::= <op_and> { '||' <op_and> }
 
-<op_and>       ::= <op_equate> { '&&' <op_equate> }
+<op_and>       ::= <op_bit_or> { '&&' <op_bit_or> }
+
+<op_bit_or>    ::= <op_bit_xor> { '|' <op_bit_xor> }
+
+<op_bit_xor>   ::= <op_bit_and> { '^' <op_bit_and> }
+
+<op_bit_and>   ::= <op_equate> { '&' <op_equate> }
 
 <op_equate>    ::= <op_compare> { ( '==' | '!=' ) <op_compare> }
 
-<op_compare>   ::= <op_add> { ( '<' | '>' | '<=' | '>=' ) <op_add> }
+<op_compare>   ::= <op_shift> { ( '<' | '>' | '<=' | '>=' ) <op_shift> }
+
+<op_shift>     ::= <op_add> { ( '<<' | '>>' ) <op_add> }
 
 <op_add_sub>   ::= <op_mult> { ( '+' | '-' ) <op_mult> }
 
@@ -94,6 +106,9 @@
 
 <op_unary>     ::= '+' <op_unary>
                  | '-' <op_unary>
+                 | '&' <id>
+                 | '!' <op_unary>
+                 | '~' <op_unary>
                  | '++' <id>
                  | '--' <id>
                  | <postfix>

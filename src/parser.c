@@ -323,7 +323,6 @@ static Node *shift()
 	return node;
 }
 
-// comparison operators
 static Node *comp_op()
 {
 	Node *node = shift();
