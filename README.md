@@ -1,5 +1,5 @@
 # mcc (*the project is not ready yet*)
-mcc - my c compiler
+mcc - my c compiler  
 This is my poorly written compiler, which I wrote to study the topic compilers.
 
 ## Links
