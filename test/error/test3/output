@@ -1,0 +1,3 @@
+[[38;2;255;0;0mERROR[0m]:3:17: expected expression
+	int a = 23423*();
+	               ^ 

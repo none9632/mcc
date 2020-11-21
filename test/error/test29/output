@@ -1,0 +1,3 @@
+[[38;2;255;0;0mERROR[0m]:8:17: lvalue required as increment operand
+	printf("%i\n", ++foo(32));
+	               ^          

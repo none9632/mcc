@@ -1,0 +1,10 @@
+int sub(int n)
+{
+	int a = 20;
+	n -= a;
+}
+
+int main()
+{
+	printf("result: %i\n", sub(10));
+}

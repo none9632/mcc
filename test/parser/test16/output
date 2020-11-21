@@ -1,0 +1,40 @@
+<program>
+├── foo()
+│   ├── <init-params>
+│   │   └── n
+│   └── <statements>
+│       └── <printf>
+│           ├── "%i\n"
+│           └── n
+└── main()
+    ├── <none>
+    └── <statements>
+        ├── <init-vars>
+        │   └── =
+        │       ├── a
+        │       └── 10
+        ├── <printf>
+        │   ├── "%i\n"
+        │   └── <post_inc>
+        │       └── a
+        ├── <printf>
+        │   ├── "%i\n"
+        │   └── <pre_dec>
+        │       └── a
+        ├── <printf>
+        │   ├── "%i\n"
+        │   └── -
+        │       └── <post_inc>
+        │           └── a
+        ├── <printf>
+        │   ├── "%i\n"
+        │   └── foo()
+        │       └── <params>
+        │           └── <pre_inc>
+        │               └── a
+        └── <printf>
+            ├── "%i\n"
+            └── foo()
+                └── <params>
+                    └── <post_dec>
+                        └── a

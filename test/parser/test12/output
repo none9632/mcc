@@ -1,0 +1,18 @@
+<program>
+└── main()
+    ├── <none>
+    └── <statements>
+        ├── <init-vars>
+        │   ├── a
+        │   ├── b
+        │   ├── c
+        │   ├── d
+        │   ├── e
+        │   └── f
+        └── <scanf>
+            ├── a
+            ├── b
+            ├── c
+            ├── d
+            ├── e
+            └── f

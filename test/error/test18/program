@@ -1,0 +1,10 @@
+int sub(int n)
+{
+	printf("%i\n", n);
+	if (sub == 0)
+	{
+		return 0;
+	}
+
+	return sub(n - 1);
+}

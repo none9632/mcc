@@ -1,0 +1,15 @@
+int main()
+{
+	if (0 == 1)
+	{
+		printf("test1\n");
+	}
+	else
+	{
+		printf("test2\n");
+	}
+	if (132)
+    {
+    	printf("test123\n");
+    }
+}

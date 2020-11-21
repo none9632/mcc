@@ -1,0 +1,16 @@
+int main()
+{
+	int a = 12, b = 32, c = 54, d = 53;
+
+	b = c = 1;
+	printf("%i %i\n", b, c);
+	b += c += d /= 2;
+	printf("%i %i %i\n", b, c, d);
+
+	printf("%i\n", 12 + (a += 32));
+	printf("%i\n", a);
+
+	int i = 10;
+	printf("%i\n", (c = d = b) * (a += 32 + (i -= 3)));
+	printf("%i %i %i %i %i\n", a, b, c, d, i);
+}

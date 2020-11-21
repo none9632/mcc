@@ -1,0 +1,3 @@
+[[38;2;255;0;0mERROR[0m]:1:21: redefinition of 'n1'
+int add(int n1, int n1)
+                    ^  

@@ -1,10 +1,10 @@
 #include <stdio.h>
 
-#include "../include/vector.h"
-#include "../include/table.h"
-#include "../include/lexer.h"
-#include "../include/error.h"
-#include "../include/node.h"
+#include "vector.h"
+#include "table.h"
+#include "lexer.h"
+#include "error.h"
+#include "node.h"
 
 #define GLOBAL_MODE 0
 #define LOCAL_MODE 1

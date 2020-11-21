@@ -1,0 +1,3 @@
+[[38;2;255;0;0mERROR[0m]:3:9: expected string argument
+	printf(1, 3);
+	       ^     

@@ -1,0 +1,9 @@
+int foo(int a)
+{
+	printf("%i\n", a);
+}
+
+int main()
+{
+	printf("%i\n", ++foo(32));
+}

@@ -1,0 +1,4 @@
+int test1(int b, int c,)
+{
+	print("hello world\n");
+}

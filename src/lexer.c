@@ -4,9 +4,9 @@
 #include <malloc.h>
 #include <string.h>
 
-#include "../include/vector.h"
-#include "../include/lexer.h"
-#include "../include/error.h"
+#include "vector.h"
+#include "lexer.h"
+#include "error.h"
 
 #define KEYWORDS_SIZE 9
 #define SYMBOL_KEYWORDS_SIZE 39

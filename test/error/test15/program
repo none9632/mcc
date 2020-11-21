@@ -1,0 +1,4 @@
+int foo(int a, sdfa b)
+{
+	print("hello world\n");
+}

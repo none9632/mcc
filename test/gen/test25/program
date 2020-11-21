@@ -1,0 +1,9 @@
+int main()
+{
+	int a = 2;
+	int b = 23915702;
+	a <<= b;
+	b >>= 1;
+	printf("%i, %i\n", a, b);
+	printf("%i, %i, %i, %i\n", a << 7, 1, 1, b << 6);
+}

@@ -1,0 +1,3 @@
+[[38;2;255;0;0mERROR[0m]:3:18: expected ';' character
+	for (int i = 10; 
+	                ^

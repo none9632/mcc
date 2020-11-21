@@ -1,0 +1,27 @@
+int main()
+{
+	int a = 10 + 12, b = 12 * 32;
+	int c = 23, d = 453, e = 829, f = 325;
+	int and = 23452, or = 2351, xor = 235223;
+
+	a = 216 - 15;
+	b += 23 - a;
+	c -= a * b;
+	d *= a - b / c;
+	e /= d - d + 1;
+	f %= a - 198;
+
+	and &= 32625;
+	xor ^= 234220;
+	or |= 1000000000;
+
+	printf("%i\n", a);
+	printf("%i\n", b);
+	printf("%i\n", c);
+	printf("%i\n", d);
+	printf("%i\n", e);
+	printf("%i\n", f);
+	printf("%i\n", and);
+	printf("%i\n", xor);
+	printf("%i\n", or);
+}

@@ -1,0 +1,16 @@
+int func1(int n)
+{
+	printf("func1(%i)\n", n);
+	return n;
+}
+
+int func2(int n)
+{
+	printf("func2(%i)\n", n);
+	return n;
+}
+
+int main()
+{
+	printf("result: %i %i\n", func1(10), func2(32));
+}

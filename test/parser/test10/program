@@ -1,0 +1,6 @@
+int main()
+{
+	int a;
+	scanf(a);
+	printf("you entered %i\n", a);
+}

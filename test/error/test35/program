@@ -1,0 +1,14 @@
+int a = 23523;
+
+int foo1()
+{
+	printf("%i\n", a);
+	printf("%i\n", b);
+}
+
+int b = 32;
+
+int main()
+{
+	foo1();
+}

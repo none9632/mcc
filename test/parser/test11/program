@@ -1,0 +1,30 @@
+int main()
+{
+	int a = 2, b = 67;
+	a = a + 23 * (1 - 10);
+	;
+	// test comment
+	scanf(a);
+	printf("test:\n%i%i\n", a, 23 + 23);
+
+	while (a > 0) {
+		printf("%i\n", a);
+		a -= 1;
+		if (a <= 23) {
+			printf("a <= 23\n");
+		}
+	}
+
+	printf("test2\n");
+
+	/* test block comment */
+
+	if (a == 0) {
+		printf("success\n");
+		int i = 12;
+		while (i > a) {
+			printf("i = %i\n", i);
+			i /= 2;
+		}
+	}
+}

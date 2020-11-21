@@ -1,0 +1,3 @@
+[[38;2;255;0;0mERROR[0m]:4:17: lvalue required as decrement operand
+	printf("%i\n", --a++);
+	               ^      

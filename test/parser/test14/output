@@ -1,0 +1,52 @@
+<program>
+├── fibonacci()
+│   ├── <init-params>
+│   │   └── count
+│   └── <statements>
+│       ├── <init-vars>
+│       │   ├── =
+│       │   │   ├── num1
+│       │   │   └── 0
+│       │   └── =
+│       │       ├── num2
+│       │       └── 1
+│       ├── <for>
+│       │   ├── <init-vars>
+│       │   │   └── =
+│       │   │       ├── i
+│       │   │       └── 1
+│       │   ├── <expr>
+│       │   │   └── <
+│       │   │       ├── i
+│       │   │       └── count
+│       │   ├── <expr>
+│       │   │   └── +=
+│       │   │       ├── i
+│       │   │       └── 1
+│       │   └── <statements>
+│       │       ├── <init-vars>
+│       │       │   └── =
+│       │       │       ├── buffer
+│       │       │       └── num2
+│       │       ├── <expr>
+│       │       │   └── =
+│       │       │       ├── num2
+│       │       │       └── +
+│       │       │           ├── num1
+│       │       │           └── num2
+│       │       └── <expr>
+│       │           └── =
+│       │               ├── num1
+│       │               └── buffer
+│       └── <printf>
+│           ├── "%i\n"
+│           └── num1
+└── main()
+    ├── <none>
+    └── <statements>
+        ├── <printf>
+        │   └── "hello world\n"
+        └── <expr>
+            └── fibonacci()
+                └── <params>
+                    └── 12

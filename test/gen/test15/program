@@ -1,0 +1,16 @@
+int foo(int mode, int n1, int n2)
+{
+	if (mode == 1) { return n1 + n2; }
+	if (mode == 2) { return n1 - n2; }
+	if (mode == 3) { return n1 * n2; }
+	if (mode == 4) { return n1 / n2; }
+}
+
+int main()
+{
+	printf("%i\n", foo(1, 2, 5));
+	printf("%i\n", foo(2, 3, 1));
+	printf("%i\n", foo(3, 10, 11));
+	printf("%i\n", foo(4, 12, 5));
+}
+

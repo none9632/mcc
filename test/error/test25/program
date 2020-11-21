@@ -1,0 +1,9 @@
+int add(int n1, int n1)
+{
+	return n1 + n1;
+}
+
+int main()
+{
+	print("%i\n", add(1, 2));
+}

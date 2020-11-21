@@ -2,12 +2,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../include/vector.h"
-#include "../include/error.h"
-#include "../include/lexer.h"
-#include "../include/parser.h"
-#include "../include/node.h"
-#include "../include/gen.h"
+#include "vector.h"
+#include "error.h"
+#include "lexer.h"
+#include "parser.h"
+#include "node.h"
+#include "gen.h"
 
 static int8_t help = 0;
 static int8_t print_ast = 0;
@@ -15,8 +15,8 @@ static char *file_name = NULL;
 
 static void usage()
 {
-	printf("Usage: mcc [options] <file>");
-	printf("\nOptions:\n");
+	printf("Usage: mcc [options] <file>\n");
+	printf("Options:\n");
 	printf("    --help          display this information\n");
 	printf("    --print-ast     display AST\n");
 	printf("\n");

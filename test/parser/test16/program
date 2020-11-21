@@ -1,0 +1,14 @@
+int foo(int n)
+{
+	printf("%i\n", n);
+}
+
+int main()
+{
+	int a = 10;
+	printf("%i\n", a++);
+	printf("%i\n", --a);
+	printf("%i\n", -a++);
+	printf("%i\n", foo(++a));
+	printf("%i\n", foo(a--));
+}

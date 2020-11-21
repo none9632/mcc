@@ -1,0 +1,79 @@
+<program>
+├── <init-vars>
+│   └── =
+│       ├── glob_a
+│       └── 23523
+├── add()
+│   ├── <init-params>
+│   │   ├── n1
+│   │   └── n2
+│   └── <statements>
+│       └── <return>
+│           └── +
+│               ├── n1
+│               └── n2
+├── sub()
+│   ├── <init-params>
+│   │   ├── n1
+│   │   └── n2
+│   └── <statements>
+│       └── <return>
+│           └── -
+│               ├── n1
+│               └── n2
+├── mult()
+│   ├── <init-params>
+│   │   ├── n1
+│   │   └── n2
+│   └── <statements>
+│       └── <return>
+│           └── *
+│               ├── n1
+│               └── n2
+├── div()
+│   ├── <init-params>
+│   │   ├── n1
+│   │   └── n2
+│   └── <statements>
+│       └── <return>
+│           └── /
+│               ├── n1
+│               └── n2
+├── <init-vars>
+│   ├── =
+│   │   ├── glob_b
+│   │   └── div()
+│   │       └── <params>
+│   │           ├── mult()
+│   │           │   └── <params>
+│   │           │       ├── 23
+│   │           │       └── 3
+│   │           └── sub()
+│   │               └── <params>
+│   │                   ├── 100
+│   │                   └── 73
+│   └── =
+│       ├── glob_c
+│       └── 32
+└── main()
+    ├── <none>
+    └── <statements>
+        ├── <init-vars>
+        │   └── =
+        │       ├── a
+        │       └── add()
+        │           └── <params>
+        │               ├── 1
+        │               └── 2
+        ├── <printf>
+        │   ├── "%i\n"
+        │   └── a
+        ├── <printf>
+        │   ├── "%i\n"
+        │   └── glob_a
+        ├── <printf>
+        │   ├── "%i\n"
+        │   └── glob_a
+        └── <printf>
+            ├── "%i\n"
+            └── glob_c

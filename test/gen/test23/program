@@ -1,0 +1,44 @@
+int glob_a = 23523;
+
+int add(int n1, int n2)
+{
+	return n1 + n2;
+}
+
+int sub(int n1, int n2)
+{
+	return n1 - n2;
+}
+
+int mult(int n1, int n2)
+{
+	return n1 * n2;
+}
+
+int div(int n1, int n2)
+{
+	return n1 / n2;
+}
+
+int glob_b = div(mult(23, 3), sub(100, 73)),
+    glob_c = 1+(1+(1+(1+(1+(1+(1+(1+(1+(1+(1+(1+(1+sub(32, add(7, glob_b))))))))))))));
+
+int foo()
+{
+	printf("%i\n", glob_a);
+	printf("%i\n", glob_b);
+	printf("%i\n", glob_c);
+	glob_a = 53 - 3;
+	glob_b += glob_a - 25;
+	glob_c = 1*3*1*4+2*4-3*3;
+}
+
+int main()
+{
+	int a = add(glob_a, glob_b);
+	foo();
+	printf("%i\n", a);
+	printf("%i\n", glob_a);
+	printf("%i\n", glob_b);
+	printf("%i\n", glob_c);
+}

@@ -1,0 +1,3 @@
+[[38;2;255;0;0mERROR[0m]:4:6: redefinition of 'asd'
+	int asd = 4;
+	    ^       

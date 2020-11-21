@@ -1,0 +1,11 @@
+<program>
+└── main()
+    ├── <none>
+    └── <statements>
+        ├── <init-vars>
+        │   └── a
+        ├── <scanf>
+        │   └── a
+        └── <printf>
+            ├── "you entered %i\n"
+            └── a

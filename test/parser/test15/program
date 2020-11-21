@@ -1,0 +1,15 @@
+int foo(int a, int c)
+{
+	printf("hello world\n");
+	printf("%i %i\n", a, c);
+	return a + c;
+}
+
+int main()
+{
+	int a = 10;
+	int c = 325;
+
+	printf("a + c = %i\n", foo(a, c));
+}
+

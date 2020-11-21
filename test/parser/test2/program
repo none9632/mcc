@@ -1,0 +1,4 @@
+int main()
+{
+	2/*test block comment*/*3+4*5; // test comment
+}

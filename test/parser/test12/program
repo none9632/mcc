@@ -1,0 +1,5 @@
+int main()
+{
+	int a, b, c, d, e, f;
+	scanf(a, b, c, d, e, f);
+}

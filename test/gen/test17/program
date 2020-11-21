@@ -1,0 +1,28 @@
+int add(int n1, int n2)
+{
+	return n1 + n2;
+}
+
+int sub(int n1, int n2)
+{
+	return n1 - n2;
+}
+
+int mult(int n1, int n2)
+{
+	return n1 * n2;
+}
+
+int div(int n1, int n2)
+{
+	return n1 / n2;
+}
+
+int main()
+{
+	int a = add(2, 5);
+	int b = 3 + mult(4 - 2, 3);
+	int c = add(sub(3, 23), div(100, 4));
+	int d = 1+(1+(1+(1+(1+(1+(1+(1+(1+(1+(1+(1+(1+sub(32, add(7, 8))))))))))))));
+	printf("%i %i %i %i\n", a, b, c, d);
+}

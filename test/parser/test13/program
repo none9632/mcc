@@ -1,0 +1,17 @@
+int main()
+{
+	for (int i = 0; i < 10; i += 1)
+	{
+		printf("%i\n", i);
+	}
+	int j = 10;
+	for (j = 0; j < 10;)
+   	{
+   		printf("%i\n", j);
+   		j += 1;
+   	}
+   	for (;;)
+   	{
+   		printf("test\n");
+   	}
+}

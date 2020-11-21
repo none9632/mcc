@@ -87,7 +87,12 @@ typedef struct node
 }
 Node;
 
-Node *new_node         (u_int8_t kind, int value, Symbol *symbol, void *p_union, Node *rhs);
-void  start_print_node (Node *node);
+Node *new_node (u_int8_t kind,
+                int value,
+                Symbol *symbol,
+                void *p_union,
+                Node *rhs);
+
+void start_print_node (Node *node);
 
 #endif

@@ -1,0 +1,25 @@
+int add(int n1, int n2)
+{
+	return n1 + n2;
+}
+
+int sub(int n1, int n2)
+{
+	return n1 - n2;
+}
+
+int mult(int n1, int n2)
+{
+	return n1 * n2;
+}
+
+int div(int n1, int n2)
+{
+	return n1 / n2;
+}
+
+int main()
+{
+	int a = div(mult(1+(1+(1+(1+(1+(1+(1+(1+(1+(1+(1+(1+(1+sub(32, 1))))))))))))), 5), 13-(13-(13-(13-(13-(13-(13-(13-(13-(13-(13-(13-1))))))))))) + 1);
+	printf("%i\n", a);
+}

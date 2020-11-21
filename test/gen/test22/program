@@ -1,0 +1,37 @@
+int foo(int n)
+{
+	printf("%i\n", n);
+}
+
+int g_a = 21;
+
+int main()
+{
+	int a = 10;
+	printf("%i\n", -a++);
+	printf("%i\n", a);
+	printf("%i\n", ++a);
+	printf("%i\n", a);
+	printf("%i\n", a--);
+	printf("%i\n", a);
+	foo(--a);
+	printf("%i\n", a);
+	foo(a++);
+	printf("%i\n", a);
+	++a;
+	printf("%i\n", a);
+	a--;
+	printf("%i\n", a);
+	--a;
+	printf("%i\n", a);
+	++a;
+	printf("%i\n", a);
+
+	/*
+	printf("%i\n", ++g_a);
+	printf("%i\n", g_a++);
+	printf("%i\n", --g_a);
+	printf("%i\n", g_a--);
+	printf("%i\n", g_a);
+	*/
+}

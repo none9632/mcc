@@ -1,0 +1,50 @@
+<program>
+└── main()
+    ├── <none>
+    └── <statements>
+        ├── <for>
+        │   ├── <init-vars>
+        │   │   └── =
+        │   │       ├── i
+        │   │       └── 0
+        │   ├── <expr>
+        │   │   └── <
+        │   │       ├── i
+        │   │       └── 10
+        │   ├── <expr>
+        │   │   └── +=
+        │   │       ├── i
+        │   │       └── 1
+        │   └── <statements>
+        │       └── <printf>
+        │           ├── "%i\n"
+        │           └── i
+        ├── <init-vars>
+        │   └── =
+        │       ├── j
+        │       └── 10
+        ├── <for>
+        │   ├── <expr>
+        │   │   └── =
+        │   │       ├── j
+        │   │       └── 0
+        │   ├── <expr>
+        │   │   └── <
+        │   │       ├── j
+        │   │       └── 10
+        │   ├── <none>
+        │   └── <statements>
+        │       ├── <printf>
+        │       │   ├── "%i\n"
+        │       │   └── j
+        │       └── <expr>
+        │           └── +=
+        │               ├── j
+        │               └── 1
+        └── <for>
+            ├── <none>
+            ├── <none>
+            ├── <none>
+            └── <statements>
+                └── <printf>
+                    └── "test\n"

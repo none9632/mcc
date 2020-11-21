@@ -1,0 +1,23 @@
+int main()
+{
+	for (int i = 10; i > 0; i -= 1)
+	{
+		printf("%i ", i);
+	}
+	printf("\n");
+
+	int j = 10;
+	for (j = 0; j < 10;)
+   	{
+   		printf("%i ", j);
+   		j += 1;
+   	}
+   	printf("\n");
+
+	for (;j > 0;)
+   	{
+   		printf("%i ", j);
+   		j -= 1;
+   	}
+   	printf("\n");
+}

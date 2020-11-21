@@ -1,0 +1,15 @@
+int foo()
+{
+	printf("calling the foo() function\n");
+}
+
+int main()
+{
+	foo();
+	foo();
+}
+
+int foo()
+{
+	printf("second calling the foo() function\n");
+}

@@ -1,0 +1,19 @@
+int fibonacci(int count)
+{
+	int num1 = 0, num2 = 1;
+
+	for (int i = 1; i < count; i += 1)
+	{
+		int buffer = num2;
+		num2 = num1 + num2;
+		num1 = buffer;
+	}
+
+	printf("%i\n", num1);
+}
+
+int main()
+{
+	printf("hello world\n");
+	fibonacci(12);
+}

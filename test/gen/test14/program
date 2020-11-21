@@ -1,0 +1,22 @@
+int main()
+{
+	int a, b, c, d, e, f, g, v, w, x, q, y, p, z, o, u, m;
+	printf("%i\n", a = b = c = d = e = f = g = v = w = x = q = y = p = z = o = u = m = 12);
+	printf("a = %i\n", a);
+	printf("b = %i\n", b);
+	printf("c = %i\n", c);
+	printf("d = %i\n", d);
+	printf("e = %i\n", e);
+	printf("f = %i\n", f);
+	printf("g = %i\n", g);
+	printf("v = %i\n", v);
+	printf("w = %i\n", w);
+	printf("x = %i\n", x);
+	printf("q = %i\n", q);
+	printf("y = %i\n", y);
+	printf("p = %i\n", p);
+	printf("z = %i\n", z);
+	printf("o = %i\n", o);
+	printf("u = %i\n", u);
+	printf("m = %i\n", m);
+}

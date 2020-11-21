@@ -1,0 +1,8 @@
+int glob_a = 0;
+
+int main()
+{
+	printf("%i\n", glob_a);
+	scanf(glob_a);
+	printf("%i\n", glob_a);
+}

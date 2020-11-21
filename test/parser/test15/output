@@ -1,0 +1,33 @@
+<program>
+├── foo()
+│   ├── <init-params>
+│   │   ├── a
+│   │   └── c
+│   └── <statements>
+│       ├── <printf>
+│       │   └── "hello world\n"
+│       ├── <printf>
+│       │   ├── "%i %i\n"
+│       │   ├── a
+│       │   └── c
+│       └── <return>
+│           └── +
+│               ├── a
+│               └── c
+└── main()
+    ├── <none>
+    └── <statements>
+        ├── <init-vars>
+        │   └── =
+        │       ├── a
+        │       └── 10
+        ├── <init-vars>
+        │   └── =
+        │       ├── c
+        │       └── 325
+        └── <printf>
+            ├── "a + c = %i\n"
+            └── foo()
+                └── <params>
+                    ├── a
+                    └── c
